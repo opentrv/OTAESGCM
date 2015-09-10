@@ -26,8 +26,8 @@ Author(s) / Copyright (s): Damon Hart-Davis 2015
 
 void setup()
   {
-  // initialize serial communications at 9600 bps.
-  Serial.begin(9600); 
+  // initialize serial communications at approproate rate.
+  Serial.begin(SERIAL_BAUD); 
   }
 
 static const int AES_KEY_SIZE = 128; // in bits

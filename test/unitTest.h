@@ -26,4 +26,13 @@ void testLibVersion();
 
 
 
+#if F_CPU == 1000000 // 1MHz CPU indicates V0p2 board with 4800 baud serial link.
+#define ON_V0P2_BOARD
+#define SERIAL_BAUD 4800
+#else
+#define SERIAL_BAUD 9600
+#endif
+
+
+
 #endif  // UNIT_TEST_H_
