@@ -26,7 +26,11 @@ Author(s) / Copyright (s): Damon Hart-Davis 2015
 
 void setup()
   {
+<<<<<<< HEAD
   // initialize serial communications at appropriate rate.
+=======
+  // initialize serial communications at approproate rate.
+>>>>>>> refs/remotes/origin/master
   Serial.begin(SERIAL_BAUD); 
   }
 
