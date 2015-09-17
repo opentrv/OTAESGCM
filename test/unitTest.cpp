@@ -38,9 +38,11 @@ void error(int expected, int actual, int line)
     }
   }
   
-/*void testLibVersion()
+/*
+void testLibVersion()
   {
   Serial.println("LibVersion");
   AssertIsEqual(0, ARDUINO_LIB_AESGCM_VERSION_MAJOR);
   AssertIsEqual(2, ARDUINO_LIB_AESGCM_VERSION_MINOR);
-}*/
+  }
+*/
