@@ -32,6 +32,7 @@ Author(s) / Copyright (s): Deniz Erbillgin 2015
  */
 
 // Core support.
+#include "utility/OTAESGCM_OTAES128.h"
 #include "utility/OTAESGCM_OTAESGCM.h"
 
 

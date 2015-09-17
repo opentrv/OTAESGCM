@@ -19,9 +19,6 @@ Author(s) / Copyright (s): Deniz Erbillgin 2015
 
 /* OpenTRV OTAESGCM microcontroller-/IoT- friendly AES(128)-GCM implementation. */
 
-#ifndef ARDUINO_LIB_OTAESGCM_OTAESGCM_H
-#define ARDUINO_LIB_OTAESGCM_OTAESGCM_H
-
 
 #include <OTAESGCM_OTAESGCM.h>
 
@@ -456,6 +453,3 @@ uint8_t aes128_gcm_decrypt(const uint8_t* key, const uint8_t* IV,
 	}*/
 }
 
-
-
-#endif
