@@ -13,7 +13,8 @@ KIND, either express or implied. See the Licence for the
 specific language governing permissions and limitations
 under the Licence.
 
-Author(s) / Copyright (s): Damon Hart-Davis 2015
+Author(s) / Copyright (s): Deniz Erbilgin 2015
+                           Damon Hart-Davis 2015
 */
 
 /*Unit test routines for library code.
@@ -26,11 +27,7 @@ Author(s) / Copyright (s): Damon Hart-Davis 2015
 
 void setup()
   {
-<<<<<<< HEAD
   // initialize serial communications at appropriate rate.
-=======
-  // initialize serial communications at approproate rate.
->>>>>>> refs/remotes/origin/master
   Serial.begin(SERIAL_BAUD); 
   }
 
