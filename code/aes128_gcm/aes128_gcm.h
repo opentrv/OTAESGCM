@@ -1,4 +1,3 @@
-
 /*
 The OpenTRV project licenses this file to you
 under the Apache Licence, Version 2.0 (the "Licence");
