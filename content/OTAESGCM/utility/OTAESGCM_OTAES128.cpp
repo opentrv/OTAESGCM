@@ -17,23 +17,24 @@ Author(s) / Copyright (s): Deniz Erbillgin 2015
                            Damon Hart-Davis 2015
 */
 
-#ifndef ARDUINO_LIB_OTAESGCM_H
-#define ARDUINO_LIB_OTAESGCM_H
-
-#define ARDUINO_LIB_OTAESGCM_VERSION_MAJOR 0
-#define ARDUINO_LIB_OTAESGCM_VERSION_MINOR 1
-
 /* OpenTRV OTAESGCM microcontroller-/IoT- friendly AES(128)-GCM implementation. */
 
-/*
- * Thanks amongst others to:
- *
- *     https://github.com/kokke/tiny-AES128-C  for code and ideas, public domain.
- */
 
-// Core support.
-#include "utility/OTAESGCM_OTAES128.h"
-#include "utility/OTAESGCM_OTAESGCM.h"
+#include <OTAESGCM_OTAES128.h>
+
+
+
+// Use namespaces to help avoid collisions.
+namespace OTAESGCM
+    {
+
+// TODO
+
+    }
+
+
+
+
 
 
 #endif
