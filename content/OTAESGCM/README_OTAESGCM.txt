@@ -1,4 +1,18 @@
-/*
+Target platform: Arduino UNO (or similar)
+Library format: pre-1.5-IDE AVR-only
+
+Description
+===========
+
+The 'OTAESGCM' OpenTRV IoT-/Microcontroller- friendly, permissively licensed, AES-GCM implementation as Arduino library.
+.
+
+Uses as namespace to help reduce chance of name collisions.
+
+
+Licence
+=======
+
 The OpenTRV project licenses this file to you
 under the Apache Licence, Version 2.0 (the "Licence");
 you may not use this file except in compliance
@@ -13,26 +27,10 @@ KIND, either express or implied. See the Licence for the
 specific language governing permissions and limitations
 under the Licence.
 
-Author(s) / Copyright (s): Deniz Erbillgin 2015
-                           Damon Hart-Davis 2015
-*/
-
-#ifndef ARDUINO_LIB_OTAESGCM_H
-#define ARDUINO_LIB_OTAESGCM_H
-
-#define ARDUINO_LIB_OTAESGCM_VERSION_MAJOR 0
-#define ARDUINO_LIB_OTAESGCM_VERSION_MINOR 1
-
-/* OpenTRV OTAESGCM microcontroller-/IoT- friendly AES(128)-GCM implementation. */
-
-/*
- * Thanks amongst others to:
- *
- *     https://github.com/kokke/tiny-AES128-C  for code and ideas, public domain.
- */
-
-// Core support.
-#include "utility/OTAESGCM_OTAESGCM.h"
+Author(s) / Copyright (s): Damon Hart-Davis 2015
 
 
-#endif
+
+Notes
+=====
+

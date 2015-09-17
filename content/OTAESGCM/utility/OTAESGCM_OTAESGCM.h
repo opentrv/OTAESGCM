@@ -25,14 +25,33 @@ Author(s) / Copyright (s): Deniz Erbillgin 2015
 #include <stddef.h>
 #include <stdint.h>
 
-#include <OTAESGCM.h>
 
 // Use namespaces to help avoid collisions.
 namespace OTAESGCM
     {
 
+// TODO
 
     }
+
+
+
+#define GCM_BLOCK_SIZE  16	// GCM block size in bytes. This must be the same as the AES block size.
+#define GCM_IV_SIZE	12      // GCM initialisation size in bytes.
+#define GCM_TAG_SIZE	16      // GCM authentication tag size in bytes.
+
+bool aes128_gcm_encrypt(    const uint8_t* key, const uint8_t* IV,
+                            const uint8_t* PDATA, uint8_t PDATALength,
+                            uint8_t* ADATA, uint8_t ADATALength,
+                            uint8_t* CDATA, uint8_t *tag);
+
+uint8_t aes128_gcm_decrypt(	const uint8_t* key, const uint8_t* IV,
+                            const uint8_t* CDATA, uint8_t CDATALength,
+                            const uint8_t* ADATA, uint8_t ADATALength,
+                            const uint8_t* messageTag, uint8_t *PDATA);
+
+
+
 
 
 #endif

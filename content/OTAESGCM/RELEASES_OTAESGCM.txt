@@ -1,0 +1,25 @@
+ALL SIGNIFICANT RELEASES AND BRANCHES (and to-do)
+
+
+This document is used to record all significant releases and branches
+in the code tree.
+
+Follow agreed procedures before creating (or deleting) branches
+or release/freeze points.
+
+
+pending:
+    DHD20150917: refactoring and rearranging code ready for initial release
+
+
+
+
+
+20150804:
+    freezepoint name: V0.x
+    branch name: HEAD
+    Deployed where:  (released copy on https://github.com/opentrv/OTAESGCM V0.X).
+    Changes since last freezepoint (developer/mgr initials and brief description): 
+    Previous significant freezepoint: V0.W
+    DHD20150XXX: 
+    
