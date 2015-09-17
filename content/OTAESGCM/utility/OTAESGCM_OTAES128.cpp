@@ -37,7 +37,6 @@ namespace OTAESGCM
 
 
 
-
 /*
 
 This is an implementation of the AES128 algorithm, specifically ECB and CBC mode.
@@ -571,3 +570,4 @@ void AES128_decrypt(const uint8_t* input, const uint8_t* key, uint8_t *output)
   InvCipher();
 }
 #endif // NO_DECRYPT
+
