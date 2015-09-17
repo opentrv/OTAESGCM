@@ -54,8 +54,8 @@ namespace OTAESGCM
 
 /********************** Includes *************************/
 #include <string.h>
-#include "aes128_gcm.h"
-#include "aes128.h"
+#include "OTAESGCM_OTAES128.h"
+#include "OTAESGCM_OTAESGCM.h"
 /******************* Global Variables ********************/
 //
 /******************* Private Variables *******************/

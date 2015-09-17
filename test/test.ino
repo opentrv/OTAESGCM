@@ -21,7 +21,7 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015
  */
 
 // Include the library under test.
-#include <aes128_gcm.h>
+#include <OTAESGCM.h>
 #include <avr/pgmspace.h>
 #include "unitTest.h"
 
