@@ -58,7 +58,7 @@ namespace OTAESGCM
  */
 static void xorBlock(uint8_t *dest, const uint8_t *src)
 {
-    for(uint8_t i = 0; i < GCM_BLOCK_SIZE; i++){
+    for(uint8_t i = 0; i < AES128GCM_BLOCK_SIZE; i++){
         *dest++ ^= *src++;
     }
 }
@@ -79,7 +79,7 @@ static void shiftBlockRight(uint8_t *block)
     block--;
 
     // loop through remaining bytes
-    for (uint8_t i = 0; i < GCM_BLOCK_SIZE-1; i++) {
+    for (uint8_t i = 0; i < AES128GCM_BLOCK_SIZE-1; i++) {
         // if lsb is set, set msb of next byte in array
         if(*block & 0x01) *(block + 1) |= 0x80;
         // bit shift byte
@@ -99,7 +99,7 @@ static uint8_t checkTag(const uint8_t *tag1, const uint8_t *tag2)
     uint8_t result = 0;
 
     // compare tags. If any byte fails, will set bits in result
-    for (uint8_t i = 0; i < GCM_TAG_SIZE; i++) {
+    for (uint8_t i = 0; i < AES128GCM_TAG_SIZE; i++) {
         result |= *tag1 ^ *tag2;
         tag1++;
         tag2++;
@@ -119,14 +119,14 @@ static uint8_t checkTag(const uint8_t *tag1, const uint8_t *tag2)
 static void gFieldMultiply(const uint8_t *x, const uint8_t *y, uint8_t *result)
 {
     // working memory
-    uint8_t temp[GCM_BLOCK_SIZE];
+    uint8_t temp[AES128GCM_BLOCK_SIZE];
 
     // init result to 0s and copy y to temp
-    memcpy(temp, y, GCM_BLOCK_SIZE);
-    memset(result, 0, GCM_BLOCK_SIZE);
+    memcpy(temp, y, AES128GCM_BLOCK_SIZE);
+    memset(result, 0, AES128GCM_BLOCK_SIZE);
 
     // multiplication algorithm
-    for (uint8_t i = 0; i < GCM_BLOCK_SIZE; i++) {
+    for (uint8_t i = 0; i < AES128GCM_BLOCK_SIZE; i++) {
         for (uint8_t j = 0; j < 8; j++) {
 
             if (x[i] & (1 << (7 - j))) {
@@ -181,8 +181,8 @@ static void GCTR(    const uint8_t *pInput, uint8_t inputLength, const uint8_t *
                     const uint8_t *pCtrBlock, uint8_t *pOutput)
 {
     uint8_t n, last;
-    uint8_t ctrBlock[GCM_BLOCK_SIZE];
-    uint8_t tmp[GCM_BLOCK_SIZE]; // if we use full blocks, no need for tmp
+    uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
+    uint8_t tmp[AES128GCM_BLOCK_SIZE]; // if we use full blocks, no need for tmp
 
     const uint8_t *xpos = pInput; //this was const but i don't think it should be
     uint8_t *ypos = pOutput;
@@ -194,7 +194,7 @@ static void GCTR(    const uint8_t *pInput, uint8_t inputLength, const uint8_t *
     n = inputLength / 16;
 
     // copy ICB to ctrBlock
-    memcpy(ctrBlock, pCtrBlock, GCM_BLOCK_SIZE);
+    memcpy(ctrBlock, pCtrBlock, AES128GCM_BLOCK_SIZE);
 
     // for full blocks
     for (uint8_t i = 0; i < n; i++) {
@@ -203,8 +203,8 @@ static void GCTR(    const uint8_t *pInput, uint8_t inputLength, const uint8_t *
         xorBlock(ypos, xpos);
 
         // increment pointers to next block
-        xpos += GCM_BLOCK_SIZE;
-        ypos += GCM_BLOCK_SIZE;
+        xpos += AES128GCM_BLOCK_SIZE;
+        ypos += AES128GCM_BLOCK_SIZE;
 
         // increment counter
         incr32(ctrBlock);
@@ -234,10 +234,10 @@ static void GHASH(  const uint8_t *pInput, uint8_t inputLength,
 {
     uint8_t m;
     const uint8_t *xpos = pInput;
-    uint8_t tmp[GCM_BLOCK_SIZE]; // if we use full blocks, no need for tmp
+    uint8_t tmp[AES128GCM_BLOCK_SIZE]; // if we use full blocks, no need for tmp
 
     // calculate number of full blocks to hash
-    m = inputLength / GCM_BLOCK_SIZE;
+    m = inputLength / AES128GCM_BLOCK_SIZE;
 
     // hash full blocks
     for (uint8_t i = 0; i < m; i++) {
@@ -248,7 +248,7 @@ static void GHASH(  const uint8_t *pInput, uint8_t inputLength,
         gFieldMultiply(pOutput, pAuthKey, tmp);
 
         // copy tmp to output
-        memcpy(pOutput, tmp, GCM_BLOCK_SIZE);
+        memcpy(pOutput, tmp, AES128GCM_BLOCK_SIZE);
     }
 
     // check if final partial block. Can be omitted if we use full blocks.
@@ -261,7 +261,7 @@ static void GHASH(  const uint8_t *pInput, uint8_t inputLength,
         // Y_i = (Y^(i-1) XOR X_i) dot H
         xorBlock(pOutput, tmp);
         gFieldMultiply(pOutput, pAuthKey, tmp);
-        memcpy(pOutput, tmp, GCM_BLOCK_SIZE);
+        memcpy(pOutput, tmp, AES128GCM_BLOCK_SIZE);
     }
 }
 
@@ -274,9 +274,9 @@ static void GHASH(  const uint8_t *pInput, uint8_t inputLength,
 static void generateICB(const uint8_t *pIV, uint8_t *pOutput)
 {
     // Prepare block J0 = IV || 0^31 || 1 [len(IV) = 96]
-    memcpy(pOutput, pIV, GCM_IV_SIZE);
-    memset(pOutput + GCM_IV_SIZE, 0, GCM_BLOCK_SIZE - GCM_IV_SIZE);
-    pOutput[GCM_BLOCK_SIZE - 1] = 0x01;
+    memcpy(pOutput, pIV, AES128GCM_IV_SIZE);
+    memset(pOutput + AES128GCM_IV_SIZE, 0, AES128GCM_BLOCK_SIZE - AES128GCM_IV_SIZE);
+    pOutput[AES128GCM_BLOCK_SIZE - 1] = 0x01;
 }
 
 /**
@@ -289,7 +289,7 @@ static void generateICB(const uint8_t *pIV, uint8_t *pOutput)
 static void generateAuthKey(const uint8_t *pKey, uint8_t *pAuthKey)
 {
     // encrypt 128 bit block of 0s to generate authentication sub key
-    memset(pAuthKey, 0, GCM_BLOCK_SIZE);
+    memset(pAuthKey, 0, AES128GCM_BLOCK_SIZE);
     AES128_encrypt(pAuthKey, pKey, pAuthKey);
 }
 
@@ -305,8 +305,8 @@ static void generateCDATA(  const uint8_t *pICB, const uint8_t *pPDATA, uint8_t 
                             uint8_t *pCDATA, const uint8_t *pKey )
 {
     // generate counterblock J
-    uint8_t ctrBlock[GCM_BLOCK_SIZE];
-    memcpy(ctrBlock, pICB, GCM_BLOCK_SIZE);
+    uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
+    memcpy(ctrBlock, pICB, AES128GCM_BLOCK_SIZE);
     incr32(ctrBlock);
 
     // encrypt
@@ -332,7 +332,7 @@ static void generateTag(    const uint8_t *pKey, const uint8_t *pAuthKey,
     uint8_t lengthBuffer[16];
     uint8_t S[16];
     memset(lengthBuffer, 0, 16);
-    memset(S, 0, GCM_BLOCK_SIZE);
+    memset(S, 0, AES128GCM_BLOCK_SIZE);
     /*
      * u = 128 * ceil[len(C)/128] - len(C)
      * v = 128 * ceil[len(A)/128] - len(A)
@@ -375,19 +375,16 @@ static void generateTag(    const uint8_t *pKey, const uint8_t *pAuthKey,
  * @param    CDATA           buffer to output ciphertext to, size (at least) PDATA_length; never NULL
  * @param    tag             pointer to 16 byte buffer to output tag to; never NULL
  *
-<<<<<<< HEAD
  * @todo CLARIFY which input data (eg PDATA) need to be multiples of block size, if any
-=======
- * @todo CLARIFY which input data (eg PDATA) need to be multiples of block size
->>>>>>> refs/remotes/origin/master
  */
-void aes128_gcm_encrypt(const uint8_t* key, const uint8_t* IV,
+void OTAES128GCMGeneric::aes128_gcm_encrypt(
+                        const uint8_t* key, const uint8_t* IV,
                         const uint8_t* PDATA, uint8_t PDATALength,
                         uint8_t* ADATA, uint8_t ADATALength,
                         uint8_t* CDATA, uint8_t *tag)
 {
-    uint8_t authKey[GCM_BLOCK_SIZE];
-    uint8_t ICB[GCM_BLOCK_SIZE];
+    uint8_t authKey[AES128GCM_BLOCK_SIZE];
+    uint8_t ICB[AES128GCM_BLOCK_SIZE];
     generateAuthKey(key, authKey);    // aes_gcm_init_hash_subkey
     generateICB(IV, ICB);            // aes_gcm_prepare_j0
     generateCDATA(ICB, PDATA, PDATALength, CDATA, key);
@@ -412,14 +409,15 @@ void aes128_gcm_encrypt(const uint8_t* key, const uint8_t* IV,
  *
  * @todo CLARIFY which input data (eg CDATA) need to be multiples of block size, if any
  */
-bool aes128_gcm_decrypt(const uint8_t* key, const uint8_t* IV,
+bool OTAES128GCMGeneric::aes128_gcm_decrypt(
+                        const uint8_t* key, const uint8_t* IV,
                         const uint8_t* CDATA, uint8_t CDATALength,
                         const uint8_t* ADATA, uint8_t ADATALength,
                         const uint8_t* messageTag, uint8_t *PDATA)
 {
-    uint8_t authKey[GCM_BLOCK_SIZE];
-    uint8_t ICB[GCM_BLOCK_SIZE];
-    uint8_t calculatedTag[GCM_TAG_SIZE];
+    uint8_t authKey[AES128GCM_BLOCK_SIZE];
+    uint8_t ICB[AES128GCM_BLOCK_SIZE];
+    uint8_t calculatedTag[AES128GCM_TAG_SIZE];
 
     generateAuthKey(key, authKey);
     generateICB(IV, ICB);
