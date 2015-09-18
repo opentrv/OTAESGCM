@@ -94,12 +94,6 @@ static void testAESGCMAll0()
   // Instance to perform enc/dec.
   //OpenTRV::AESGCM::AES128GCM16small eo;
   // Do encryption.
-  /*AssertIsTrue(eo.encrypt(
-                key, (size_t) sizeof(key),
-                nonce, sizeof(nonce),
-                input, sizeof(input),
-                aad, sizeof(aad),
-                cipherText, tag));*/
   OTAESGCM::aes128_gcm_encrypt(key, nonce, input, sizeof(input),
                                aad, sizeof(aad), cipherText, tag);
   // Check some of the cipher text and tag.
@@ -112,13 +106,8 @@ static void testAESGCMAll0()
 
   // Decrypt...
   uint8_t plain[sizeof(cipherText)]; // Space for decrypted text.
-  /*AssertIsTrue(eo.decrypt(
-                key, (size_t) sizeof(key),
-                nonce, sizeof(nonce),
-    cipherText, sizeof(cipherText),
-    aad, sizeof(aad), tag,
-                plain));*/
-  AssertIsEqual(0x00, OTAESGCM::aes128_gcm_decrypt(  key, nonce,
+  // Should pass authentication and produce the original plaintext.
+  AssertIsTrue(OTAESGCM::aes128_gcm_decrypt(  key, nonce,
                             cipherText, sizeof(cipherText),
                             aad, sizeof(aad),
                             tag, plain));
@@ -146,12 +135,6 @@ static void testGCMVS0()
   // Instance to perform enc/dec.
   //OpenTRV::AESGCM::AES128GCM16small eo;
   // Do encryption.
-  /*AssertIsTrue(eo.encrypt(
-                key, (size_t) sizeof(key),
-                nonce, sizeof(nonce),
-                input, sizeof(input),
-                aad, sizeof(aad),
-                cipherText, tag));*/
   OTAESGCM::aes128_gcm_encrypt(key, nonce, input, sizeof(input),
                                aad, sizeof(aad), cipherText, tag);
   // Check some of the cipher text and tag.
@@ -164,13 +147,8 @@ static void testGCMVS0()
 
   // Decrypt...
   uint8_t plain[sizeof(cipherText)]; // Space for decrypted text.
-  /*AssertIsTrue(eo.decrypt(
-                key, (size_t) sizeof(key),
-                nonce, sizeof(nonce),
-    cipherText, sizeof(cipherText),
-    aad, sizeof(aad), tag,
-                plain));*/
-  AssertIsEqual(0x00, OTAESGCM::aes128_gcm_decrypt(  key, nonce,
+  // Should pass authentication and produce the original plaintext.
+  AssertIsTrue(OTAESGCM::aes128_gcm_decrypt(  key, nonce,
                             cipherText, sizeof(cipherText),
                             aad, sizeof(aad),
                             tag, plain));
@@ -197,12 +175,6 @@ static void testGCMVS1()
   // Instance to perform enc/dec.
   //OpenTRV::AESGCM::AES128GCM16small eo;
   // Do encryption.
-  /*AssertIsTrue(eo.encrypt(
-                key, (size_t) sizeof(key),
-                nonce, sizeof(nonce),
-                input, sizeof(input),
-                aad, sizeof(aad),
-                cipherText, tag));*/
   OTAESGCM::aes128_gcm_encrypt(key, nonce, input, sizeof(input),
                                             aad, sizeof(aad), cipherText, tag);
   // Check some of the cipher text and tag.
@@ -215,13 +187,8 @@ static void testGCMVS1()
 
   // Decrypt...
   uint8_t plain[sizeof(cipherText)]; // Space for decrypted text.
-  /*AssertIsTrue(eo.decrypt(
-                key, (size_t) sizeof(key),
-                nonce, sizeof(nonce),
-    cipherText, sizeof(cipherText),
-    aad, sizeof(aad), tag,
-                plain));*/
-  AssertIsEqual(0x00, OTAESGCM::aes128_gcm_decrypt(  key, nonce,
+  // Should pass authentication and produce the original plaintext.
+  AssertIsTrue(OTAESGCM::aes128_gcm_decrypt(  key, nonce,
                             cipherText, sizeof(cipherText),
                             aad, sizeof(aad),
                             tag, plain));
@@ -258,21 +225,22 @@ static void testAESGCMAuthentication()
   uint8_t tempTag[GCM_TAG_LENGTH];
   memcpy(tempTag, tag, GCM_TAG_LENGTH);
 
-  AssertIsEqual(0x0, OTAESGCM::aes128_gcm_decrypt(  key, nonce, cipherText, sizeof(cipherText),
+  // Un-hacked tag should match.
+  AssertIsTrue(OTAESGCM::aes128_gcm_decrypt(key, nonce, cipherText, sizeof(cipherText),
                                     aad, sizeof(aad), tempTag, plain));
-  // make tag false
+  // Various manglings of the tag should fail.
   tempTag[0]++;
-  AssertIsTrue(OTAESGCM::aes128_gcm_decrypt(  key, nonce, cipherText, sizeof(cipherText),
+  AssertIsTrue(!OTAESGCM::aes128_gcm_decrypt(key, nonce, cipherText, sizeof(cipherText),
                                     aad, sizeof(aad), tempTag, plain));
   tempTag[0]--;
 
   tempTag[1]++;
-  AssertIsTrue(OTAESGCM::aes128_gcm_decrypt(  key, nonce, cipherText, sizeof(cipherText),
+  AssertIsTrue(!OTAESGCM::aes128_gcm_decrypt(key, nonce, cipherText, sizeof(cipherText),
                                     aad, sizeof(aad), tempTag, plain));
   tempTag[1]--;
 
   tempTag[15]++;
-  AssertIsTrue(OTAESGCM::aes128_gcm_decrypt(  key, nonce, cipherText, sizeof(cipherText),
+  AssertIsTrue(!OTAESGCM::aes128_gcm_decrypt(key, nonce, cipherText, sizeof(cipherText),
                                     aad, sizeof(aad), tempTag, plain));
   }
 

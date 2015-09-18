@@ -430,7 +430,7 @@ bool aes128_gcm_decrypt(const uint8_t* key, const uint8_t* IV,
     generateTag(key, authKey, ADATA, ADATALength, CDATA, CDATALength, calculatedTag, ICB);
 
     // function to compare tags and return 0 if they match
-    return(0 != checkTag(calculatedTag, messageTag));
+    return(0 == checkTag(calculatedTag, messageTag));
 
     // test one that wipes messages that fail authentication
     /*if(checkTag(calculatedTag, messageTag) == 0) return 0;
