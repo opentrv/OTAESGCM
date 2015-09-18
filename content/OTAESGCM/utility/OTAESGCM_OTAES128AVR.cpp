@@ -17,18 +17,19 @@ Author(s) / Copyright (s): Deniz Erbillgin 2015
                            Damon Hart-Davis 2015
 */
 
-/* OpenTRV OTAESGCM microcontroller-/IoT- friendly AES(128)-GCM implementation. */
+/* Atmel AVR/ATMega (eg ATMega328P) AES(128) implementation. */
 
+#if defined(__AVR_ARCH__) || defined(ARDUINO_ARCH_AVR) // Atmel AVR only.
 
 #include <string.h>
 
 #include <avr/pgmspace.h>
 
 #include "OTAESGCM_OTAES128.h"
+#include "OTAESGCM_OTAES128AVR.h"
 
 
 #define AES_128_ONLY        // excludes untested parts of the library used for AES256
-
 
 
 // Use namespaces to help avoid collisions.
@@ -134,7 +135,7 @@ static const uint8_t sbox[256] PROGMEM =   {
   0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf,
   0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16 };
 
-#ifndef NO_DECRYPT
+//#ifndef NO_DECRYPT
 // reverse sbox
 static const uint8_t rsbox[256] PROGMEM =
 { 0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb,
@@ -153,7 +154,7 @@ static const uint8_t rsbox[256] PROGMEM =
   0x60, 0x51, 0x7f, 0xa9, 0x19, 0xb5, 0x4a, 0x0d, 0x2d, 0xe5, 0x7a, 0x9f, 0x93, 0xc9, 0x9c, 0xef,
   0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61,
   0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d };
-#endif // NO_DECRYPT
+//#endif // NO_DECRYPT
 
 /**
  * @brief    use reduced Rcon table for AES
@@ -395,7 +396,7 @@ static void Cipher(void)
   AddRoundKey(Nr);
 }
 
-#ifndef NO_DECRYPT
+//#ifndef NO_DECRYPT
 /**
  * @brief    Reverses substitution transform
  * @param    uint8_t number to be transformed
@@ -507,7 +508,7 @@ static void InvCipher(void)
   InvSubBytes();
   AddRoundKey(0);
 }
-#endif // NO_DECRYPT
+//#endif // NO_DECRYPT
 
 
 
@@ -521,33 +522,32 @@ static void InvCipher(void)
  *    @param    key takes a pointer to a 128bit secret key
  *    @param    output takes a pointer to an array to fill with ciphertext
  */
-void AES128_encrypt(const uint8_t* input, const uint8_t* key, uint8_t* output)
+void OTAES128E_AVR::blockEncrypt(const uint8_t* input, const uint8_t* key, uint8_t* output)
 {
-  // Copy input to output, and work in-memory on output
+  // Copy input to output, and work in-memory on output.
   //BlockCopy(output, input);
-    memcpy(output, input, AES_BLOCK_SIZE);
+  memcpy(output, input, AES_BLOCK_SIZE);
   state = (state_t*)output;
 
   Key = key;
   KeyExpansion();
 
-  // The next function call encrypts the PlainText with the Key using AES algorithm.
+  // Encrypt the plaintext with the Key using the AES algorithm.
   Cipher();
 }
 
 
-//#ifndef NO_DECRYPT
 /**
  *    @brief    AES128 block decryption
  *    @param    input takes a pointer to an array containing ciphertext
  *    @param    key takes a pointer to a 128bit secret key
  *    @param    output takes a pointer to an array to fill with plaintext
  */
-void AES128_decrypt(const uint8_t* input, const uint8_t* key, uint8_t *output)
+void OTAES128DE_AVR::blockDecrypt(const uint8_t* input, const uint8_t* key, uint8_t *output)
 {
-  // Copy input to output, and work in-memory on output
+  // Copy input to output, and work in-memory on output.
   //BlockCopy(output, input);
-    memcpy(output, input, AES_BLOCK_SIZE);
+  memcpy(output, input, AES_BLOCK_SIZE);
   state = (state_t*)output;
 
   // The KeyExpansion routine must be called before encryption.
@@ -556,8 +556,9 @@ void AES128_decrypt(const uint8_t* input, const uint8_t* key, uint8_t *output)
 
   InvCipher();
 }
-//#endif // NO_DECRYPT
 
 
     }
 
+
+#endif

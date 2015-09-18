@@ -49,7 +49,7 @@ namespace OTAESGCM
              *    @param    key takes a pointer to a 128-bit (16-byte) secret key; never NULL
              *    @param    output takes a pointer to an array to fill with ciphertext, of size 16 bytes; never NULL
              */
-            virtual void encrypt(const uint8_t* input, const uint8_t* key, uint8_t *output) = 0;
+            virtual void blockEncrypt(const uint8_t* input, const uint8_t* key, uint8_t *output) = 0;
 
 #if 0 // Defining the virtual destructor uses ~800+ bytes of Flash by forcing use of malloc()/free().
             // Ensure safe instance destruction when derived from.
@@ -61,16 +61,16 @@ namespace OTAESGCM
 #endif
         };
 
-    // Base class / interface for AES128 block encryption and decryption.
+    // Base class / interface for AES128 block decryption.
     // Implementations can be optimised for different characteristics such as speed or size or CPU.
     // Implementations may contain differing amounts of state / data, ie vary in size.
     // Many uses, eg for AES-GCM, or TX-only leaf nodes, will not require block decryption.
     // Neither re-entrant nor ISR-safe except where stated.
-    class OTAES128DE : public OTAES128E
+    class OTAES128D
         {
         protected:
             // Only derived classes can construct an instance.
-            OTAES128DE() { }
+            OTAES128D() { }
 
         public:
             /**
@@ -79,22 +79,11 @@ namespace OTAESGCM
              *    @param    key takes a pointer to a 128-bit (16-byte) secret key; never NULL
              *    @param    output takes a pointer to an array to fill with plaintext, of size 16 bytes; never NULL
              */
-            virtual void decrypt(const uint8_t* input, const uint8_t* key, uint8_t *output) = 0;
+            virtual void blockDecrypt(const uint8_t* input, const uint8_t* key, uint8_t *output) = 0;
         };
 
 
-void AES128_encrypt(const uint8_t* input, const uint8_t* key, uint8_t *output);
-
-//#ifndef NO_DECRYPT
-void AES128_decrypt(const uint8_t* input, const uint8_t* key, uint8_t *output);
-//#endif // NO_DECRYPT
-
-
     }
-
-
-
-
 
 
 #endif

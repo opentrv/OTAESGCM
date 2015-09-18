@@ -31,9 +31,12 @@ Author(s) / Copyright (s): Deniz Erbillgin 2015
  *     https://github.com/kokke/tiny-AES128-C  for code and ideas, public domain.
  */
 
-// Core support.
+// Core support/APIs.
 #include "utility/OTAESGCM_OTAES128.h"
 #include "utility/OTAESGCM_OTAESGCM.h"
+
+// Implementations.
+#include "utility/OTAESGCM_OTAES128Impls.h"
 
 
 #endif

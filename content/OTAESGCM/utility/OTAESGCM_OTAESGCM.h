@@ -25,6 +25,10 @@ Author(s) / Copyright (s): Deniz Erbillgin 2015
 #include <stddef.h>
 #include <stdint.h>
 
+// Get available AES API and cypher implementations.
+#include "OTAESGCM_OTAES128.h"
+#include "OTAESGCM_OTAES128Impls.h"
+
 
 // Use namespaces to help avoid collisions.
 namespace OTAESGCM
@@ -58,7 +62,7 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
              *
              * @todo CLARIFY which input data (eg PDATA) need to be multiples of block size, if any
              */
-            virtual void aes128_gcm_encrypt(
+            virtual void gcmEncrypt(
                 const uint8_t* key, const uint8_t* IV,
                 const uint8_t* PDATA, uint8_t PDATALength,
                 uint8_t* ADATA, uint8_t ADATALength,
@@ -81,7 +85,7 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
              *
              * @todo CLARIFY which input data (eg CDATA) need to be multiples of block size, if any
              */
-            virtual bool aes128_gcm_decrypt(
+            virtual bool gcmDecrypt(
                  const uint8_t* key, const uint8_t* IV,
                  const uint8_t* CDATA, uint8_t CDATALength,
                  const uint8_t* ADATA, uint8_t ADATALength,
@@ -98,30 +102,46 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
         };
 
     // Generic implementation, parameterised with type of underlying AES implementation.
+    // The default AES impl for the architecture is used unless otherwise specified.
     // This implementation is not specialised for a particular CPU/MCU for example.
     // This implementation is carries no state beyond that of the AES128 implementation.
-    class OTAES128GCMGeneric : public OTAES128GCM
+    class OTAES128GCMGenericBase : public OTAES128GCM
         {
+        private:
+            // Pointer to an AES block encryption implementation instance; never NULL.
+            OTAES128E * const ap;
         public:
-            virtual void aes128_gcm_encrypt(
+            // Create an instance pointing at a suitable AES block enc/dec implementation.
+            // The AES impl should not carry state between operations,
+            // but may hold temporary workspace.
+            OTAES128GCMGenericBase(OTAES128E *aptr) : ap(aptr) { }
+            // Encrypt.
+            virtual void gcmEncrypt(
                 const uint8_t* key, const uint8_t* IV,
                 const uint8_t* PDATA, uint8_t PDATALength,
                 uint8_t* ADATA, uint8_t ADATALength,
                 uint8_t* CDATA, uint8_t *tag);
-            virtual bool aes128_gcm_decrypt(
+            // Decrypt.
+            virtual bool gcmDecrypt(
                  const uint8_t* key, const uint8_t* IV,
                  const uint8_t* CDATA, uint8_t CDATALength,
                  const uint8_t* ADATA, uint8_t ADATALength,
                  const uint8_t* messageTag, uint8_t *PDATA);
         };
 
+    // Generic implementation, parameterised with type of underlying AES implementation.
+    // Carries the AES working state with it.
+    template<class OTAESImpl = OTAES128E_default_t>
+    class OTAES128GCMGeneric : public OTAES128GCMGenericBase
+        {
+        private:
+            OTAESImpl aesImpl;
+        public:
+            OTAES128GCMGeneric() : OTAES128GCMGenericBase(&aesImpl) { }
+        };
+
 
     }
-
-
-
-
-
 
 
 #endif

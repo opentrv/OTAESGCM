@@ -21,7 +21,6 @@ Author(s) / Copyright (s): Deniz Erbillgin 2015
 
 
 #include <string.h>
-#include "OTAESGCM_OTAES128.h"
 
 #include "OTAESGCM_OTAESGCM.h"
 
@@ -177,7 +176,8 @@ static void incr32(uint8_t *pBlock)
  * @param   pICB            initial counter block J0
  * @param   pOutput         pointer to output data. same length as input.
  */
-static void GCTR(    const uint8_t *pInput, uint8_t inputLength, const uint8_t *pKey,
+static void GCTR(OTAES128E * const ap,
+                    const uint8_t *pInput, uint8_t inputLength, const uint8_t *pKey,
                     const uint8_t *pCtrBlock, uint8_t *pOutput)
 {
     uint8_t n, last;
@@ -189,7 +189,6 @@ static void GCTR(    const uint8_t *pInput, uint8_t inputLength, const uint8_t *
 
     if (inputLength == 0) return;
 
-
     // calculate number of full blocks to cipher
     n = inputLength / 16;
 
@@ -199,7 +198,7 @@ static void GCTR(    const uint8_t *pInput, uint8_t inputLength, const uint8_t *
     // for full blocks
     for (uint8_t i = 0; i < n; i++) {
         // cipher counterblock and combine with input
-        AES128_encrypt(ctrBlock, pKey, ypos);
+        ap->blockEncrypt(ctrBlock, pKey, ypos);
         xorBlock(ypos, xpos);
 
         // increment pointers to next block
@@ -214,7 +213,7 @@ static void GCTR(    const uint8_t *pInput, uint8_t inputLength, const uint8_t *
     last = pInput + inputLength - xpos;
     if (last) {
         // encrypt into tmp and combine with last block of input
-        AES128_encrypt(ctrBlock, pKey, tmp);
+        ap->blockEncrypt(ctrBlock, pKey, tmp);
         for (uint8_t i = 0; i < last; i++)
             *ypos++ = *xpos++ ^ tmp[i];
     }
@@ -279,19 +278,6 @@ static void generateICB(const uint8_t *pIV, uint8_t *pOutput)
     pOutput[AES128GCM_BLOCK_SIZE - 1] = 0x01;
 }
 
-/**
- * @note    aes_gcm_init_hash_subkey
- * @brief   generates authentication subkey H
- * @param   pKey            pointer to 128 bit AES key
- * @param   pOutput         pointer to 16 byte array put to subkey H in
- * @note    tested arduino 1.6.5
- */
-static void generateAuthKey(const uint8_t *pKey, uint8_t *pAuthKey)
-{
-    // encrypt 128 bit block of 0s to generate authentication sub key
-    memset(pAuthKey, 0, AES128GCM_BLOCK_SIZE);
-    AES128_encrypt(pAuthKey, pKey, pAuthKey);
-}
 
 /**
  * @note    aes_gcm_ctr
@@ -301,7 +287,8 @@ static void generateAuthKey(const uint8_t *pKey, uint8_t *pAuthKey)
  * @param   PDATALength length of plain text
  * @param   pCDATA      pointer to array for cipher text
  */
-static void generateCDATA(  const uint8_t *pICB, const uint8_t *pPDATA, uint8_t PDATALength,
+static void generateCDATA(OTAES128E * const ap,
+                            const uint8_t *pICB, const uint8_t *pPDATA, uint8_t PDATALength,
                             uint8_t *pCDATA, const uint8_t *pKey )
 {
     // generate counterblock J
@@ -310,7 +297,7 @@ static void generateCDATA(  const uint8_t *pICB, const uint8_t *pPDATA, uint8_t 
     incr32(ctrBlock);
 
     // encrypt
-    GCTR(pPDATA, PDATALength, pKey, ctrBlock, pCDATA);
+    GCTR(ap, pPDATA, PDATALength, pKey, ctrBlock, pCDATA);
 }
 
 /**
@@ -323,7 +310,8 @@ static void generateCDATA(  const uint8_t *pICB, const uint8_t *pPDATA, uint8_t 
  * @param   pAuthKey        pointer to 128 bit authentication subkey H
  * @param   pTag            pointer to array to store tag
  */
-static void generateTag(    const uint8_t *pKey, const uint8_t *pAuthKey,
+static void generateTag(OTAES128E * const ap,
+                            const uint8_t *pKey, const uint8_t *pAuthKey,
                             const uint8_t *pADATA, uint8_t ADATALength,
                             const uint8_t *pCDATA, uint8_t CDATALength,
                             uint8_t * pTag, const uint8_t *pICB)
@@ -358,7 +346,21 @@ static void generateTag(    const uint8_t *pKey, const uint8_t *pAuthKey,
     GHASH(pCDATA, CDATALength, pAuthKey, S);
     GHASH(lengthBuffer, sizeof(lengthBuffer), pAuthKey, S);
 
-    GCTR(S, sizeof(S), pKey, pICB, pTag);
+    GCTR(ap, S, sizeof(S), pKey, pICB, pTag);
+}
+
+/**
+ * @note    aes_gcm_init_hash_subkey
+ * @brief   generates authentication subkey H
+ * @param   pKey            pointer to 128 bit AES key
+ * @param   pOutput         pointer to 16 byte array put to subkey H in
+ * @note    tested arduino 1.6.5
+ */
+static void generateAuthKey(OTAES128E * const ap, const uint8_t *pKey, uint8_t *pAuthKey)
+{
+    // Encrypt 128 bit block of 0s to generate authentication sub-key.
+    memset(pAuthKey, 0, AES128GCM_BLOCK_SIZE);
+    ap->blockEncrypt(pAuthKey, pKey, pAuthKey);
 }
 
 
@@ -377,7 +379,7 @@ static void generateTag(    const uint8_t *pKey, const uint8_t *pAuthKey,
  *
  * @todo CLARIFY which input data (eg PDATA) need to be multiples of block size, if any
  */
-void OTAES128GCMGeneric::aes128_gcm_encrypt(
+void OTAES128GCMGenericBase::gcmEncrypt(
                         const uint8_t* key, const uint8_t* IV,
                         const uint8_t* PDATA, uint8_t PDATALength,
                         uint8_t* ADATA, uint8_t ADATALength,
@@ -385,10 +387,10 @@ void OTAES128GCMGeneric::aes128_gcm_encrypt(
 {
     uint8_t authKey[AES128GCM_BLOCK_SIZE];
     uint8_t ICB[AES128GCM_BLOCK_SIZE];
-    generateAuthKey(key, authKey);    // aes_gcm_init_hash_subkey
+    generateAuthKey(ap, key, authKey);    // aes_gcm_init_hash_subkey
     generateICB(IV, ICB);            // aes_gcm_prepare_j0
-    generateCDATA(ICB, PDATA, PDATALength, CDATA, key);
-    generateTag(key, authKey, ADATA, ADATALength, CDATA, PDATALength, tag, ICB);
+    generateCDATA(ap, ICB, PDATA, PDATALength, CDATA, key);
+    generateTag(ap, key, authKey, ADATA, ADATALength, CDATA, PDATALength, tag, ICB);
 }
 
 
@@ -409,7 +411,7 @@ void OTAES128GCMGeneric::aes128_gcm_encrypt(
  *
  * @todo CLARIFY which input data (eg CDATA) need to be multiples of block size, if any
  */
-bool OTAES128GCMGeneric::aes128_gcm_decrypt(
+bool OTAES128GCMGenericBase::gcmDecrypt(
                         const uint8_t* key, const uint8_t* IV,
                         const uint8_t* CDATA, uint8_t CDATALength,
                         const uint8_t* ADATA, uint8_t ADATALength,
@@ -419,13 +421,13 @@ bool OTAES128GCMGeneric::aes128_gcm_decrypt(
     uint8_t ICB[AES128GCM_BLOCK_SIZE];
     uint8_t calculatedTag[AES128GCM_TAG_SIZE];
 
-    generateAuthKey(key, authKey);
+    generateAuthKey(ap, key, authKey);
     generateICB(IV, ICB);
 
     // this function is incorrect?
-    generateCDATA(ICB, CDATA, CDATALength, PDATA, key);
+    generateCDATA(ap, ICB, CDATA, CDATALength, PDATA, key);
 
-    generateTag(key, authKey, ADATA, ADATALength, CDATA, CDATALength, calculatedTag, ICB);
+    generateTag(ap, key, authKey, ADATA, ADATALength, CDATA, CDATALength, calculatedTag, ICB);
 
     // function to compare tags and return 0 if they match
     return(0 == checkTag(calculatedTag, messageTag));
