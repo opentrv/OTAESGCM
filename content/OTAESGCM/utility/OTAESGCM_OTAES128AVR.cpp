@@ -100,15 +100,6 @@ NOTE:   String length must be evenly divisible by 16byte (str_len % 16 == 0)
 /*****************************************************************************/
 /* Private variables:                                                        */
 /*****************************************************************************/
-// state - array holding the intermediate results during decryption.
-typedef uint8_t state_t[4][4];
-static state_t* state;
-
-// The array that stores Nr+1 round keys.
-static uint8_t RoundKey[176];
-
-// The Key input to the AES Program
-static const uint8_t* Key;
 
 
 
@@ -183,7 +174,7 @@ static uint8_t getSBoxValue(uint8_t num)
  * @brief    Fills RoundKey with key expansion of Key
  */
 // This function produces Nb(Nr+1) round keys. The round keys are used in each round to decrypt the states.
-static void KeyExpansion(void)
+void OTAES128E_AVR::KeyExpansion(void)
 {
   uint32_t i, j, k;
   uint8_t tempa[4]; // Used for the column/row operations
@@ -258,7 +249,7 @@ static void KeyExpansion(void)
  * @todo    is it worth removing nested loop? matrix should be stored in consecutive memory locations anyway
  * @param    round    current AES encryption round
  */
-static void AddRoundKey(uint8_t round)
+void OTAES128E_AVR::AddRoundKey(uint8_t round)
 {
   uint8_t i,j;
   for(i=0;i<4;++i)
@@ -274,7 +265,7 @@ static void AddRoundKey(uint8_t round)
  * @brief    Substitute state matrix values with S-box values
  * @todo    is it worth removing nested loop? matrix should be stored in consecutive memory locations anyway
  */
-static void SubBytes(void)
+void OTAES128E_AVR::SubBytes(void)
 {
   uint8_t i, j;
   for(i = 0; i < 4; ++i)
@@ -290,7 +281,7 @@ static void SubBytes(void)
  * @brief    shifts rows in state to the left by the row number (first row not shifted, last row shifted by 3)
  * @todo    is it worth removing nested loop? matrix should be stored in consecutive memory locations anyway
  */
-static void ShiftRows(void)
+void OTAES128E_AVR::ShiftRows(void)
 {
   uint8_t temp;
 
@@ -327,25 +318,6 @@ static uint8_t xtime(uint8_t x)
 }
 
 /**
- * @brief    mixes columns according AES spec
- * @todo    better description
- */
-static void MixColumns(void)
-{
-  uint8_t i;
-  uint8_t Tmp,Tm,t;
-  for(i = 0; i < 4; ++i)
-  {
-    t   = (*state)[i][0];
-    Tmp = (*state)[i][0] ^ (*state)[i][1] ^ (*state)[i][2] ^ (*state)[i][3] ;
-    Tm  = (*state)[i][0] ^ (*state)[i][1] ; Tm = xtime(Tm);  (*state)[i][0] ^= Tm ^ Tmp ;
-    Tm  = (*state)[i][1] ^ (*state)[i][2] ; Tm = xtime(Tm);  (*state)[i][1] ^= Tm ^ Tmp ;
-    Tm  = (*state)[i][2] ^ (*state)[i][3] ; Tm = xtime(Tm);  (*state)[i][2] ^= Tm ^ Tmp ;
-    Tm  = (*state)[i][3] ^ t ;        Tm = xtime(Tm);  (*state)[i][3] ^= Tm ^ Tmp ;
-  }
-}
-
-/**
  * @todo    work out what to do about this
  */
 // Multiply is used to multiply numbers in the field GF(2^8)
@@ -369,9 +341,28 @@ static uint8_t Multiply(uint8_t x, uint8_t y)
 #endif
 
 /**
+ * @brief    mixes columns according AES spec
+ * @todo    better description
+ */
+void OTAES128E_AVR::MixColumns(void)
+{
+  uint8_t i;
+  uint8_t Tmp,Tm,t;
+  for(i = 0; i < 4; ++i)
+  {
+    t   = (*state)[i][0];
+    Tmp = (*state)[i][0] ^ (*state)[i][1] ^ (*state)[i][2] ^ (*state)[i][3] ;
+    Tm  = (*state)[i][0] ^ (*state)[i][1] ; Tm = xtime(Tm);  (*state)[i][0] ^= Tm ^ Tmp ;
+    Tm  = (*state)[i][1] ^ (*state)[i][2] ; Tm = xtime(Tm);  (*state)[i][1] ^= Tm ^ Tmp ;
+    Tm  = (*state)[i][2] ^ (*state)[i][3] ; Tm = xtime(Tm);  (*state)[i][2] ^= Tm ^ Tmp ;
+    Tm  = (*state)[i][3] ^ t ;        Tm = xtime(Tm);  (*state)[i][3] ^= Tm ^ Tmp ;
+  }
+}
+
+/**
  * @brief    encrypts one 128 bit block
  */
-static void Cipher(void)
+void OTAES128E_AVR::Cipher(void)
 {
   uint8_t round = 0;
 
@@ -414,7 +405,7 @@ static uint8_t getSBoxInvert(uint8_t num)
 /**
  * @brief    inverse mix columns for unencrypting data
  */
-static void InvMixColumns(void)
+void OTAES128DE_AVR::InvMixColumns(void)
 {
     // The method used to multiply may be difficult to understand for the inexperienced.
     // Please use the references to gain more information.
@@ -438,7 +429,7 @@ static void InvMixColumns(void)
 /**
  * @brief    inverses S-box substitution of state
  */
-static void InvSubBytes(void)
+void OTAES128DE_AVR::InvSubBytes(void)
 {
   uint8_t i,j;
   for(i=0;i<4;++i)
@@ -453,7 +444,7 @@ static void InvSubBytes(void)
 /**
  * @brief    inverse of shiftRows
  */
-static void InvShiftRows(void)
+void OTAES128DE_AVR::InvShiftRows(void)
 {
   uint8_t temp;
 
@@ -484,7 +475,7 @@ static void InvShiftRows(void)
 /**
  * @brief    decrypts one 128 bit block
  */
-static void InvCipher(void)
+void OTAES128DE_AVR::InvCipher(void)
 {
   uint8_t round=0;
 

@@ -33,13 +33,31 @@ namespace OTAESGCM
     {
 
 
-// TODO: move static workspace up into private fields.  (Then use of separate instance would also be thread-safe.)
-
     // AVR encrypt-only implementation.
     // Neither re-entrant nor ISR-safe except where stated.
     // Carries workspace but logically no state is carried from one operation to the next.
+    // Residual state should be regarded as sensitive, and eg overwritten before being released to heap.
     class OTAES128E_AVR : public OTAES128E
         {
+        protected:
+            // The AES key (128 bits, 16 bytes); never NULL.
+            // Note that Key is space passed in by caller.
+            const uint8_t *Key;
+            // Intermediate results during decryption.
+            typedef uint8_t state_t[4][4];
+            // Note that state is space passed in by caller.
+            state_t *state;
+            // Nr+1 round keys.
+            // Should be cleared before releasing space to (say) heap.
+            uint8_t RoundKey[176];
+
+            void KeyExpansion();
+            void AddRoundKey(uint8_t round);
+            void SubBytes();
+            void ShiftRows();
+            void MixColumns();
+            void Cipher();
+
         public:
             /**
              *    @brief    AES128 block encryption
@@ -53,8 +71,15 @@ namespace OTAESGCM
     // AVR decrypt and encrypt implementation.
     // Neither re-entrant nor ISR-safe except where stated.
     // Carries workspace but logically no state is carried from one operation to the next.
+    // Residual state should be regarded as sensitive, and eg overwritten before being released to heap.
     class OTAES128DE_AVR : public OTAES128D, public OTAES128E_AVR
         {
+        protected:
+            void InvMixColumns();
+            void InvSubBytes();
+            void InvShiftRows();
+            void InvCipher();
+
         public:
             /**
              *    @brief    AES128 block decryption
