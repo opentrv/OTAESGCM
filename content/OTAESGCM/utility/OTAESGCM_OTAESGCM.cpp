@@ -365,7 +365,7 @@ static void generateTag(    const uint8_t *pKey, const uint8_t *pAuthKey,
 /******************* Public Functions ********************/
 
 /**
- * @brief    performs aesgcm encryption
+ * @brief    performs AES-GCM encryption
  * @param    key             pointer to 16 byte (128 bit) key; never NULL
  * @param    IV              pointer to 12 byte (96 bit) IV; never NULL
  * @param    PDATA           pointer to plaintext array; never NULL
@@ -374,6 +374,8 @@ static void generateTag(    const uint8_t *pKey, const uint8_t *pAuthKey,
  * @param    ADATA_length    length of additional data (in bytes?), can be zero
  * @param    CDATA           buffer to output ciphertext to, size (at least) PDATA_length; never NULL
  * @param    tag             pointer to 16 byte buffer to output tag to; never NULL
+ *
+ * @todo CLARIFY which input data (eg PDATA) need to be multiples of block size, if any
  */
 void aes128_gcm_encrypt(const uint8_t* key, const uint8_t* IV,
                         const uint8_t* PDATA, uint8_t PDATALength,
@@ -389,26 +391,26 @@ void aes128_gcm_encrypt(const uint8_t* key, const uint8_t* IV,
 }
 
 /**
- * @note    aes_gcm_ad
- * @brief   performs aesgcm decryption and authentication
+ * @brief   performs AES-GCM decryption and authentication
  * @todo    How to do data hiding on authentication fail?
  *                 - when put into classes?
  *                 - wipe array?
  *                 - make PDATA private and then only pass pointer if true?
- *             Should this be a bool?
- * @param    key:            pointer to 16 byte (128 bit) key
- * @param    IV:                pointer to IV
- * @param    CDATA:          pointer to ciphertext array
- * @param    CDATALength:   length of ciphertext array
- * @param    ADATA:          pointer to additional data array
- * @param    ADATALength:   length of additional data
- * @param    PDATA:          buffer to output plaintext to
- * @retval    returns true if authenticated, else returns false
+ * @param    key             pointer to 16 byte (128 bit) key
+ * @param    IV              pointer to IV
+ * @param    CDATA           pointer to ciphertext array
+ * @param    CDATALength     length of ciphertext array
+ * @param    ADATA           pointer to additional data array
+ * @param    ADATALength     length of additional data
+ * @param    PDATA           buffer to output plaintext to
+ * @retval   returns true if authenticated, else false
+ *
+ * @todo CLARIFY which input data (eg CDATA) need to be multiples of block size, if any
  */
-uint8_t aes128_gcm_decrypt(const uint8_t* key, const uint8_t* IV,
-                           const uint8_t* CDATA, uint8_t CDATALength,
-                           const uint8_t* ADATA, uint8_t ADATALength,
-                           const uint8_t* messageTag, uint8_t *PDATA)
+bool aes128_gcm_decrypt(const uint8_t* key, const uint8_t* IV,
+                        const uint8_t* CDATA, uint8_t CDATALength,
+                        const uint8_t* ADATA, uint8_t ADATALength,
+                        const uint8_t* messageTag, uint8_t *PDATA)
 {
     uint8_t authKey[GCM_BLOCK_SIZE];
     uint8_t ICB[GCM_BLOCK_SIZE];
@@ -423,8 +425,7 @@ uint8_t aes128_gcm_decrypt(const uint8_t* key, const uint8_t* IV,
     generateTag(key, authKey, ADATA, ADATALength, CDATA, CDATALength, calculatedTag, ICB);
 
     // function to compare tags and return 0 if they match
-
-    return checkTag(calculatedTag, messageTag);
+    return(0 != checkTag(calculatedTag, messageTag));
 
     // test one that wipes messages that fail authentication
     /*if(checkTag(calculatedTag, messageTag) == 0) return 0;
