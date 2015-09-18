@@ -375,7 +375,11 @@ static void generateTag(    const uint8_t *pKey, const uint8_t *pAuthKey,
  * @param    CDATA           buffer to output ciphertext to, size (at least) PDATA_length; never NULL
  * @param    tag             pointer to 16 byte buffer to output tag to; never NULL
  *
+<<<<<<< HEAD
  * @todo CLARIFY which input data (eg PDATA) need to be multiples of block size, if any
+=======
+ * @todo CLARIFY which input data (eg PDATA) need to be multiples of block size
+>>>>>>> refs/remotes/origin/master
  */
 void aes128_gcm_encrypt(const uint8_t* key, const uint8_t* IV,
                         const uint8_t* PDATA, uint8_t PDATALength,
@@ -389,6 +393,7 @@ void aes128_gcm_encrypt(const uint8_t* key, const uint8_t* IV,
     generateCDATA(ICB, PDATA, PDATALength, CDATA, key);
     generateTag(key, authKey, ADATA, ADATALength, CDATA, PDATALength, tag, ICB);
 }
+
 
 /**
  * @brief   performs AES-GCM decryption and authentication
