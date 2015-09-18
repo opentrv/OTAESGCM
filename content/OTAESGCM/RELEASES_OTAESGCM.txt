@@ -9,17 +9,17 @@ or release/freeze points.
 
 
 pending:
-    DHD20150917: refactoring and rearranging code ready for initial release
 
 
 
 
 
 20150804:
-    freezepoint name: V0.x
+    freezepoint name: V0.1
     branch name: HEAD
     Deployed where:  (released copy on https://github.com/opentrv/OTAESGCM V0.X).
     Changes since last freezepoint (developer/mgr initials and brief description): 
-    Previous significant freezepoint: V0.W
-    DHD20150XXX: 
+    Previous significant freezepoint:
+    DHD20150919: tentative initial release
+    DHD20150917: refactoring and rearranging code ready for initial release
     
