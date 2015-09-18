@@ -20,21 +20,20 @@ Author(s) / Copyright (s): Deniz Erbillgin 2015
 /* OpenTRV OTAESGCM microcontroller-/IoT- friendly AES(128)-GCM implementation. */
 
 
-#include <OTAESGCM_OTAES128.h>
+#include <string.h>
+
+#include <avr/pgmspace.h>
+
+#include "OTAESGCM_OTAES128.h"
+
+
+#define AES_128_ONLY        // excludes untested parts of the library used for AES256
 
 
 
 // Use namespaces to help avoid collisions.
 namespace OTAESGCM
     {
-
-// TODO
-
-    }
-
-
-
-
 
 
 /*
@@ -72,9 +71,7 @@ NOTE:   String length must be evenly divisible by 16byte (str_len % 16 == 0)
 /*****************************************************************************/
 /* Includes:                                                                 */
 /*****************************************************************************/
-#include <string.h>
 
-#include <avr/pgmspace.h>
 
 
 /*****************************************************************************/
@@ -159,7 +156,7 @@ static const uint8_t rsbox[256] PROGMEM =
 #endif // NO_DECRYPT
 
 /**
- * @brief	use reduced Rcon table for AES
+ * @brief    use reduced Rcon table for AES
  */
 // The round constant word array, Rcon[i], contains the values given by
 // x to th e power (i-1) being powers of x (x is denoted as {02}) in the field GF(2^8)
@@ -171,10 +168,10 @@ static const uint8_t Rcon[11] PROGMEM = { 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x
 /* Private functions:                                                        */
 /*****************************************************************************/
 /**
- * @brief	Performs substitution transform
- * @todo	inline?
- * @param	uint8_t number to be transformed
- * @retval	uint8_t transformed number
+ * @brief    Performs substitution transform
+ * @todo    inline?
+ * @param    uint8_t number to be transformed
+ * @retval    uint8_t transformed number
  */
 static uint8_t getSBoxValue(uint8_t num)
 {
@@ -182,7 +179,7 @@ static uint8_t getSBoxValue(uint8_t num)
 }
 
 /**
- * @brief	Fills RoundKey with key expansion of Key
+ * @brief    Fills RoundKey with key expansion of Key
  */
 // This function produces Nb(Nr+1) round keys. The round keys are used in each round to decrypt the states.
 static void KeyExpansion(void)
@@ -234,7 +231,7 @@ static void KeyExpansion(void)
       tempa[0] =  tempa[0] ^ pgm_read_byte(&Rcon[i/Nk]);
     }
 
-#ifndef AES_128
+#ifndef AES_128_ONLY
     // this is only required for greater than 128bit encryption
     else if (Nk > 6 && i % Nk == 4)
     {
@@ -256,9 +253,9 @@ static void KeyExpansion(void)
 }
 
 /**
- * @brief	XOR round key to state
- * @todo	is it worth removing nested loop? matrix should be stored in consecutive memory locations anyway
- * @param	round	current AES encryption round
+ * @brief    XOR round key to state
+ * @todo    is it worth removing nested loop? matrix should be stored in consecutive memory locations anyway
+ * @param    round    current AES encryption round
  */
 static void AddRoundKey(uint8_t round)
 {
@@ -273,8 +270,8 @@ static void AddRoundKey(uint8_t round)
 }
 
 /**
- * @brief	Substitute state matrix values with S-box values
- * @todo	is it worth removing nested loop? matrix should be stored in consecutive memory locations anyway
+ * @brief    Substitute state matrix values with S-box values
+ * @todo    is it worth removing nested loop? matrix should be stored in consecutive memory locations anyway
  */
 static void SubBytes(void)
 {
@@ -289,8 +286,8 @@ static void SubBytes(void)
 }
 
 /**
- * @brief	shifts rows in state to the left by the row number (first row not shifted, last row shifted by 3)
- * @todo	is it worth removing nested loop? matrix should be stored in consecutive memory locations anyway
+ * @brief    shifts rows in state to the left by the row number (first row not shifted, last row shifted by 3)
+ * @todo    is it worth removing nested loop? matrix should be stored in consecutive memory locations anyway
  */
 static void ShiftRows(void)
 {
@@ -321,7 +318,7 @@ static void ShiftRows(void)
 }
 
 /**
- * @todo	find out what this does/what it's used for
+ * @todo    find out what this does/what it's used for
  */
 static uint8_t xtime(uint8_t x)
 {
@@ -329,8 +326,8 @@ static uint8_t xtime(uint8_t x)
 }
 
 /**
- * @brief	mixes columns according AES spec
- * @todo	better description
+ * @brief    mixes columns according AES spec
+ * @todo    better description
  */
 static void MixColumns(void)
 {
@@ -348,7 +345,7 @@ static void MixColumns(void)
 }
 
 /**
- * @todo	work out what to do about this
+ * @todo    work out what to do about this
  */
 // Multiply is used to multiply numbers in the field GF(2^8)
 #if MULTIPLY_AS_A_FUNCTION
@@ -371,7 +368,7 @@ static uint8_t Multiply(uint8_t x, uint8_t y)
 #endif
 
 /**
- * @brief	encrypts one 128 bit block
+ * @brief    encrypts one 128 bit block
  */
 static void Cipher(void)
 {
@@ -400,12 +397,12 @@ static void Cipher(void)
 
 #ifndef NO_DECRYPT
 /**
- * @brief	Reverses substitution transform
- * @param	uint8_t number to be transformed
- * @retval	uint8_t transformed number
- * @todo	can this be done efficiently using sbox table?
- * 			ie with binary sort
- * 			inline?
+ * @brief    Reverses substitution transform
+ * @param    uint8_t number to be transformed
+ * @retval    uint8_t transformed number
+ * @todo    can this be done efficiently using sbox table?
+ *             ie with binary sort
+ *             inline?
  */
 static uint8_t getSBoxInvert(uint8_t num)
 {
@@ -414,12 +411,12 @@ static uint8_t getSBoxInvert(uint8_t num)
 
 
 /**
- * @brief	inverse mix columns for unencrypting data
+ * @brief    inverse mix columns for unencrypting data
  */
 static void InvMixColumns(void)
 {
-	// The method used to multiply may be difficult to understand for the inexperienced.
-	// Please use the references to gain more information.
+    // The method used to multiply may be difficult to understand for the inexperienced.
+    // Please use the references to gain more information.
   int i;
   uint8_t a,b,c,d;
   for(i=0;i<4;++i)
@@ -438,7 +435,7 @@ static void InvMixColumns(void)
 
 
 /**
- * @brief	inverses S-box substitution of state
+ * @brief    inverses S-box substitution of state
  */
 static void InvSubBytes(void)
 {
@@ -453,7 +450,7 @@ static void InvSubBytes(void)
 }
 
 /**
- * @brief	inverse of shiftRows
+ * @brief    inverse of shiftRows
  */
 static void InvShiftRows(void)
 {
@@ -484,7 +481,7 @@ static void InvShiftRows(void)
 }
 
 /**
- * @brief	decrypts one 128 bit block
+ * @brief    decrypts one 128 bit block
  */
 static void InvCipher(void)
 {
@@ -528,10 +525,10 @@ static void BlockCopy(uint8_t* output, uint8_t* input)
 /*****************************************************************************/
 
 /**
- *	@brief	AES128 block encryption
- *	@param	input takes a pointer to an array containing plaintext
- *	@param	key takes a pointer to a 128bit secret key
- *	@param	output takes a pointer to an array to fill with ciphertext
+ *    @brief    AES128 block encryption
+ *    @param    input takes a pointer to an array containing plaintext
+ *    @param    key takes a pointer to a 128bit secret key
+ *    @param    output takes a pointer to an array to fill with ciphertext
  */
 void AES128_encrypt(const uint8_t* input, const uint8_t* key, uint8_t* output)
 {
@@ -548,18 +545,18 @@ void AES128_encrypt(const uint8_t* input, const uint8_t* key, uint8_t* output)
 }
 
 
-#ifndef NO_DECRYPT
+//#ifndef NO_DECRYPT
 /**
- *	@brief	AES128 block decryption
- *	@param	input takes a pointer to an array containing ciphertext
- *	@param	key takes a pointer to a 128bit secret key
- *	@param	output takes a pointer to an array to fill with plaintext
+ *    @brief    AES128 block decryption
+ *    @param    input takes a pointer to an array containing ciphertext
+ *    @param    key takes a pointer to a 128bit secret key
+ *    @param    output takes a pointer to an array to fill with plaintext
  */
 void AES128_decrypt(const uint8_t* input, const uint8_t* key, uint8_t *output)
 {
   // Copy input to output, and work in-memory on output
   //BlockCopy(output, input);
-	memcpy(output, input, AES_BLOCK_SIZE);
+    memcpy(output, input, AES_BLOCK_SIZE);
   state = (state_t*)output;
 
   // The KeyExpansion routine must be called before encryption.
@@ -568,5 +565,8 @@ void AES128_decrypt(const uint8_t* input, const uint8_t* key, uint8_t *output)
 
   InvCipher();
 }
-#endif // NO_DECRYPT
+//#endif // NO_DECRYPT
+
+
+    }
 

@@ -26,27 +26,26 @@ Author(s) / Copyright (s): Deniz Erbillgin 2015
 #include <stdint.h>
 
 
+
+
+//#define NO_DECRYPT	// excludes decryption functions which are unnecessary when using GCM authentication
+//#define MULTIPLY_AS_A_FUNCTION	// This may reduce code size on the keil arm compiler
+
+
 // Use namespaces to help avoid collisions.
 namespace OTAESGCM
     {
 
-// TODO
-
-    }
-
-
-
-#define AES_128		// excludes untested parts of the library used for AES256
-#define NO_DECRYPT	// excludes decryption functions which are unnecessary when using GCM authentication
-//#define MULTIPLY_AS_A_FUNCTION	// This may reduce code size on the keil arm compiler
-
-#include <stdint.h>
 
 void AES128_encrypt(const uint8_t* input, const uint8_t* key, uint8_t *output);
 
-#ifndef NO_DECRYPT
+//#ifndef NO_DECRYPT
 void AES128_decrypt(const uint8_t* input, const uint8_t* key, uint8_t *output);
-#endif // NO_DECRYPT
+//#endif // NO_DECRYPT
+
+
+    }
+
 
 
 
