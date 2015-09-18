@@ -36,19 +36,17 @@ static const uint8_t GCM_IV_SIZE    = 12; // GCM initialisation size in bytes.
 static const uint8_t GCM_TAG_SIZE   = 16; // GCM authentication tag size in bytes.
 
 /**
- * @note
  * @brief    performs aesgcm encryption
- * @todo     should this be a void?
- * @param    key                pointer to 16 byte (128 bit) key
- * @param    IV                pointer to IV
- * @param    PDATA            pointer to plaintext array
- * @param    PDATA_length    length of plaintext array
- * @param    ADATA             pointer to additional data array
- * @param    ADATA_length    length of additional data
- * @param    CDATA            buffer to output ciphertext to
- * @param    tag                pointer to 16 byte buffer to output tag to
+ * @param    key             pointer to 16 byte (128 bit) key; never NULL
+ * @param    IV              pointer to 12 byte (96 bit) IV; never NULL
+ * @param    PDATA           pointer to plaintext array; never NULL
+ * @param    PDATA_length    length of plaintext array (in bytes?), can be zero
+ * @param    ADATA           pointer to additional data array; never NULL
+ * @param    ADATA_length    length of additional data (in bytes?), can be zero
+ * @param    CDATA           buffer to output ciphertext to, size (at least) PDATA_length; never NULL
+ * @param    tag             pointer to 16 byte buffer to output tag to; never NULL
  */
-bool aes128_gcm_encrypt(    const uint8_t* key, const uint8_t* IV,
+void aes128_gcm_encrypt(    const uint8_t* key, const uint8_t* IV,
                             const uint8_t* PDATA, uint8_t PDATALength,
                             uint8_t* ADATA, uint8_t ADATALength,
                             uint8_t* CDATA, uint8_t *tag);

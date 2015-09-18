@@ -100,8 +100,8 @@ static void testAESGCMAll0()
                 input, sizeof(input),
                 aad, sizeof(aad),
                 cipherText, tag));*/
-  AssertIsTrue(OTAESGCM::aes128_gcm_encrypt(key, nonce, input, sizeof(input),
-                                            aad, sizeof(aad), cipherText, tag));
+  OTAESGCM::aes128_gcm_encrypt(key, nonce, input, sizeof(input),
+                               aad, sizeof(aad), cipherText, tag);
   // Check some of the cipher text and tag.
 //            "0388DACE60B6A392F328C2B971B2FE78F795AAAB494B5923F7FD89FF948B  61 47 72 C7 92 9C D0 DD 68 1B D8 A3 7A 65 6F 33" :
   AssertIsEqual(0x03, cipherText[0]);
@@ -152,8 +152,8 @@ static void testGCMVS0()
                 input, sizeof(input),
                 aad, sizeof(aad),
                 cipherText, tag));*/
-  AssertIsTrue(OTAESGCM::aes128_gcm_encrypt(key, nonce, input, sizeof(input),
-                                            aad, sizeof(aad), cipherText, tag));
+  OTAESGCM::aes128_gcm_encrypt(key, nonce, input, sizeof(input),
+                               aad, sizeof(aad), cipherText, tag);
   // Check some of the cipher text and tag.
 //            "0388DACE60B6A392F328C2B971B2FE78F795AAAB494B5923F7FD89FF948B  61 47 72 C7 92 9C D0 DD 68 1B D8 A3 7A 65 6F 33" :
   AssertIsEqual(0xc2, cipherText[0]);
@@ -203,8 +203,8 @@ static void testGCMVS1()
                 input, sizeof(input),
                 aad, sizeof(aad),
                 cipherText, tag));*/
-  AssertIsTrue(OTAESGCM::aes128_gcm_encrypt(key, nonce, input, sizeof(input),
-                                            aad, sizeof(aad), cipherText, tag));
+  OTAESGCM::aes128_gcm_encrypt(key, nonce, input, sizeof(input),
+                                            aad, sizeof(aad), cipherText, tag);
   // Check some of the cipher text and tag.
 //            "0388DACE60B6A392F328C2B971B2FE78F795AAAB494B5923F7FD89FF948B  61 47 72 C7 92 9C D0 DD 68 1B D8 A3 7A 65 6F 33" :
   AssertIsEqual(0xdf, cipherText[0]);
