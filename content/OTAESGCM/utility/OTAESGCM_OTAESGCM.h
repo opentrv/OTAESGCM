@@ -91,7 +91,7 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
             // Ensure safe instance destruction when derived from.
             // by default attempts to shut down the sensor and otherwise free resources when done.
             // This uses ~800+ bytes of Flash by forcing use of malloc()/free().
-            virtual ~OTAES128GCM() { end(); }
+            virtual ~OTAES128GCM() { }
 #else
 #define OTAES128GCM_NO_VIRT_DEST // Beware, no virtual destructor so be careful of use via base pointers.
 #endif
