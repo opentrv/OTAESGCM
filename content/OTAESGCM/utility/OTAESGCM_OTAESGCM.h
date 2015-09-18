@@ -30,6 +30,7 @@ Author(s) / Copyright (s): Deniz Erbillgin 2015
 namespace OTAESGCM
     {
 
+
 static const uint8_t GCM_BLOCK_SIZE = 16; // GCM block size in bytes. This must be the same as the AES block size.
 static const uint8_t GCM_IV_SIZE    = 12; // GCM initialisation size in bytes.
 static const uint8_t GCM_TAG_SIZE   = 16; // GCM authentication tag size in bytes.
