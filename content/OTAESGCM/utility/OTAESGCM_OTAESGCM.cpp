@@ -374,6 +374,8 @@ static void generateTag(    const uint8_t *pKey, const uint8_t *pAuthKey,
  * @param    ADATA_length    length of additional data (in bytes?), can be zero
  * @param    CDATA           buffer to output ciphertext to, size (at least) PDATA_length; never NULL
  * @param    tag             pointer to 16 byte buffer to output tag to; never NULL
+ *
+ * @todo CLARIFY which input data (eg PDATA) need to be multiples of block size
  */
 void aes128_gcm_encrypt(const uint8_t* key, const uint8_t* IV,
                         const uint8_t* PDATA, uint8_t PDATALength,
@@ -404,6 +406,8 @@ void aes128_gcm_encrypt(const uint8_t* key, const uint8_t* IV,
  * @param    ADATALength:   length of additional data
  * @param    PDATA:          buffer to output plaintext to
  * @retval    returns true if authenticated, else returns false
+ *
+ * @todo CLARIFY which input data (eg PDATA) need to be multiples of block size
  */
 uint8_t aes128_gcm_decrypt(const uint8_t* key, const uint8_t* IV,
                            const uint8_t* CDATA, uint8_t CDATALength,
