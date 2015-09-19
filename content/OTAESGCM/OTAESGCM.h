@@ -21,7 +21,7 @@ Author(s) / Copyright (s): Deniz Erbillgin 2015
 #define ARDUINO_LIB_OTAESGCM_H
 
 #define ARDUINO_LIB_OTAESGCM_VERSION_MAJOR 0
-#define ARDUINO_LIB_OTAESGCM_VERSION_MINOR 1
+#define ARDUINO_LIB_OTAESGCM_VERSION_MINOR 2
 
 /* OpenTRV OTAESGCM microcontroller-/IoT- friendly AES(128)-GCM implementation. */
 

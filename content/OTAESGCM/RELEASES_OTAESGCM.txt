@@ -9,7 +9,7 @@ or release/freeze points.
 
 
 pending:
-
+    DHD20150919: starting work on V0.2...  Pending spec/API comment updates, safety with non-block-size data.
 
 
 
