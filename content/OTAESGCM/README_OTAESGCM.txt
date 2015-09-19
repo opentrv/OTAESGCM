@@ -34,3 +34,16 @@ Author(s) / Copyright (s): Damon Hart-Davis 2015
 Notes
 =====
 
+Misfeatures to guard against:
+
+  * Any received data, malformed in any way including by length,
+    can cause a crash, eg non-block-sized data for decode.
+    (Such bad data should be quickly and safely rejected.)
+  
+  * There should be no timing or power differences dependent on key or data
+    during encode or decode.
+
+  * APIs must be clear so that programmers know eg where padding must be supplied
+    and for example even if inputs don't need padding, do output buffers?
+
+
