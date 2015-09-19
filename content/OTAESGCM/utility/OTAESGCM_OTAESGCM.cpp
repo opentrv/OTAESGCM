@@ -13,7 +13,7 @@ KIND, either express or implied. See the Licence for the
 specific language governing permissions and limitations
 under the Licence.
 
-Author(s) / Copyright (s): Deniz Erbillgin 2015
+Author(s) / Copyright (s): Deniz Erbilgin 2015
                            Damon Hart-Davis 2015
 */
 
@@ -174,7 +174,7 @@ static void incr32(uint8_t *pBlock)
  * @param   inputLength     length of input array
  * @param   pKey            pointer to 128 bit AES key
  * @param   pICB            initial counter block J0
- * @param   pOutput         pointer to output data. same length as input.
+ * @param   pOutput         pointer to output data. length inputLength rounded up to 16.
  */
 static void GCTR(OTAES128E * const ap,
                     const uint8_t *pInput, uint8_t inputLength, const uint8_t *pKey,
@@ -184,9 +184,10 @@ static void GCTR(OTAES128E * const ap,
     uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
     uint8_t tmp[AES128GCM_BLOCK_SIZE]; // if we use full blocks, no need for tmp
 
-    const uint8_t *xpos = pInput; //this was const but i don't think it should be
+    const uint8_t *xpos = pInput;
     uint8_t *ypos = pOutput;
 
+    // exit function if no input data
     if (inputLength == 0) return;
 
     // calculate number of full blocks to cipher
@@ -285,14 +286,18 @@ static void generateICB(const uint8_t *pIV, uint8_t *pOutput)
  * @param   pICB        pointer to initial counter block
  * @param   pPDATA      pointer to plain text
  * @param   PDATALength length of plain text
- * @param   pCDATA      pointer to array for cipher text
+ * @param   pCDATA      pointer to array for cipher text. Length PDATALength rounded up to next 16 bytes
  */
 static void generateCDATA(OTAES128E * const ap,
                             const uint8_t *pICB, const uint8_t *pPDATA, uint8_t PDATALength,
                             uint8_t *pCDATA, const uint8_t *pKey )
 {
-    // generate counterblock J
     uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
+
+    // exit function if no data to encrypt
+    if(PDATALength == 0) return;
+
+    // generate counterblock J
     memcpy(ctrBlock, pICB, AES128GCM_BLOCK_SIZE);
     incr32(ctrBlock);
 
@@ -358,6 +363,8 @@ static void generateTag(OTAES128E * const ap,
  */
 static void generateAuthKey(OTAES128E * const ap, const uint8_t *pKey, uint8_t *pAuthKey)
 {
+	// original has if(aes == NULL) return NULL;
+
     // Encrypt 128 bit block of 0s to generate authentication sub-key.
     memset(pAuthKey, 0, AES128GCM_BLOCK_SIZE);
     ap->blockEncrypt(pAuthKey, pKey, pAuthKey);
@@ -367,19 +374,19 @@ static void generateAuthKey(OTAES128E * const ap, const uint8_t *pKey, uint8_t *
 /******************* Public Functions ********************/
 
 /**
- * @brief    performs AES-GCM encryption
+ * @brief    performs AES-GCM encryption.
  * @param    key             pointer to 16 byte (128 bit) key; never NULL
  * @param    IV              pointer to 12 byte (96 bit) IV; never NULL
- * @param    PDATA           pointer to plaintext array; never NULL
- * @param    PDATA_length    length of plaintext array (in bytes?), can be zero
- * @param    ADATA           pointer to additional data array; never NULL
- * @param    ADATA_length    length of additional data (in bytes?), can be zero
- * @param    CDATA           buffer to output ciphertext to, size (at least) PDATA_length; never NULL
+ * @param    PDATA           pointer to plaintext array, this is internally padded up to a multiple of the blocksize; NULL if length 0.
+ * @param    PDATALength    length of plaintext array in bytes, can be zero
+ * @param    ADATA           pointer to additional data array; NULL if length 0.
+ * @param    ADATALength    length of additional data in bytes, can be zero
+ * @param    CDATA           buffer to output ciphertext to, size PDATALength in bytes rounded up to nearest 16; set to NULL if PDATA is NULL
  * @param    tag             pointer to 16 byte buffer to output tag to; never NULL
- *
- * @todo CLARIFY which input data (eg PDATA) need to be multiples of block size, if any
+ * @retval	0 if encryption successful
+ * 			-2 if no PDATA and no ADATA
  */
-void OTAES128GCMGenericBase::gcmEncrypt(
+int8_t OTAES128GCMGenericBase::gcmEncrypt(
                         const uint8_t* key, const uint8_t* IV,
                         const uint8_t* PDATA, uint8_t PDATALength,
                         uint8_t* ADATA, uint8_t ADATALength,
@@ -387,10 +394,18 @@ void OTAES128GCMGenericBase::gcmEncrypt(
 {
     uint8_t authKey[AES128GCM_BLOCK_SIZE];
     uint8_t ICB[AES128GCM_BLOCK_SIZE];
-    generateAuthKey(ap, key, authKey);    // aes_gcm_init_hash_subkey
-    generateICB(IV, ICB);            // aes_gcm_prepare_j0
+
+    // check if there is input data
+	if ( (PDATALength == 0) && (ADATALength == 0) ) return -2;
+
+	// Encrypt data
+    generateAuthKey(ap, key, authKey);
+    generateICB(IV, ICB);
     generateCDATA(ap, ICB, PDATA, PDATALength, CDATA, key);
+
+    // Generate authentication tag
     generateTag(ap, key, authKey, ADATA, ADATALength, CDATA, PDATALength, tag, ICB);
+    return 0;
 }
 
 
@@ -401,17 +416,18 @@ void OTAES128GCMGenericBase::gcmEncrypt(
  *                 - wipe array?
  *                 - make PDATA private and then only pass pointer if true?
  * @param    key             pointer to 16 byte (128 bit) key
- * @param    IV              pointer to IV
- * @param    CDATA           pointer to ciphertext array
- * @param    CDATALength     length of ciphertext array
+ * @param    IV              pointer to 12 byte (96 bit) IV
+ * @param    CDATA           pointer to ciphertext array. Must be multiple of key length (16 bytes)
+ * @param    CDATALength     length of ciphertext array. Must be a multiple of 16.
  * @param    ADATA           pointer to additional data array
  * @param    ADATALength     length of additional data
- * @param    PDATA           buffer to output plaintext to
- * @retval   returns true if authenticated, else false
- *
- * @todo CLARIFY which input data (eg CDATA) need to be multiples of block size, if any
+ * @param    PDATA           buffer to output plaintext to. Must be same length as CDATA
+ * @retval   0 if authentication passed
+ * 			 -1 if authentication failed
+ * 			 -2 if no CDATA and no ADATA
+ * 			 -3 if CDATA length is not a multiple of blocksize (16 bytes)
  */
-bool OTAES128GCMGenericBase::gcmDecrypt(
+int8_t OTAES128GCMGenericBase::gcmDecrypt(
                         const uint8_t* key, const uint8_t* IV,
                         const uint8_t* CDATA, uint8_t CDATALength,
                         const uint8_t* ADATA, uint8_t ADATALength,
@@ -421,16 +437,22 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
     uint8_t ICB[AES128GCM_BLOCK_SIZE];
     uint8_t calculatedTag[AES128GCM_TAG_SIZE];
 
+    // check if there is input data
+	if ( (CDATALength == 0) && (ADATALength == 0) ) return -2;
+
+    // exit if CDATA is not a multiple of 128 bits (16 bytes)
+    // if( (CDATALength % 16) != 0 ) return -3;	// commented out as currently breaks tag
+
+    // Decrypt CDATA
     generateAuthKey(ap, key, authKey);
     generateICB(IV, ICB);
 
-    // this function is incorrect?
     generateCDATA(ap, ICB, CDATA, CDATALength, PDATA, key);
 
+    // Authenticate and return 1 if passed
     generateTag(ap, key, authKey, ADATA, ADATALength, CDATA, CDATALength, calculatedTag, ICB);
-
-    // function to compare tags and return 0 if they match
-    return(0 == checkTag(calculatedTag, messageTag));
+    if (0 == checkTag(calculatedTag, messageTag)) return 0;	// probably needs changing
+    else return -1;
 
     // test one that wipes messages that fail authentication
     /*if(checkTag(calculatedTag, messageTag) == 0) return 0;

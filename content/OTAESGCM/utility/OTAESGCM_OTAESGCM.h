@@ -13,7 +13,7 @@ KIND, either express or implied. See the Licence for the
 specific language governing permissions and limitations
 under the Licence.
 
-Author(s) / Copyright (s): Deniz Erbillgin 2015
+Author(s) / Copyright (s): Deniz Erbilgin 2015
                            Damon Hart-Davis 2015
 */
 
@@ -50,19 +50,20 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
 
         public:
             /**
-             * @brief    performs AES-GCM encryption
+             * @brief    performs AES-GCM encryption. For GMAC (Authentication only) set PDATA and CDATA to NULL and PDATALength to 0.
+             * @todo	Create a GMAC function? (GMAC just authenticates without a CDATA segment)
              * @param    key             pointer to 16 byte (128 bit) key; never NULL
              * @param    IV              pointer to 12 byte (96 bit) IV; never NULL
-             * @param    PDATA           pointer to plaintext array; never NULL
-             * @param    PDATA_length    length of plaintext array (in bytes?), can be zero
-             * @param    ADATA           pointer to additional data array; never NULL
-             * @param    ADATA_length    length of additional data (in bytes?), can be zero
-             * @param    CDATA           buffer to output ciphertext to, size (at least) PDATA_length; never NULL
+             * @param    PDATA           pointer to plaintext array, this is internally padded up to a multiple of the blocksize; NULL if length 0.
+             * @param    PDATALength    length of plaintext array in bytes, can be zero
+             * @param    ADATA           pointer to additional data array; NULL if length 0.
+             * @param    ADATALength    length of additional data in bytes, can be zero
+             * @param    CDATA           buffer to output ciphertext to, size PDATALength in bytes rounded up to nearest 16; set to NULL if PDATA is NULL
              * @param    tag             pointer to 16 byte buffer to output tag to; never NULL
-             *
-             * @todo CLARIFY which input data (eg PDATA) need to be multiples of block size, if any
+             * @retval	0 if encryption successful
+             * 			-2 if no input data (no PDATA or ADATA)
              */
-            virtual void gcmEncrypt(
+            virtual int8_t gcmEncrypt(
                 const uint8_t* key, const uint8_t* IV,
                 const uint8_t* PDATA, uint8_t PDATALength,
                 uint8_t* ADATA, uint8_t ADATALength,
@@ -75,17 +76,18 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
              *                 - wipe array?
              *                 - make PDATA private and then only pass pointer if true?
              * @param    key             pointer to 16 byte (128 bit) key
-             * @param    IV              pointer to IV
-             * @param    CDATA           pointer to ciphertext array
-             * @param    CDATALength     length of ciphertext array
+             * @param    IV              pointer to 12 byte (96 bit) IV
+             * @param    CDATA           pointer to ciphertext array. Must be multiple of key length (16 bytes)
+             * @param    CDATALength     length of ciphertext array. Must be a multiple of 16.
              * @param    ADATA           pointer to additional data array
              * @param    ADATALength     length of additional data
-             * @param    PDATA           buffer to output plaintext to
-             * @retval   returns true if authenticated, else false
-             *
-             * @todo CLARIFY which input data (eg CDATA) need to be multiples of block size, if any
+             * @param    PDATA           buffer to output plaintext to. Must be same length as CDATA
+             * @retval   0 if authentication passed
+             * 			 -1 if authentication failed
+             * 			 -2 if no input data (no CDATA and no ADATA)
+             * 			 -3 if CDATA length is not a multiple of blocksize (16 bytes)
              */
-            virtual bool gcmDecrypt(
+            virtual int8_t gcmDecrypt(
                  const uint8_t* key, const uint8_t* IV,
                  const uint8_t* CDATA, uint8_t CDATALength,
                  const uint8_t* ADATA, uint8_t ADATALength,
@@ -116,13 +118,13 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
             // but may hold temporary workspace.
             OTAES128GCMGenericBase(OTAES128E *aptr) : ap(aptr) { }
             // Encrypt.
-            virtual void gcmEncrypt(
+            virtual int8_t gcmEncrypt(
                 const uint8_t* key, const uint8_t* IV,
                 const uint8_t* PDATA, uint8_t PDATALength,
                 uint8_t* ADATA, uint8_t ADATALength,
                 uint8_t* CDATA, uint8_t *tag);
             // Decrypt.
-            virtual bool gcmDecrypt(
+            virtual int8_t gcmDecrypt(
                  const uint8_t* key, const uint8_t* IV,
                  const uint8_t* CDATA, uint8_t CDATALength,
                  const uint8_t* ADATA, uint8_t ADATALength,

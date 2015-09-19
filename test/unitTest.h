@@ -33,7 +33,7 @@ inline void errorIfNotEqual(int expected, int actual, int delta, int line) { if(
 // Test expression and bucket out with error if false, else continue, including line number.
 // Macros allow __LINE__ to work correctly.
 #define AssertIsTrueWithErr(x, err) { if(!(x)) { error(0, (err), __LINE__); } }
-#define AssertIsTrue(x) AssertIsTrueWithErr((x), 0)
+#define AssertIsTrue(x) AssertIsTrueWithErr((x), 0x0)
 #define AssertIsEqual(expected, x) { errorIfNotEqual((expected), (x), __LINE__); }
 #define AssertIsEqualWithDelta(expected, x, delta) { errorIfNotEqual((expected), (x), (delta), __LINE__); }
 

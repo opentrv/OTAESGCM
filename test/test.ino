@@ -89,7 +89,8 @@ static void testAESGCMAll0()
   
   // Space for outputs from encryption.
   uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
-  uint8_t cipherText[sizeof(input)]; // Space for encrypted text.
+  uint8_t cipherText[sizeof(input)]; // Space for encrypted text
+  memset(cipherText, 0, sizeof(cipherText));
   
   // Instance to perform enc/dec.
   //OpenTRV::AESGCM::AES128GCM16small eo;
@@ -98,17 +99,16 @@ static void testAESGCMAll0()
   gen.gcmEncrypt(key, nonce, input, sizeof(input),
                          aad, sizeof(aad), cipherText, tag);
   // Check some of the cipher text and tag.
-//            "0388DACE60B6A392F328C2B971B2FE78F795AAAB494B5923F7FD89FF948B  61 47 72 C7 92 9C D0 DD 68 1B D8 A3 7A 65 6F 33" :
+//            "0388DACE60B6A392F328C2B971B2FE78 F795AAAB494B5923F7FD89FF948B  61 47 72 C7 92 9C D0 DD 68 1B D8 A3 7A 65 6F 33" :
   AssertIsEqual(0x03, cipherText[0]);
   AssertIsEqual(0x88, cipherText[1]);
   AssertIsEqual(0x8b, cipherText[sizeof(cipherText)-1]);
   AssertIsEqual(0x61, tag[0]);
   AssertIsEqual(0x33, tag[15]);
-
   // Decrypt...
   uint8_t plain[sizeof(cipherText)]; // Space for decrypted text.
   // Should pass authentication and produce the original plaintext.
-  AssertIsTrue(gen.gcmDecrypt(  key, nonce,
+  AssertIsEqual(0x0, gen.gcmDecrypt(  key, nonce,
                             cipherText, sizeof(cipherText),
                             aad, sizeof(aad),
                             tag, plain));
@@ -150,7 +150,7 @@ static void testGCMVS0()
   // Decrypt...
   uint8_t plain[sizeof(cipherText)]; // Space for decrypted text.
   // Should pass authentication and produce the original plaintext.
-  AssertIsTrue(gen.gcmDecrypt(  key, nonce,
+  AssertIsEqual(0, gen.gcmDecrypt(  key, nonce,
                             cipherText, sizeof(cipherText),
                             aad, sizeof(aad),
                             tag, plain));
@@ -191,7 +191,7 @@ static void testGCMVS1()
   // Decrypt...
   uint8_t plain[sizeof(cipherText)]; // Space for decrypted text.
   // Should pass authentication and produce the original plaintext.
-  AssertIsTrue(gen.gcmDecrypt(  key, nonce,
+  AssertIsTrue(!gen.gcmDecrypt(  key, nonce,
                             cipherText, sizeof(cipherText),
                             aad, sizeof(aad),
                             tag, plain));
@@ -203,7 +203,7 @@ static void testAESGCMAuthentication()
   {
   Serial.println("AESGCMAuthentication");
   // Inputs to encryption.
-  uint8_t input[30]; // All-zeros input, typical input size.
+  uint8_t input[32]; // All-zeros input, typical input size.
   memset(input, 0x0, sizeof(input));
   
   uint8_t key[AES_KEY_SIZE/8];
@@ -230,25 +230,114 @@ static void testAESGCMAuthentication()
   memcpy(tempTag, tag, GCM_TAG_LENGTH);
 
   // Un-hacked tag should match.
-  AssertIsTrue(gen.gcmDecrypt(key, nonce, cipherText, sizeof(cipherText),
+  AssertIsEqual(0, gen.gcmDecrypt(key, nonce, cipherText, sizeof(cipherText),
                                     aad, sizeof(aad), tempTag, plain));
   // Various manglings of the tag should fail.
   tempTag[0]++;
-  AssertIsTrue(!gen.gcmDecrypt(key, nonce, cipherText, sizeof(cipherText),
+  AssertIsEqual(-1, gen.gcmDecrypt(key, nonce, cipherText, sizeof(cipherText),
                                     aad, sizeof(aad), tempTag, plain));
   tempTag[0]--;
 
   tempTag[1]++;
-  AssertIsTrue(!gen.gcmDecrypt(key, nonce, cipherText, sizeof(cipherText),
+  AssertIsEqual(-1, gen.gcmDecrypt(key, nonce, cipherText, sizeof(cipherText),
                                     aad, sizeof(aad), tempTag, plain));
   tempTag[1]--;
 
   tempTag[15]++;
-  AssertIsTrue(!gen.gcmDecrypt(key, nonce, cipherText, sizeof(cipherText),
+  AssertIsEqual(-1, gen.gcmDecrypt(key, nonce, cipherText, sizeof(cipherText),
                                     aad, sizeof(aad), tempTag, plain));
   }
 
+// Check that throws error on no data input
+static void testAESGCMNoData()
+  {
+  Serial.println("AESGCMNoData");
+  // Inputs to encryption.
+  uint8_t plainText[16]; // Space for encrypted text.
+  uint8_t key[AES_KEY_SIZE/8];
+  memset(key, 0, sizeof(key)); // All-zeros key.
+  
+  uint8_t nonce[GCM_NONCE_LENGTH];
+  memset(nonce, 0x0, sizeof(nonce)); // All-zeros nonce.
+  // Space for outputs from encryption.
+  uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
+  uint8_t cipherText[sizeof(plainText)]; // Space for encrypted text.
+  
+  // Instance to perform enc/dec.
+  //OpenTRV::AESGCM::AES128GCM16small eo;
+  // Do encryption.
+  OTAESGCM::OTAES128GCMGeneric<> gen;
+  AssertIsEqual(-2, gen.gcmEncrypt(key, nonce, NULL, 0,
+                      NULL, 0, cipherText, tag));
+  // Decrypt...
+  uint8_t tempTag[GCM_TAG_LENGTH];
+  memcpy(tempTag, tag, GCM_TAG_LENGTH);
 
+  // Un-hacked tag should match.
+  AssertIsEqual(-2, gen.gcmDecrypt(key, nonce, NULL, 0,
+                      NULL, 0, tempTag, plainText));
+  }
+
+// Check that runs correctly with ADATA only
+static void testAESGCMadataOnly()
+  {
+  Serial.println("AESGCMadataOnly");
+  // Inputs to encryption.
+  uint8_t key[AES_KEY_SIZE/8];
+  memset(key, 0, sizeof(key)); // All-zeros key.
+  
+  uint8_t nonce[GCM_NONCE_LENGTH];
+  memset(nonce, 0x0, sizeof(nonce)); // All-zeros nonce.
+  
+  // Space for outputs from encryption.
+  uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
+  uint8_t ADATA[16];
+  
+  // Instance to perform enc/dec.
+  //OpenTRV::AESGCM::AES128GCM16small eo;
+  // Do encryption.
+  OTAESGCM::OTAES128GCMGeneric<> gen;
+  AssertIsEqual(0, gen.gcmEncrypt(key, nonce, NULL, 0,
+                      ADATA, sizeof(ADATA), NULL, tag));
+  // Decrypt...
+  uint8_t tempTag[GCM_TAG_LENGTH];
+  memcpy(tempTag, tag, GCM_TAG_LENGTH);
+
+  // Un-hacked tag should match.
+  AssertIsEqual(0, gen.gcmDecrypt(key, nonce, NULL, 0,
+                      ADATA, sizeof(ADATA), tempTag, NULL));
+  }
+
+// Check that throws error on no data input
+static void testAESGCMcdataOnly()
+  {
+  Serial.println("AESGCMcdataOnly");
+  // Inputs to encryption.
+  uint8_t plainText[16]; // Space for encrypted text.
+  memset(plainText, 0, sizeof(plainText));
+  uint8_t key[AES_KEY_SIZE/8];
+  memset(key, 0, sizeof(key)); // All-zeros key.
+  
+  uint8_t nonce[GCM_NONCE_LENGTH];
+  memset(nonce, 0x0, sizeof(nonce)); // All-zeros nonce.
+  // Space for outputs from encryption.
+  uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
+  uint8_t cipherText[sizeof(plainText)]; // Space for encrypted text.
+  
+  // Instance to perform enc/dec.
+  //OpenTRV::AESGCM::AES128GCM16small eo;
+  // Do encryption.
+  OTAESGCM::OTAES128GCMGeneric<> gen;
+  AssertIsEqual(0, gen.gcmEncrypt(key, nonce, plainText, sizeof(plainText),
+                      NULL, 0, cipherText, tag));
+  // Decrypt...
+  uint8_t tempTag[GCM_TAG_LENGTH];
+  memcpy(tempTag, tag, GCM_TAG_LENGTH);
+
+  // Un-hacked tag should match.
+  AssertIsEqual(0, gen.gcmDecrypt(key, nonce, cipherText, sizeof(cipherText),
+                      NULL, 0, tempTag, plainText));
+  }
 
 // To be called from loop() instead of main code when running unit tests.
 // Tests generally flag an error and stop the test cycle with a call to panic() or error().
@@ -269,6 +358,12 @@ void loop()
 
   // Run the tests, fastest / newest / most-fragile / most-interesting first...
   //testLibVersion();
+  testAESGCMNoData();
+
+  testAESGCMadataOnly();
+
+  testAESGCMcdataOnly();
+  
   testAESGCMAll0();
 
   testAESGCMAuthentication();
