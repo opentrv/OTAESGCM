@@ -1,4 +1,4 @@
-#include <aes128_gcm.h>
+#include <OTAESGCM.h>
 
 void setup() {
   // put your setup code here, to run once:
@@ -8,10 +8,15 @@ void setup() {
   uint8_t adata[4];
   uint8_t tag[16];
   uint8_t cdata[30];
-
-  aes128_gcm_encrypt(key, iv, pdata, sizeof(pdata), adata, sizeof(adata), cdata, tag);
   
-  aes128_gcm_decrypt(key, iv, cdata, sizeof(cdata), adata, sizeof(adata), tag, pdata);
+  OTAESGCM::OTAES128GCMGeneric<> gen;
+
+  gen.gcmEncrypt(key, iv, pdata, sizeof(pdata),
+                 adata, sizeof(adata), cdata, tag);
+  gen.gcmDecrypt(  key, iv,
+                            cdata, sizeof(cdata),
+                            adata, sizeof(adata),
+                            tag, pdata);
 }
 
 void loop() {
