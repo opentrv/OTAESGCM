@@ -21,24 +21,51 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015
 #define OT_UNIT_TEST_H_
 
 #include <Arduino.h>
-
-/**Report an error from a unit test on Serial, and repeat so that it is not missed. */
-void error(int expected, int actual, int line);
-
-// Deal with common equality test.
-inline void errorIfNotEqual(int expected, int actual, int line) { if(expected != actual) { error(expected, actual, line); } }
-// Allowing a delta.
-inline void errorIfNotEqual(int expected, int actual, int delta, int line) { if(abs(expected - actual) > delta) { error(expected, actual, line); } }
+#include <OTV0p2Base.h> // necessary?
 
 // Test expression and bucket out with error if false, else continue, including line number.
 // Macros allow __LINE__ to work correctly.
-#define AssertIsTrueWithErr(x, err) { if(!(x)) { error(0, (err), __LINE__); } }
+#define AssertIsTrueWithErr(x, err) { if(!(x)) { unitTest.error(0, (err), __LINE__); } }
 #define AssertIsTrue(x) AssertIsTrueWithErr((x), 0x0)
-#define AssertIsEqual(expected, x) { errorIfNotEqual((expected), (x), __LINE__); }
-#define AssertIsEqualWithDelta(expected, x, delta) { errorIfNotEqual((expected), (x), (delta), __LINE__); }
+#define AssertIsEqual(expected, x) { unitTest.errorIfNotEqual((expected), (x), __LINE__); }
+#define AssertIsEqualWithDelta(expected, x, delta) { unitTest.errorIfNotEqual((expected), (x), (delta), __LINE__); }
 
-void testLibVersion();
+class OTUnitTest
+{
+public:
+	OTUnitTest();
 
+	void testLibVersion();
+
+
+//private:
+	/**
+	 * @brief	Report an error from a unit test on Serial, and repeat so that it is not missed.
+	 * @param	expected	expected value
+	 * @param	actual		actual value
+	 * @param	line		line error occurred at
+	 */
+	void error(int expected, int actual, int line);
+
+	/**
+	 * @brief	Common equality test
+	 * @param	expected	expected value
+	 * @param	actual		actual value
+	 * @param	line		line error occurred at
+	 */
+	inline void errorIfNotEqual(int expected, int actual, int line) { if(expected != actual) { error(expected, actual, line); } };	// TODO may be inlined
+	/**
+	 * @brief	Common equality tests
+	 * @param	expected	expected value
+	 * @param	actual		actual value
+	 * @param	delta		maximum acceptable deviation of actual from expected
+	 * @param	line		line error occurred at
+	 */
+	inline void errorIfNotEqual(int expected, int actual, int delta, int line) { if(abs(expected - actual) > delta) { error(expected, actual, line); } }
+
+};
+
+extern OTUnitTest unitTest;
 
 
 #if F_CPU == 1000000 // 1MHz CPU indicates V0p2 board with 4800 baud serial link.
