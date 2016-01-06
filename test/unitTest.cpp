@@ -15,8 +15,13 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015
 
 #include "unitTest.h"
 
-/**Report an error from a unit test on Serial, and repeat so that it is not missed. */
-void error(int expected, int actual, int line)
+/**
+ * @brief	Report an error from a unit test on Serial, and repeat so that it is not missed.
+ * @param	expected	expected value
+ * @param	actual		actual value
+ * @param	line		line error occurred at
+ */
+void OTUnitTest::error(int expected, int actual, int line)
   {
   for( ; ; )
     {
@@ -38,11 +43,12 @@ void error(int expected, int actual, int line)
     }
   }
   
-/*
-void testLibVersion()
+/**
+ * @brief	Test library version
+ */
+void OTUnitTest::testLibVersion()
   {
   Serial.println("LibVersion");
   AssertIsEqual(0, ARDUINO_LIB_AESGCM_VERSION_MAJOR);
   AssertIsEqual(2, ARDUINO_LIB_AESGCM_VERSION_MINOR);
   }
-*/
