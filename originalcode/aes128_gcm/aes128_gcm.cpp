@@ -28,11 +28,11 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015
  *********************************************************/
 
 /********************** Includes *************************/
-#include "../../oiriginalcode/aes128_gcm/aes128_gcm.h"
+#include "../../originalcode/aes128_gcm/aes128_gcm.h"
 
 #include <string.h>
 
-#include "../../oiriginalcode/aes128_gcm/aes128.h"
+#include "../../originalcode/aes128_gcm/aes128.h"
 /******************* Global Variables ********************/
 //
 /******************* Private Variables *******************/

@@ -43,7 +43,7 @@ NOTE:   String length must be evenly divisible by 16byte (str_len % 16 == 0)
 /*****************************************************************************/
 /* Includes:                                                                 */
 /*****************************************************************************/
-#include "../../oiriginalcode/aes128_gcm/aes128.h"
+#include "../../originalcode/aes128_gcm/aes128.h"
 
 #include <string.h>
 
