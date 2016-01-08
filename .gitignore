@@ -28,3 +28,5 @@
 *.app
 /Debug/
 /.DS_Store
+/Build (GNU)/
+/.externalToolBuilders/
