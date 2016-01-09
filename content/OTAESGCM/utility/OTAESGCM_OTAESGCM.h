@@ -60,7 +60,7 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
              * @param   PDATALength	length of plaintext array in bytes, can be zero
              * @param   ADATA           pointer to additional data array; NULL if length 0.
              * @param   ADATALength    	length of additional data in bytes, can be zero
-             * @param   CDATA           buffer to output ciphertext to, same length as PDATA array; set to NULL if PDATA is NULL
+             * @param   CDATA           buffer to output ciphertext to, size must be padded to blocksize at/above PDATAlength; set to NULL if PDATA is NULL
              * @param   tag             pointer to 16 byte buffer to output tag to; never NULL
              * @retval	true if encryption is successful, else false
              */
