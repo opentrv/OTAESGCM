@@ -98,7 +98,7 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
         };
 
     // Generic implementation, parameterised with type of underlying AES implementation.
-    // The default AES impl for the architecture is used unless otherwise specified.
+    // The default AES implementation for the architecture is used unless otherwise specified.
     // This implementation is not specialised for a particular CPU/MCU for example.
     // This implementation carries no state beyond that of the AES128 implementation.
     class OTAES128GCMGenericBase : public OTAES128GCM
