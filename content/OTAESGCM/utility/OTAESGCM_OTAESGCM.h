@@ -155,6 +155,7 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
         return(i.gcmEncrypt(key, iv, plaintext, 32, authtext, authtextSize, ciphertextOut, tagOut));
         }
 
+
     }
 
 
