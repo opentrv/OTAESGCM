@@ -137,7 +137,7 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
         };
 
 
-    // AES-GCM 128-bit-key fixed-size text encryption function.
+    // AES-GCM 128-bit-key fixed-size text (256-bit/32-byte) encryption function.
     // This is an adaptor/bridge function to ease outside use in simple cases
     // without explicit type/library dependencies, but use with care.
     // Stateless implementation: creates state on stack each time at cost of stack space
