@@ -139,7 +139,7 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
     // AES-GCM 128-bit-key fixed-size text encryption function.
     // This is an adaptor/bridge function to ease outside use in simple cases
     // without explicitly type/library dependencies, but use with care.
-    // Stateless; creates state on stack (which may be considerable, be careful); state is not used.
+    // Stateless; creates state on stack (which may be considerable, be careful); state is not used.t
     // Returns true on success, false on failure.
     //
     // The state argument must be a pointer to a default OTAES128GCMGeneric<> instance.
@@ -149,7 +149,7 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
             const uint8_t *plaintext,
             uint8_t *ciphertextOut, uint8_t *tagOut)
         {
-        OTAES128GCMGeneric<> i; // FIXME: ensure state is cleared afterwards
+        OTAES128GCMGeneric<> i; // FIXME: ensure state is cleared afterwards.
         return(i.gcmEncrypt(key, iv, plaintext, 32, authtext, authtextSize, ciphertextOut, tagOut));
         }
 
