@@ -25,6 +25,7 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015
 #if defined(__AVR_ARCH__) || defined(ARDUINO_ARCH_AVR) // Atmel AVR only.
 
 #include <stdint.h>
+#include <string.h>
 #include "OTAESGCM_OTAES128.h"
 
 
@@ -66,6 +67,11 @@ namespace OTAESGCM
              *    @param    output takes a pointer to an array to fill with ciphertext, of size 16 bytes; never NULL
              */
             virtual void blockEncrypt(const uint8_t* input, const uint8_t* key, uint8_t *output);
+
+            // Clean up sensitive state and removes pointers to external state.
+            // If Key pointer already cleared then assumed to already have been done and is not repeated.
+            // NOT YET TESTED.
+            virtual void cleanup() { if(NULL!=Key) { memset(RoundKey, 0, sizeof(RoundKey)); state=NULL; Key=NULL; } }
         };
 
     // AVR decrypt and encrypt implementation.

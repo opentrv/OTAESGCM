@@ -25,7 +25,7 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015
 #include <stddef.h>
 #include <stdint.h>
 
-// Get available AES API and cypher implementations.
+// Get available AES API and cipher implementations.
 #include "OTAESGCM_OTAES128.h"
 #include "OTAESGCM_OTAES128Impls.h"
 
@@ -54,10 +54,10 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
              * 			If ADATA unused, set ADATA to NULL and ADATALength to 0.
              * 			If PDATA unused (This is GMAC), set PDATA and CDATA to NULL and PDATALength to 0.
              * @todo	Make GMAC helper function.
-             * @param   key				pointer to 16 byte (128 bit) key; never NULL
+             * @param   key		pointer to 16 byte (128 bit) key; never NULL
              * @param   IV             	pointer to 12 byte (96 bit) IV; never NULL
              * @param   PDATA          	pointer to plaintext array, this is internally padded up to a multiple of the blocksize; NULL if length 0.
-             * @param   PDATALength		length of plaintext array in bytes, can be zero
+             * @param   PDATALength	length of plaintext array in bytes, can be zero
              * @param   ADATA           pointer to additional data array; NULL if length 0.
              * @param   ADATALength    	length of additional data in bytes, can be zero
              * @param   CDATA           buffer to output ciphertext to, same length as PDATA array; set to NULL if PDATA is NULL
@@ -100,7 +100,7 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
     // Generic implementation, parameterised with type of underlying AES implementation.
     // The default AES impl for the architecture is used unless otherwise specified.
     // This implementation is not specialised for a particular CPU/MCU for example.
-    // This implementation is carries no state beyond that of the AES128 implementation.
+    // This implementation carries no state beyond that of the AES128 implementation.
     class OTAES128GCMGenericBase : public OTAES128GCM
         {
         private:
@@ -137,14 +137,21 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
         };
 
     // AES-GCM 128-bit-key fixed-size text encryption function.
+    // This is an adaptor/bridge function to ease outside use in simple cases
+    // without explicitly type/library dependencies, but use with care.
+    // Stateless; creates state on stack (which may be considerable, be careful); state is not used.
     // Returns true on success, false on failure.
     //
     // The state argument must be a pointer to a default OTAES128GCMGeneric<> instance.
-    bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT(void *state,
-            const uint8_t *key, const uint8_t *nonce,
+    bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS(void *state,
+            const uint8_t *key, const uint8_t *iv,
             const uint8_t *authtext, uint8_t authtextSize,
             const uint8_t *plaintext,
-            uint8_t *ciphertextOut, uint8_t *tagOut);
+            uint8_t *ciphertextOut, uint8_t *tagOut)
+        {
+        OTAES128GCMGeneric<> i; // FIXME: ensure state is cleared afterwards
+        return(i.gcmEncrypt(key, iv, plaintext, 32, authtext, authtextSize, ciphertextOut, tagOut));
+        }
 
 
     }
