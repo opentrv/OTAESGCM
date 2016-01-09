@@ -80,49 +80,59 @@ static void testLibVersion()
 //        assertTrue((Arrays.equals(input, plainText)));
 //        }
 
+
+// A const all-zeros block useful for keys, nonce, plaintext, etc.
+static const uint8_t allZerosBlock[32] = { };
+
 // Check that all zeros key, plaintext and ADATA gives the correct result.
 static void testAESGCMAll0()
   {
   Serial.println("AESGCMAll0");
   // Inputs to encryption.
-  uint8_t input[30]; // All-zeros input, typical input size.
-  memset(input, 0x0, sizeof(input));
-  
-  uint8_t key[AES_KEY_SIZE/8];
-  memset(key, 0, sizeof(key)); // All-zeros key.
-  
-  uint8_t nonce[GCM_NONCE_LENGTH];
-  memset(nonce, 0x0, sizeof(nonce)); // All-zeros nonce.
-  
-  uint8_t aad[4];
-  memset(aad, 0, sizeof(aad)); // All-zeros ADATA.
-  
+  const uint8_t inputSize = 30;
+//  uint8_t input[30]; // All-zeros input, typical input size.
+//  memset(input, 0x0, sizeof(input));
+  const uint8_t *input = allZerosBlock;
+
+//  uint8_t key[AES_KEY_SIZE/8];
+//  memset(key, 0, sizeof(key)); // All-zeros key.
+  const uint8_t *key = allZerosBlock;
+
+//  uint8_t nonce[GCM_NONCE_LENGTH];
+//  memset(nonce, 0x0, sizeof(nonce)); // All-zeros nonce.
+  const uint8_t *nonce = allZerosBlock;
+
+  const uint8_t aadSize = 4;
+//  uint8_t aad[4];
+//  memset(aad, 0, sizeof(aad)); // All-zeros ADATA.
+  const uint8_t *aad = allZerosBlock;
+
   // Space for outputs from encryption.
   uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
-  uint8_t cipherText[sizeof(input)]; // Space for encrypted text
+  uint8_t cipherText[max(32, inputSize)]; // Space for encrypted text
   memset(cipherText, 0, sizeof(cipherText));
   
   // Instance to perform enc/dec.
   //OpenTRV::AESGCM::AES128GCM16small eo;
   // Do encryption.
   OTAESGCM::OTAES128GCMGeneric<> gen;
-  gen.gcmEncrypt(key, nonce, input, sizeof(input),
-                         aad, sizeof(aad), cipherText, tag);
+  gen.gcmEncrypt(key, nonce, input, inputSize,
+                         aad, aadSize, cipherText, tag);
   // Check some of the cipher text and tag.
 //            "0388DACE60B6A392F328C2B971B2FE78 F795AAAB494B5923F7FD89FF948B  61 47 72 C7 92 9C D0 DD 68 1B D8 A3 7A 65 6F 33" :
   AssertIsEqual(0x03, cipherText[0]);
   AssertIsEqual(0x88, cipherText[1]);
-  AssertIsEqual(0x8b, cipherText[sizeof(cipherText)-1]);
+  AssertIsEqual(0x8b, cipherText[29]);
   AssertIsEqual(0x61, tag[0]);
   AssertIsEqual(0x33, tag[15]);
   // Decrypt...
   uint8_t plain[sizeof(cipherText)]; // Space for decrypted text.
   // Should pass authentication and produce the original plaintext.
-  AssertIsTrue(gen.gcmDecrypt(  key, nonce,
+  AssertIsTrue(gen.gcmDecrypt(key, nonce,
                             cipherText, sizeof(cipherText),
-                            aad, sizeof(aad),
+                            aad, aadSize,
                             tag, plain));
-  AssertIsEqual(0, memcmp(input, plain, sizeof(input))); // 0 indicates plain text recovered correctly.
+  AssertIsEqual(0, memcmp(input, plain, inputSize)); // 0 indicates plain text recovered correctly.
   }
 
 // Check that padding works
