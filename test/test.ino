@@ -123,8 +123,8 @@ static void testAESGCMAll0()
   AssertIsEqual(0x03, cipherText[0]);
   AssertIsEqual(0x88, cipherText[1]);
   AssertIsEqual(0x8b, cipherText[29]);
-  AssertIsEqual(0x61, tag[0]);
-  AssertIsEqual(0x33, tag[15]);
+  AssertIsEqual(0xb6, tag[0]); // Was, before CDATAlength fix, AssertIsEqual(0x61, tag[0]);
+  AssertIsEqual(0x18, tag[15]); // Was, before CDATAlength fix, AssertIsEqual(0x33, tag[15]);
   // Decrypt...
   uint8_t plain[sizeof(cipherText)]; // Space for decrypted text.
   // Should pass authentication and produce the original plaintext.
@@ -160,7 +160,6 @@ static void testAESGCMPadding()
   memset(cipherText, 0, sizeof(cipherText));
   
   // Instance to perform enc/dec.
-  //OpenTRV::AESGCM::AES128GCM16small eo;
   // Do encryption.
   OTAESGCM::OTAES128GCMGeneric<> gen;
   gen.gcmEncrypt(key, nonce, input, inputSize,
@@ -171,8 +170,8 @@ static void testAESGCMPadding()
   AssertIsEqual(0xdd, cipherText[1]);
 //  AssertIsEqual(0xa6, cipherText[sizeof(cipherText)-1]);
   AssertIsEqual(0xa6, cipherText[8]);
-  AssertIsEqual(0xbd, tag[0]);
-  AssertIsEqual(0xd9, tag[15]);
+  AssertIsEqual(0x9b, tag[0]); // Was, before CDATAlength fix, AssertIsEqual(0xbd, tag[0]);
+  AssertIsEqual(0x75, tag[15]); // Was, before CDATAlength fix, AssertIsEqual(0xd9, tag[15]);
   // Decrypt...
   uint8_t plain[sizeof(cipherText)]; // Space for decrypted text.
   // Should pass authentication and produce the original plaintext.

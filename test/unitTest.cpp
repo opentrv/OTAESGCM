@@ -28,8 +28,10 @@ void OTUnitTest::error(int expected, int actual, int line)
     {
     Serial.print(F("***Test FAILED*** expected=\t0x"));
     Serial.print(expected, HEX);
-    Serial.print(F("\tactual=\t"));
-    Serial.print(actual);//, HEX);
+    Serial.print(F(", actual = 0x"));
+    Serial.print(actual, HEX);
+    Serial.print(F(" = "));
+    Serial.print(actual, DEC);
     if(0 != line)
       {
       Serial.print(F(" at line "));
