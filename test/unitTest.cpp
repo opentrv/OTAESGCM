@@ -11,6 +11,7 @@ KIND, either express or implied. See the Licence for the
 specific language governing permissions and limitations
 under the Licence.
 Author(s) / Copyright (s): Deniz Erbilgin 2015
+                           Damon Hart-Davis 2015--2016
 */
 
 #include "unitTest.h"
@@ -42,13 +43,4 @@ void OTUnitTest::error(int expected, int actual, int line)
     delay(1000);
     }
   }
-  
-/**
- * @brief	Test library version
- */
-void OTUnitTest::testLibVersion()
-  {
-  Serial.println("LibVersion");
-  AssertIsEqual(0, ARDUINO_LIB_AESGCM_VERSION_MAJOR);
-  AssertIsEqual(2, ARDUINO_LIB_AESGCM_VERSION_MINOR);
-  }
+

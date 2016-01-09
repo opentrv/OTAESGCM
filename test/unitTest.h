@@ -14,28 +14,27 @@ specific language governing permissions and limitations
 under the Licence.
 
 Author(s) / Copyright (s): Deniz Erbilgin 2015
-                           Damon Hart-Davis 2015
+                           Damon Hart-Davis 2015--2016
 */
 
 #ifndef OT_UNIT_TEST_H_
 #define OT_UNIT_TEST_H_
 
 #include <Arduino.h>
-#include <OTV0p2Base.h> // necessary?
 
 // Test expression and bucket out with error if false, else continue, including line number.
 // Macros allow __LINE__ to work correctly.
-#define AssertIsTrueWithErr(x, err) { if(!(x)) { unitTest.error(0, (err), __LINE__); } }
+#define AssertIsTrueWithErr(x, err) { if(!(x)) { OTUnitTest::error(0, (err), __LINE__); } }
 #define AssertIsTrue(x) AssertIsTrueWithErr((x), 0x0)
-#define AssertIsEqual(expected, x) { unitTest.errorIfNotEqual((expected), (x), __LINE__); }
-#define AssertIsEqualWithDelta(expected, x, delta) { unitTest.errorIfNotEqual((expected), (x), (delta), __LINE__); }
+#define AssertIsEqual(expected, x) { OTUnitTest::errorIfNotEqual((expected), (x), __LINE__); }
+#define AssertIsEqualWithDelta(expected, x, delta) { OTUnitTest::errorIfNotEqual((expected), (x), (delta), __LINE__); }
 
 class OTUnitTest
 {
 public:
 	OTUnitTest();
 
-	void testLibVersion();
+//	void testLibVersion();
 
 
 //private:
@@ -45,7 +44,7 @@ public:
 	 * @param	actual		actual value
 	 * @param	line		line error occurred at
 	 */
-	void error(int expected, int actual, int line);
+	static void error(int expected, int actual, int line);
 
 	/**
 	 * @brief	Common equality test
@@ -53,7 +52,7 @@ public:
 	 * @param	actual		actual value
 	 * @param	line		line error occurred at
 	 */
-	inline void errorIfNotEqual(int expected, int actual, int line) { if(expected != actual) { error(expected, actual, line); } };	// TODO may be inlined
+	static inline void errorIfNotEqual(int expected, int actual, int line) { if(expected != actual) { error(expected, actual, line); } };	// TODO may be inlined
 	/**
 	 * @brief	Common equality tests
 	 * @param	expected	expected value
@@ -61,7 +60,7 @@ public:
 	 * @param	delta		maximum acceptable deviation of actual from expected
 	 * @param	line		line error occurred at
 	 */
-	inline void errorIfNotEqual(int expected, int actual, int delta, int line) { if(abs(expected - actual) > delta) { error(expected, actual, line); } }
+	static inline void errorIfNotEqual(int expected, int actual, int delta, int line) { if(abs(expected - actual) > delta) { error(expected, actual, line); } }
 
 };
 
