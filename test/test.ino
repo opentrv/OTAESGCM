@@ -183,8 +183,8 @@ static void testAESGCMPadding()
   AssertIsEqual(0, memcmp(input, plain, sizeof(input))); // 0 indicates plain text recovered correctly.
   }
 
-// Check using NIST GCMVS test vector
-  // keylen = 128, ivlen = 96, ptlen = 128, aadlen = 160, taglen = 128, count = 0
+// Check using NIST GCMVS test vector.
+// keylen = 128, ivlen = 96, ptlen = 128, aadlen = 160, taglen = 128, count = 0
 static void testGCMVS0()
   {
   Serial.println("GCMVS0");
@@ -225,7 +225,8 @@ static void testGCMVS0()
   AssertIsEqual(0, memcmp(input, plain, sizeof(input))); // 0 indicates plain text recovered correctly.
   }
 
-  // keylen = 128, ivlen = 96, ptlen = 256, aadlen = 128, taglen = 128, count = 0
+// Check using NIST GCMVS test vector.
+// keylen = 128, ivlen = 96, ptlen = 256, aadlen = 128, taglen = 128, count = 0
 static void testGCMVS1()
   {
   Serial.println("GCMVS1");
