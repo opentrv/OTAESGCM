@@ -298,6 +298,63 @@ static void testGCMVS1()
   AssertIsEqual(0, memcmp(input, plain, sizeof(input))); // 0 indicates plain text recovered correctly.
   }
 
+// Check using NIST GCMVS test vector.
+// Test via fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS interface.
+// See http://csrc.nist.gov/groups/STM/cavp/documents/mac/gcmvs.pdf
+// See http://csrc.nist.gov/groups/STM/cavp/documents/mac/gcmtestvectors.zip
+//
+//[Keylen = 128]
+//[IVlen = 96]
+//[PTlen = 256]
+//[AADlen = 128]
+//[Taglen = 128]
+//
+//Count = 0
+//Key = 298efa1ccf29cf62ae6824bfc19557fc
+//IV = 6f58a93fe1d207fae4ed2f6d
+//PT = cc38bccd6bc536ad919b1395f5d63801f99f8068d65ca5ac63872daf16b93901
+//AAD = 021fafd238463973ffe80256e5b1c6b1
+//CT = dfce4e9cd291103d7fe4e63351d9e79d3dfd391e3267104658212da96521b7db
+//Tag = 542465ef599316f73a7a560509a2d9f2
+//
+// keylen = 128, ivlen = 96, ptlen = 256, aadlen = 128, taglen = 128, count = 0
+static void testGCMVS1ViaFixed32BTextSize()
+  {
+  Serial.println("GCMVS1ViaFixed32BTextSize");
+  // Inputs to encryption.
+  static const uint8_t input[32] = { 0xcc, 0x38, 0xbc, 0xcd, 0x6b, 0xc5, 0x36, 0xad, 0x91, 0x9b, 0x13, 0x95, 0xf5, 0xd6, 0x38, 0x01, 0xf9, 0x9f, 0x80, 0x68, 0xd6, 0x5c, 0xa5, 0xac, 0x63, 0x87, 0x2d, 0xaf, 0x16, 0xb9, 0x39, 0x01 }; // All-zeros input, typical input size.
+  
+  static const uint8_t key[AES_KEY_SIZE/8] = { 0x29, 0x8e, 0xfa, 0x1c, 0xcf, 0x29, 0xcf, 0x62, 0xae, 0x68, 0x24, 0xbf, 0xc1, 0x95, 0x57, 0xfc };
+  
+  static const uint8_t nonce[GCM_NONCE_LENGTH] = { 0x6f, 0x58, 0xa9, 0x3f, 0xe1, 0xd2, 0x07, 0xfa, 0xe4, 0xed, 0x2f, 0x6d };
+  
+  static const uint8_t aad[16] = { 0x02, 0x1f, 0xaf, 0xd2, 0x38, 0x46, 0x39, 0x73, 0xff, 0xe8, 0x02, 0x56, 0xe5, 0xb1, 0xc6, 0xb1 };
+  
+  // Space for outputs from encryption.
+  uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
+  uint8_t cipherText[max(32, sizeof(input))]; // Space for encrypted text.
+  
+  // Instance to perform enc/dec.
+  // Do encryption via simplified interface.
+  AssertIsTrue(OTAESGCM::fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS(NULL,
+            key, nonce,
+            aad, sizeof(aad),
+            input,
+            cipherText, tag));
+  // Check some of the cipher text and tag.
+//            "0388DACE60B6A392F328C2B971B2FE78F795AAAB494B5923F7FD89FF948B  61 47 72 C7 92 9C D0 DD 68 1B D8 A3 7A 65 6F 33" :
+  AssertIsEqual(0xdf, cipherText[0]);
+  AssertIsEqual(0x91, cipherText[5]);
+  AssertIsEqual(0xdb, cipherText[sizeof(cipherText)-1]);
+  AssertIsEqual(0x24, tag[1]);
+  AssertIsEqual(0xd9, tag[14]);
+
+  // Decrypt via simplified interface...
+  // TODO
+  }
+
+
+
 // Check that authentication works correctly.
 static void testAESGCMAuthentication()
   {
@@ -512,6 +569,7 @@ void loop()
   testAESGCMAuthentication();
   testGCMVS0();
   testGCMVS1();
+  testGCMVS1ViaFixed32BTextSize();
 
   // Announce successful loop completion and count.
   ++loopCount;
