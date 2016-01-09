@@ -89,8 +89,8 @@ static void testAESGCMAll0()
   {
   Serial.println("AESGCMAll0");
   // Inputs to encryption.
-  const uint8_t inputSize = 30;
-//  uint8_t input[30]; // All-zeros input, typical input size.
+  const uint8_t inputSize = 30; // Typical non-block-size input size.
+//  uint8_t input[30]; // All-zeros input.
 //  memset(input, 0x0, sizeof(input));
   const uint8_t *input = allZerosBlock;
 
@@ -109,11 +109,11 @@ static void testAESGCMAll0()
 
   // Space for outputs from encryption.
   uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
-  uint8_t cipherText[max(32, inputSize)]; // Space for encrypted tex, rounded up to block size.
+  memset(tag, 0, sizeof(tag));
+  uint8_t cipherText[max(32, inputSize)]; // Space for encrypted text, rounded up to block size.
   memset(cipherText, 0, sizeof(cipherText));
-  
+
   // Instance to perform enc/dec.
-  //OpenTRV::AESGCM::AES128GCM16small eo;
   // Do encryption.
   OTAESGCM::OTAES128GCMGeneric<> gen;
   gen.gcmEncrypt(key, nonce, input, inputSize,
@@ -135,13 +135,15 @@ static void testAESGCMAll0()
   AssertIsEqual(0, memcmp(input, plain, inputSize)); // 0 indicates plain text recovered correctly.
   }
 
+
 // Check that padding works
 static void testAESGCMPadding()
   {
   Serial.println("AESGCMPadding");
   // Inputs to encryption.
-  uint8_t input[9]; // All-zeros input
-  memset(input, 0x55, sizeof(input));
+  const uint8_t inputSize = 9;
+  uint8_t input[inputSize]; // All-zeros input
+  memset(input, 0x55, inputSize);
   
   uint8_t key[AES_KEY_SIZE/8];
   memset(key, 0, sizeof(key)); // All-zeros key.
@@ -154,20 +156,21 @@ static void testAESGCMPadding()
   
   // Space for outputs from encryption.
   uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
-  uint8_t cipherText[sizeof(input)]; // Space for encrypted text
+  uint8_t cipherText[max(16, inputSize)]; // Space for encrypted text
   memset(cipherText, 0, sizeof(cipherText));
   
   // Instance to perform enc/dec.
   //OpenTRV::AESGCM::AES128GCM16small eo;
   // Do encryption.
   OTAESGCM::OTAES128GCMGeneric<> gen;
-  gen.gcmEncrypt(key, nonce, input, sizeof(input),
+  gen.gcmEncrypt(key, nonce, input, inputSize,
                          aad, sizeof(aad), cipherText, tag);
   // Check some of the cipher text and tag. Generated from java cipher
 //             0x56DD8F9B35E3F6C7A6 BDAF5DEC6047100A8233C7E36900C1D9
   AssertIsEqual(0x56, cipherText[0]);
   AssertIsEqual(0xdd, cipherText[1]);
-  AssertIsEqual(0xa6, cipherText[sizeof(cipherText)-1]);
+//  AssertIsEqual(0xa6, cipherText[sizeof(cipherText)-1]);
+  AssertIsEqual(0xa6, cipherText[8]);
   AssertIsEqual(0xbd, tag[0]);
   AssertIsEqual(0xd9, tag[15]);
   // Decrypt...
@@ -196,7 +199,7 @@ static void testGCMVS0()
   
   // Space for outputs from encryption.
   uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
-  uint8_t cipherText[sizeof(input)]; // Space for encrypted text.
+  uint8_t cipherText[max(16, sizeof(input))]; // Space for encrypted text.
   
   // Instance to perform enc/dec.
   //OpenTRV::AESGCM::AES128GCM16small eo;
@@ -237,10 +240,9 @@ static void testGCMVS1()
   
   // Space for outputs from encryption.
   uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
-  uint8_t cipherText[sizeof(input)]; // Space for encrypted text.
+  uint8_t cipherText[max(32, sizeof(input))]; // Space for encrypted text.
   
   // Instance to perform enc/dec.
-  //OpenTRV::AESGCM::AES128GCM16small eo;
   // Do encryption.
   OTAESGCM::OTAES128GCMGeneric<> gen;
   gen.gcmEncrypt(key, nonce, input, sizeof(input),
@@ -281,7 +283,7 @@ static void testAESGCMAuthentication()
   memset(aad, 0, sizeof(aad)); // All-zeros ADATA.
   // Space for outputs from encryption.
   uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
-  uint8_t cipherText[sizeof(input)]; // Space for encrypted text.
+  uint8_t cipherText[max(32, sizeof(input))]; // Space for encrypted text.
   
   // Instance to perform enc/dec.
   //OpenTRV::AESGCM::AES128GCM16small eo;
@@ -326,7 +328,7 @@ static void testAESGCMNoData()
   memset(nonce, 0x0, sizeof(nonce)); // All-zeros nonce.
   // Space for outputs from encryption.
   uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
-  uint8_t cipherText[sizeof(plainText)]; // Space for encrypted text.
+  uint8_t cipherText[max(16, sizeof(plainText))]; // Space for encrypted text.
   
   // Instance to perform enc/dec.
   //OpenTRV::AESGCM::AES128GCM16small eo;
@@ -387,7 +389,7 @@ static void testAESGCMcdataOnly()
   memset(nonce, 0x0, sizeof(nonce)); // All-zeros nonce.
   // Space for outputs from encryption.
   uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
-  uint8_t cipherText[sizeof(plainText)]; // Space for encrypted text.
+  uint8_t cipherText[max(16, sizeof(plainText))]; // Space for encrypted text.
   
   // Instance to perform enc/dec.
   //OpenTRV::AESGCM::AES128GCM16small eo;

@@ -24,8 +24,8 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015
 
 // Test expression and bucket out with error if false, else continue, including line number.
 // Macros allow __LINE__ to work correctly.
-#define AssertIsTrueWithErr(x, err) { if(!(x)) { OTUnitTest::error(0, (err), __LINE__); } }
-#define AssertIsTrue(x) AssertIsTrueWithErr((x), 0x0)
+#define AssertIsTrueWithErr(x, err) { if(!(x)) { OTUnitTest::error(1, (err), __LINE__); } }
+#define AssertIsTrue(x) AssertIsTrueWithErr((x), 0)
 #define AssertIsEqual(expected, x) { OTUnitTest::errorIfNotEqual((expected), (x), __LINE__); }
 #define AssertIsEqualWithDelta(expected, x, delta) { OTUnitTest::errorIfNotEqual((expected), (x), (delta), __LINE__); }
 
