@@ -91,13 +91,15 @@ static void shiftBlockRight(uint8_t *block)
  * @brief   checks if tags match
  * @param   tag1        pointer to array containing tag1
  * @param   tag2        pointer to array containing tag2
- * @retval  returns 0 if tags match. All other values are a fail
+ * @retval  returns 0 if tags match. All other values are a fail.
  */
 static uint8_t checkTag(const uint8_t *tag1, const uint8_t *tag2)
 {
     uint8_t result = 0;
 
-    // compare tags. If any byte fails, will set bits in result
+    // Compare tags: f any byte pair fails to match this will set bits in result.
+    // This method runtime does not depend on where the match is,
+    // which will help avoid some side-channel attacks based on timing.
     for (uint8_t i = 0; i < AES128GCM_TAG_SIZE; i++) {
         result |= *tag1 ^ *tag2;
         tag1++;
@@ -394,17 +396,19 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
     uint8_t authKey[AES128GCM_BLOCK_SIZE];
     uint8_t ICB[AES128GCM_BLOCK_SIZE];
 
-    // check if there is input data
-    if ( (PDATALength == 0) && (ADATALength == 0) ) return false;
+    // Check if there is input data.
+    // Fail if there is nothing to dencrypt and/or authenticate.
+    if ((PDATALength == 0) && (ADATALength == 0)) { return(false); }
 
     // Encrypt data
     generateAuthKey(ap, key, authKey);
     generateICB(IV, ICB);
     generateCDATA(ap, ICB, PDATA, PDATALength, CDATA, key);
 
-    // Generate authentication tag
+    // Generate authentication tag.
     generateTag(ap, key, authKey, ADATA, ADATALength, CDATA, PDATALength, tag, ICB);
-    return true;
+
+    return(true);
 }
 
 
@@ -429,20 +433,19 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
     uint8_t ICB[AES128GCM_BLOCK_SIZE];
     uint8_t calculatedTag[AES128GCM_TAG_SIZE];
 
-    // check if there is input data
-        if ( (CDATALength == 0) && (ADATALength == 0) ) return false;
+    // Check if there is input data.
+    // Fail if there is nothing to decrypt and/or authenticate.
+    if ((CDATALength == 0) && (ADATALength == 0)) { return(false); }
 
-    // Decrypt CDATA
+    // Decrypt CDATA.
     generateAuthKey(ap, key, authKey);
     generateICB(IV, ICB);
 
     generateCDATA(ap, ICB, CDATA, CDATALength, PDATA, key);
 
-    // Authenticate and return true if passed
+    // Authenticate and return true if tag matches.
     generateTag(ap, key, authKey, ADATA, ADATALength, CDATA, CDATALength, calculatedTag, ICB);
-    //if(!checkTag(calculatedTag, messageTag)) return true;
-    //else return false;
-    return (0 == checkTag(calculatedTag, messageTag));
+    return(0 == checkTag(calculatedTag, messageTag));
 }
 
 

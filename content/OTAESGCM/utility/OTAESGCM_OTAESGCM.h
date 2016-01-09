@@ -108,16 +108,16 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
             OTAES128E * const ap;
         public:
             // Create an instance pointing at a suitable AES block enc/dec implementation.
-            // The AES impl should not carry state between operations,
-            // but may hold temporary workspace.
+            // The AES impl should not carry logical state between operations,
+            // but may hold temporary workspace or non-key/data-dependent state.
             OTAES128GCMGenericBase(OTAES128E *aptr) : ap(aptr) { }
-            // Encrypt.
+            // Encrypt; true iff successful.
             virtual bool gcmEncrypt(
                 const uint8_t* key, const uint8_t* IV,
                 const uint8_t* PDATA, uint8_t PDATALength,
                 const uint8_t* ADATA, uint8_t ADATALength,
                 uint8_t* CDATA, uint8_t *tag);
-            // Decrypt.
+            // Decrypt; true iff successful.
             virtual bool gcmDecrypt(
                  const uint8_t* key, const uint8_t* IV,
                  const uint8_t* CDATA, uint8_t CDATALength,
