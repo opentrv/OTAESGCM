@@ -57,7 +57,7 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
              * @param   key				pointer to 16 byte (128 bit) key; never NULL
              * @param   IV             	pointer to 12 byte (96 bit) IV; never NULL
              * @param   PDATA          	pointer to plaintext array, this is internally padded up to a multiple of the blocksize; NULL if length 0.
-             * @param   PDATALength		length of plaintext array in bytes, can be zero
+             * @param   PDATALength	length of plaintext array in bytes, can be zero
              * @param   ADATA           pointer to additional data array; NULL if length 0.
              * @param   ADATALength    	length of additional data in bytes, can be zero
              * @param   CDATA           buffer to output ciphertext to, same length as PDATA array; set to NULL if PDATA is NULL
@@ -137,14 +137,21 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
         };
 
     // AES-GCM 128-bit-key fixed-size text encryption function.
+    // This is an adaptor/bridge function to ease outside use in simple cases
+    // without explicitly type/library dependencies, but use with care.
     // Returns true on success, false on failure.
     //
     // The state argument must be a pointer to a default OTAES128GCMGeneric<> instance.
     bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT(void *state,
-            const uint8_t *key, const uint8_t *nonce,
+            const uint8_t *key, const uint8_t *iv,
             const uint8_t *authtext, uint8_t authtextSize,
             const uint8_t *plaintext,
-            uint8_t *ciphertextOut, uint8_t *tagOut);
+            uint8_t *ciphertextOut, uint8_t *tagOut)
+        {
+        OTAES128GCMGeneric<> *i = static_cast<OTAES128GCMGeneric<> *> state;
+        if(NULL == state) { return(false); } // ERROR.
+        return(i->gcmEncrypt(key, iv, plaintext, 32, authtext, authtextSize, ciphertextOut, tagOut));
+        }
 
 
     }
