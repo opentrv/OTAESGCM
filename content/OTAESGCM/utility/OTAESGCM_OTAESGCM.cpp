@@ -383,7 +383,7 @@ static void generateAuthKey(OTAES128E * const ap, const uint8_t *pKey, uint8_t *
  * @param   PDATALength     length of plaintext array in bytes, can be zero
  * @param   ADATA           pointer to additional data array; NULL if length 0.
  * @param   ADATALength     length of additional data in bytes, can be zero
- * @param   CDATA           buffer to output ciphertext to, size must be padded to blocksize at/above PDATAlength; set to NULL if PDATA is NULL
+ * @param   CDATA           buffer to output ciphertext to, size MUST BE PADDED/EXPANDED TO FULL BLOCKSIZE MULTIPLE at/above PDATAlength; set to NULL if PDATA is NULL
  * @param   tag             pointer to 16 byte buffer to output tag to; never NULL
  * @retval  true if encryption successful, else false
  */
@@ -400,13 +400,17 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
     // Fail if there is nothing to dencrypt and/or authenticate.
     if ((PDATALength == 0) && (ADATALength == 0)) { return(false); }
 
+    // Compute implicit CDATA length (ie rounded up to the next block size if necessary).
+    if(PDATALength >= (uint8_t)(256U - (uint16_t)AES128GCM_BLOCK_SIZE)) { return(false); } // Too big.
+    const uint8_t CDATALength = (PDATALength + AES128GCM_BLOCK_SIZE-1) & ~(AES128GCM_BLOCK_SIZE-1);
+
     // Encrypt data
     generateAuthKey(ap, key, authKey);
     generateICB(IV, ICB);
     generateCDATA(ap, ICB, PDATA, PDATALength, CDATA, key);
 
     // Generate authentication tag.
-    generateTag(ap, key, authKey, ADATA, ADATALength, CDATA, PDATALength, tag, ICB);
+    generateTag(ap, key, authKey, ADATA, ADATALength, CDATA, CDATALength, tag, ICB);
 
     return(true);
 }
@@ -435,7 +439,10 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
 
     // Check if there is input data.
     // Fail if there is nothing to decrypt and/or authenticate.
-    if ((CDATALength == 0) && (ADATALength == 0)) { return(false); }
+    if((CDATALength == 0) && (ADATALength == 0)) { return(false); }
+
+    // Fail if the CDATA length is not a multiple of the block size.
+    if(0 != (CDATALength & (AES128GCM_BLOCK_SIZE-1))) { return(false); }
 
     // Decrypt CDATA.
     generateAuthKey(ap, key, authKey);
