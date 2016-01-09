@@ -136,6 +136,16 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
             OTAES128GCMGeneric() : OTAES128GCMGenericBase(&aesImpl) { }
         };
 
+    // AES-GCM 128-bit-key fixed-size text encryption function.
+    // Returns true on success, false on failure.
+    //
+    // The state argument must be a pointer to a default OTAES128GCMGeneric<> instance.
+    bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT(void *state,
+            const uint8_t *key, const uint8_t *nonce,
+            const uint8_t *authtext, uint8_t authtextSize,
+            const uint8_t *plaintext,
+            uint8_t *ciphertextOut, uint8_t *tagOut);
+
 
     }
 
