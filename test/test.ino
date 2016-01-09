@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the Licence.
 
 Author(s) / Copyright (s): Deniz Erbilgin 2015
-                           Damon Hart-Davis 2015
+                           Damon Hart-Davis 2015--2016
 */
 
 /*Unit test routines for library code.
@@ -34,6 +34,16 @@ void setup()
 static const int AES_KEY_SIZE = 128; // in bits
 static const int GCM_NONCE_LENGTH = 12; // in bytes
 static const int GCM_TAG_LENGTH = 16; // in bytes (default 16, 12 possible)
+  
+/**
+ * @brief  Test library version
+ */
+static void testLibVersion()
+  {
+  Serial.println("LibVersion");
+  AssertIsEqual(0, ARDUINO_LIB_OTAESGCM_VERSION_MAJOR);
+  AssertIsEqual(2, ARDUINO_LIB_OTAESGCM_VERSION_MINOR);
+  }
 
 //    /**Test on specific simple plaintext/ADATA.key value.
 //     * Can be used to test MCU-based implementations.
@@ -443,7 +453,8 @@ void loop()
 
 
   // Run the tests, fastest / newest / most-fragile / most-interesting first...
-  //testLibVersion();
+  testLibVersion();
+
   //testAESGCMNoKey();   // not currently implemented
   //testAESGCMNoIV();    // not currently implemented
   

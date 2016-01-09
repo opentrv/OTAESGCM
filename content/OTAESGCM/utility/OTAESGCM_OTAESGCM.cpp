@@ -363,7 +363,7 @@ static void generateTag(OTAES128E * const ap,
  */
 static void generateAuthKey(OTAES128E * const ap, const uint8_t *pKey, uint8_t *pAuthKey)
 {
-	// original has if(aes == NULL) return NULL;
+        // original has if(aes == NULL) return NULL;
 
     // Encrypt 128 bit block of 0s to generate authentication sub-key.
     memset(pAuthKey, 0, AES128GCM_BLOCK_SIZE);
@@ -378,26 +378,26 @@ static void generateAuthKey(OTAES128E * const ap, const uint8_t *pKey, uint8_t *
  * @param   key             pointer to 16 byte (128 bit) key; never NULL
  * @param   IV              pointer to 12 byte (96 bit) IV; never NULL
  * @param   PDATA           pointer to plaintext array, this is internally padded up to a multiple of the blocksize; NULL if length 0.
- * @param   PDATALength    length of plaintext array in bytes, can be zero
+ * @param   PDATALength     length of plaintext array in bytes, can be zero
  * @param   ADATA           pointer to additional data array; NULL if length 0.
- * @param   ADATALength    length of additional data in bytes, can be zero
+ * @param   ADATALength     length of additional data in bytes, can be zero
  * @param   CDATA           buffer to output ciphertext to, same length as PDATA array; set to NULL if PDATA is NULL
  * @param   tag             pointer to 16 byte buffer to output tag to; never NULL
- * @retval	true if encryption successful, else false
+ * @retval  true if encryption successful, else false
  */
 bool OTAES128GCMGenericBase::gcmEncrypt(
                         const uint8_t* key, const uint8_t* IV,
                         const uint8_t* PDATA, uint8_t PDATALength,
-                        uint8_t* ADATA, uint8_t ADATALength,
+                        const uint8_t* ADATA, uint8_t ADATALength,
                         uint8_t* CDATA, uint8_t *tag)
 {
     uint8_t authKey[AES128GCM_BLOCK_SIZE];
     uint8_t ICB[AES128GCM_BLOCK_SIZE];
 
     // check if there is input data
-	if ( (PDATALength == 0) && (ADATALength == 0) ) return false;
+        if ( (PDATALength == 0) && (ADATALength == 0) ) return false;
 
-	// Encrypt data
+        // Encrypt data
     generateAuthKey(ap, key, authKey);
     generateICB(IV, ICB);
     generateCDATA(ap, ICB, PDATA, PDATALength, CDATA, key);
@@ -409,15 +409,15 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
 
 
 /**
- * @brief	performs AES-GCM decryption and authentication
- * @param	key             pointer to 16 byte (128 bit) key
+ * @brief   performs AES-GCM decryption and authentication
+ * @param   key             pointer to 16 byte (128 bit) key
  * @param   IV              pointer to 12 byte (96 bit) IV
  * @param   CDATA           pointer to ciphertext array
  * @param   CDATALength     length of ciphertext array
  * @param   ADATA           pointer to additional data array
  * @param   ADATALength     length of additional data
  * @param   PDATA           buffer to output plaintext to. Must be same length as CDATA
- * @retval   true if decryption and authentication successful, else false
+ * @retval  true if decryption and authentication successful, else false
  */
 bool OTAES128GCMGenericBase::gcmDecrypt(
                         const uint8_t* key, const uint8_t* IV,
@@ -430,7 +430,7 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
     uint8_t calculatedTag[AES128GCM_TAG_SIZE];
 
     // check if there is input data
-	if ( (CDATALength == 0) && (ADATALength == 0) ) return false;
+        if ( (CDATALength == 0) && (ADATALength == 0) ) return false;
 
     // Decrypt CDATA
     generateAuthKey(ap, key, authKey);

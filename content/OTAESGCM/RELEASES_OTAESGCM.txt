@@ -9,6 +9,8 @@ or release/freeze points.
 
 
 pending:
+    DHD20160109: creating bridge functions for use in secure frame code from base lib.
+    DHD20160109: various const and other minor fixes (typos, etc).
     DHD20150919: starting work on V0.2...  Pending spec/API comment updates, safety with non-block-size data.
 
 
@@ -22,4 +24,3 @@ pending:
     Previous significant freezepoint:
     DHD20150919: tentative initial release
     DHD20150917: refactoring and rearranging code ready for initial release
-    

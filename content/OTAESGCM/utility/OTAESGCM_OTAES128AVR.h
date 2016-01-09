@@ -68,10 +68,10 @@ namespace OTAESGCM
              */
             virtual void blockEncrypt(const uint8_t* input, const uint8_t* key, uint8_t *output);
 
-            // Clean up sensitive state and removes pointers to external state.
-            // If Key pointer already cleared then assumed to already have been done and is not repeated.
-            // NOT YET TESTED.
-            virtual void cleanup() { if(NULL!=Key) { memset(RoundKey, 0, sizeof(RoundKey)); state=NULL; Key=NULL; } }
+//            // Clean up sensitive state and removes pointers to external state.
+//            // If Key pointer already cleared then assumed to already have been done and is not repeated.
+//            // NOT YET TESTED.
+//            virtual void cleanup() { if(NULL!=Key) { memset(RoundKey, 0, sizeof(RoundKey)); state=NULL; Key=NULL; } }
         };
 
     // AVR decrypt and encrypt implementation.

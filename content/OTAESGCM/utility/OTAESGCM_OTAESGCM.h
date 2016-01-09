@@ -67,7 +67,7 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
             virtual bool gcmEncrypt(
                 const uint8_t* key, const uint8_t* IV,
                 const uint8_t* PDATA, uint8_t PDATALength,
-                uint8_t* ADATA, uint8_t ADATALength,
+                const uint8_t* ADATA, uint8_t ADATALength,
                 uint8_t* CDATA, uint8_t *tag) = 0;
 
             /**
@@ -115,7 +115,7 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
             virtual bool gcmEncrypt(
                 const uint8_t* key, const uint8_t* IV,
                 const uint8_t* PDATA, uint8_t PDATALength,
-                uint8_t* ADATA, uint8_t ADATALength,
+                const uint8_t* ADATA, uint8_t ADATALength,
                 uint8_t* CDATA, uint8_t *tag);
             // Decrypt.
             virtual bool gcmDecrypt(
@@ -136,14 +136,16 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
             OTAES128GCMGeneric() : OTAES128GCMGenericBase(&aesImpl) { }
         };
 
+
     // AES-GCM 128-bit-key fixed-size text encryption function.
     // This is an adaptor/bridge function to ease outside use in simple cases
-    // without explicitly type/library dependencies, but use with care.
-    // Stateless; creates state on stack (which may be considerable, be careful); state is not used.t
+    // without explicit type/library dependencies, but use with care.
+    // Stateless implementation: creates state on stack each time at cost of stack space
+    // (which may be considerable and difficult to manage in an embedded system)
+    // and at cost of time.
+    // The state parameter is not used (is ignored) and should be NULL.
     // Returns true on success, false on failure.
-    //
-    // The state argument must be a pointer to a default OTAES128GCMGeneric<> instance.
-    bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS(void *state,
+    inline bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS(void *,
             const uint8_t *key, const uint8_t *iv,
             const uint8_t *authtext, uint8_t authtextSize,
             const uint8_t *plaintext,
@@ -152,7 +154,6 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
         OTAES128GCMGeneric<> i; // FIXME: ensure state is cleared afterwards.
         return(i.gcmEncrypt(key, iv, plaintext, 32, authtext, authtextSize, ciphertextOut, tagOut));
         }
-
 
     }
 
