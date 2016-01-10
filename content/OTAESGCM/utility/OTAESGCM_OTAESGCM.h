@@ -145,12 +145,12 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
     // and at cost of time.
     // The state parameter is not used (is ignored) and should be NULL.
     // Other than the authtext, all sizes are fixed:
-    //   * textSize is 32
+    //   * textSize is 32 (or zero if plaintext is NULL)
     //   * keySize is 16
     //   * nonceSize is 12
     //   * tagSize is 16
     // The plain-text (and identical cipher-text) size is picked to be
-    // a multiple of the cipher's block size,
+    // a multiple of the cipher's block size, or zero,
     // which implies likely requirement for padding of the plain text.
     // Note that the authenticated text size is not fixed, ie is zero or more bytes.
     // Returns true on success, false on failure.
@@ -168,12 +168,12 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
     // and at cost of time.
     // The state parameter is not used (is ignored) and should be NULL.
     // Other than the authtext, all sizes are fixed:
-    //   * textSize is 32
+    //   * textSize is 32 (or zero if ciphertext is NULL)
     //   * keySize is 16
     //   * nonceSize is 12
     //   * tagSize is 16
     // The plain-text (and identical cipher-text) size is picked to be
-    // a multiple of the cipher's block size,
+    // a multiple of the cipher's block size, or zero,
     // which implies likely requirement for padding of the plain text.
     // Note that the authenticated text size is not fixed, ie is zero or more bytes.
     // Decrypts/authenticates the output of fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS.)

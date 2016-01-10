@@ -464,12 +464,12 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
 // and at cost of time.
 // The state parameter is not used (is ignored) and should be NULL.
 // Other than the authtext, all sizes are fixed:
-//   * textSize is 32
+//   * textSize is 32 (or zero if plaintext is NULL)
 //   * keySize is 16
 //   * nonceSize is 12
 //   * tagSize is 16
 // The plain-text (and identical cipher-text) size is picked to be
-// a multiple of the cipher's block size,
+// a multiple of the cipher's block size, or zero,
 // which implies likely requirement for padding of the plain text.
 // Note that the authenticated text size is not fixed, ie is zero or more bytes.
 // Returns true on success, false on failure.
@@ -482,7 +482,7 @@ bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS(void *,
     if((NULL == key) || (NULL == iv) ||
        (NULL == plaintext) || (NULL == ciphertextOut) || (NULL == tagOut)) { return(false); } // ERROR
     OTAES128GCMGeneric<> i; // FIXME: ensure state is cleared afterwards.
-    return(i.gcmEncrypt(key, iv, plaintext, 32, (0 == authtextSize) ? NULL : authtext, authtextSize, ciphertextOut, tagOut));
+    return(i.gcmEncrypt(key, iv, plaintext, (NULL == plaintext) ? 0 : 32, (0 == authtextSize) ? NULL : authtext, authtextSize, ciphertextOut, tagOut));
     }
 
 // AES-GCM 128-bit-key fixed-size text (256-bit/32-byte) decryption/authentication function.
@@ -493,12 +493,12 @@ bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS(void *,
 // and at cost of time.
 // The state parameter is not used (is ignored) and should be NULL.
 // Other than the authtext, all sizes are fixed:
-//   * textSize is 32
+//   * textSize is 32 (or zero if ciphertext is NULL)
 //   * keySize is 16
 //   * nonceSize is 12
 //   * tagSize is 16
 // The plain-text (and identical cipher-text) size is picked to be
-// a multiple of the cipher's block size,
+// a multiple of the cipher's block size, or zero,
 // which implies likely requirement for padding of the plain text.
 // Note that the authenticated text size is not fixed, ie is zero or more bytes.
 // Decrypts/authenticates the output of fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS.)
@@ -512,7 +512,7 @@ bool fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_STATELESS(void *state,
     if((NULL == key) || (NULL == iv) ||
        (NULL == ciphertext) || (NULL == tag) || (NULL == tag)) { return(false); } // ERROR
     OTAES128GCMGeneric<> i; // FIXME: ensure state is cleared afterwards.
-    return(i.gcmDecrypt(key, iv, ciphertext, 32, (0 == authtextSize) ? NULL : authtext, authtextSize, tag, plaintextOut));
+    return(i.gcmDecrypt(key, iv, ciphertext, (NULL == ciphertext) ? 0 : 32, (0 == authtextSize) ? NULL : authtext, authtextSize, tag, plaintextOut));
     }
 
 
