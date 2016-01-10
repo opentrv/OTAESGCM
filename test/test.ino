@@ -338,7 +338,13 @@ static void testGCMVS1ViaFixed32BTextSize()
   AssertIsEqual(0x24, tag[1]);
   AssertIsEqual(0xd9, tag[14]);
   // Decrypt via simplified interface...
-  // TODO
+  uint8_t inputDecoded[32];
+  AssertIsTrue(OTAESGCM::fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_STATELESS(NULL,
+            key, nonce,
+            aad, sizeof(aad),
+            cipherText, tag,
+            inputDecoded));
+  AssertIsEqual(0, memcmp(input, inputDecoded, 32));
   }
 
 
