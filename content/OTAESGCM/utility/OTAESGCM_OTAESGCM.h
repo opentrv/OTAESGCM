@@ -154,15 +154,11 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
     // which implies likely requirement for padding of the plain text.
     // Note that the authenticated text size is not fixed, ie is zero or more bytes.
     // Returns true on success, false on failure.
-    inline bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS(void *,
+    bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS(void *,
             const uint8_t *key, const uint8_t *iv,
             const uint8_t *authtext, uint8_t authtextSize,
             const uint8_t *plaintext,
-            uint8_t *ciphertextOut, uint8_t *tagOut)
-        {
-        OTAES128GCMGeneric<> i; // FIXME: ensure state is cleared afterwards.
-        return(i.gcmEncrypt(key, iv, plaintext, 32, authtext, authtextSize, ciphertextOut, tagOut));
-        }
+            uint8_t *ciphertextOut, uint8_t *tagOut);
 
     // AES-GCM 128-bit-key fixed-size text (256-bit/32-byte) decryption/authentication function.
     // This is an adaptor/bridge function to ease outside use in simple cases
@@ -182,15 +178,11 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
     // Note that the authenticated text size is not fixed, ie is zero or more bytes.
     // Decrypts/authenticates the output of fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS.)
     // Returns true on success, false on failure.
-    inline bool fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_STATELESS(void *state,
+    bool fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_STATELESS(void *state,
             const uint8_t *key, const uint8_t *iv,
             const uint8_t *authtext, uint8_t authtextSize,
             const uint8_t *ciphertext, const uint8_t *tag,
-            uint8_t *plaintextOut)
-        {
-        OTAES128GCMGeneric<> i; // FIXME: ensure state is cleared afterwards.
-        return(i.gcmDecrypt(key, iv, ciphertext, 32, authtext, authtextSize, tag, plaintextOut));
-        }
+            uint8_t *plaintextOut);
 
 
     }
