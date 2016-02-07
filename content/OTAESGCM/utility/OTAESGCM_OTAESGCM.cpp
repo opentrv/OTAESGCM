@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the Licence.
 
 Author(s) / Copyright (s): Deniz Erbilgin 2015
-                           Damon Hart-Davis 2015
+                           Damon Hart-Davis 2015--2016
 */
 
 /* OpenTRV OTAESGCM microcontroller-/IoT- friendly AES(128)-GCM implementation. */
@@ -479,8 +479,7 @@ bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS(void *,
         const uint8_t *plaintext,
         uint8_t *ciphertextOut, uint8_t *tagOut)
     {
-    if((NULL == key) || (NULL == iv) ||
-       (NULL == plaintext) || (NULL == ciphertextOut) || (NULL == tagOut)) { return(false); } // ERROR
+    if((NULL == key) || (NULL == iv) || (NULL == ciphertextOut) || (NULL == tagOut)) { return(false); } // ERROR
     OTAES128GCMGeneric<> i; // FIXME: ensure state is cleared afterwards.
     return(i.gcmEncrypt(key, iv, plaintext, (NULL == plaintext) ? 0 : 32, (0 == authtextSize) ? NULL : authtext, authtextSize, ciphertextOut, tagOut));
     }
@@ -509,8 +508,7 @@ bool fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_STATELESS(void *state,
         const uint8_t *ciphertext, const uint8_t *tag,
         uint8_t *plaintextOut)
     {
-    if((NULL == key) || (NULL == iv) ||
-       (NULL == ciphertext) || (NULL == tag) || (NULL == tag)) { return(false); } // ERROR
+    if((NULL == key) || (NULL == iv) || (NULL == tag) || (NULL == tag)) { return(false); } // ERROR
     OTAES128GCMGeneric<> i; // FIXME: ensure state is cleared afterwards.
     return(i.gcmDecrypt(key, iv, ciphertext, (NULL == ciphertext) ? 0 : 32, (0 == authtextSize) ? NULL : authtext, authtextSize, tag, plaintextOut));
     }

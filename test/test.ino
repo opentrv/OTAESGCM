@@ -323,7 +323,6 @@ static void testGCMVS1ViaFixed32BTextSize()
   // Space for outputs from encryption.
   uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
   uint8_t cipherText[max(32, sizeof(input))]; // Space for encrypted text.
-  // Instance to perform enc/dec.
   // Do encryption via simplified interface.
   AssertIsTrue(OTAESGCM::fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS(NULL,
             key, nonce,
@@ -345,6 +344,21 @@ static void testGCMVS1ViaFixed32BTextSize()
             cipherText, tag,
             inputDecoded));
   AssertIsEqual(0, memcmp(input, inputDecoded, 32));
+  // Try enc/auth with no (ie zero-length) plaintext.
+  AssertIsTrue(OTAESGCM::fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS(NULL,
+            key, nonce,
+            aad, sizeof(aad),
+            NULL,
+            cipherText, tag));
+  // Check some of the tag.
+//  AssertIsEqual(0x24, tag[1]);
+//  AssertIsEqual(0xd9, tag[14]);
+  // Auth/decrypt (auth should still succeed).
+  AssertIsTrue(OTAESGCM::fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_STATELESS(NULL,
+            key, nonce,
+            aad, sizeof(aad),
+            NULL, tag,
+            inputDecoded));  
   }
 
 
