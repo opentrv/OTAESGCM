@@ -479,8 +479,7 @@ bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS(void *,
         const uint8_t *plaintext,
         uint8_t *ciphertextOut, uint8_t *tagOut)
     {
-    if((NULL == key) || (NULL == iv) ||
-       (NULL == plaintext) || (NULL == ciphertextOut) || (NULL == tagOut)) { return(false); } // ERROR
+    if((NULL == key) || (NULL == iv) || (NULL == ciphertextOut) || (NULL == tagOut)) { return(false); } // ERROR
     OTAES128GCMGeneric<> i; // FIXME: ensure state is cleared afterwards.
     return(i.gcmEncrypt(key, iv, plaintext, (NULL == plaintext) ? 0 : 32, (0 == authtextSize) ? NULL : authtext, authtextSize, ciphertextOut, tagOut));
     }
