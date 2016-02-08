@@ -472,12 +472,13 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
 // a multiple of the cipher's block size, or zero,
 // which implies likely requirement for padding of the plain text.
 // Note that the authenticated text size is not fixed, ie is zero or more bytes.
+// The plaintext can be NULL, ciphertextOut not (a future version may allow it to be if plaintext is).
 // Returns true on success, false on failure.
-bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS(void *,
-        const uint8_t *key, const uint8_t *iv,
-        const uint8_t *authtext, uint8_t authtextSize,
-        const uint8_t *plaintext,
-        uint8_t *ciphertextOut, uint8_t *tagOut)
+bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS(void *const ,
+        const uint8_t *const key, const uint8_t *const iv,
+        const uint8_t *const authtext, const uint8_t authtextSize,
+        const uint8_t *const plaintext,
+        uint8_t *const ciphertextOut, uint8_t *const tagOut)
     {
     if((NULL == key) || (NULL == iv) || (NULL == ciphertextOut) || (NULL == tagOut)) { return(false); } // ERROR
     OTAES128GCMGeneric<> i; // FIXME: ensure state is cleared afterwards.
@@ -500,15 +501,16 @@ bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS(void *,
 // a multiple of the cipher's block size, or zero,
 // which implies likely requirement for padding of the plain text.
 // Note that the authenticated text size is not fixed, ie is zero or more bytes.
+// The ciphertext can be NULL, plaintextOut not (a future version may allow it to be if ciphertext is).
 // Decrypts/authenticates the output of fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS.)
 // Returns true on success, false on failure.
-bool fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_STATELESS(void *state,
-        const uint8_t *key, const uint8_t *iv,
-        const uint8_t *authtext, uint8_t authtextSize,
-        const uint8_t *ciphertext, const uint8_t *tag,
-        uint8_t *plaintextOut)
+bool fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_STATELESS(void *const ,
+        const uint8_t *const key, const uint8_t *const iv,
+        const uint8_t *const authtext, const uint8_t authtextSize,
+        const uint8_t *const ciphertext, const uint8_t *const tag,
+        uint8_t *const plaintextOut)
     {
-    if((NULL == key) || (NULL == iv) || (NULL == tag) || (NULL == tag)) { return(false); } // ERROR
+    if((NULL == key) || (NULL == iv) || (NULL == tag) || (NULL == plaintextOut)) { return(false); } // ERROR
     OTAES128GCMGeneric<> i; // FIXME: ensure state is cleared afterwards.
     return(i.gcmDecrypt(key, iv, ciphertext, (NULL == ciphertext) ? 0 : 32, (0 == authtextSize) ? NULL : authtext, authtextSize, tag, plaintextOut));
     }
