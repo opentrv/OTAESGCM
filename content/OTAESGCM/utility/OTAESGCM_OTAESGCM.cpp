@@ -397,8 +397,8 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
     uint8_t ICB[AES128GCM_BLOCK_SIZE];
 
     // Check if there is input data.
-    // Fail if there is nothing to dencrypt and/or authenticate.
-    if ((PDATALength == 0) && (ADATALength == 0)) { return(false); }
+    // Fail if there is nothing to encrypt and/or authenticate.
+    if((PDATALength == 0) && (ADATALength == 0)) { return(false); }
 
     // Compute implicit CDATA length (ie rounded up to the next block size if necessary).
     if(PDATALength >= (uint8_t)(256U - (uint16_t)AES128GCM_BLOCK_SIZE)) { return(false); } // Too big.
