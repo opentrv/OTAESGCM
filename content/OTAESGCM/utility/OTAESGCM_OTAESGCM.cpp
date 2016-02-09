@@ -397,8 +397,8 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
     uint8_t ICB[AES128GCM_BLOCK_SIZE];
 
     // Check if there is input data.
-    // Fail if there is nothing to dencrypt and/or authenticate.
-    if ((PDATALength == 0) && (ADATALength == 0)) { return(false); }
+    // Fail if there is nothing to encrypt and/or authenticate.
+    if((PDATALength == 0) && (ADATALength == 0)) { return(false); }
 
     // Compute implicit CDATA length (ie rounded up to the next block size if necessary).
     if(PDATALength >= (uint8_t)(256U - (uint16_t)AES128GCM_BLOCK_SIZE)) { return(false); } // Too big.
@@ -474,7 +474,7 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
 // Note that the authenticated text size is not fixed, ie is zero or more bytes.
 // The plaintext can be NULL, ciphertextOut not (a future version may allow it to be if plaintext is).
 // Returns true on success, false on failure.
-bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS(void *const ,
+bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS(void *const,
         const uint8_t *const key, const uint8_t *const iv,
         const uint8_t *const authtext, const uint8_t authtextSize,
         const uint8_t *const plaintext,
@@ -504,7 +504,7 @@ bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS(void *const ,
 // The ciphertext can be NULL, plaintextOut not (a future version may allow it to be if ciphertext is).
 // Decrypts/authenticates the output of fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS.)
 // Returns true on success, false on failure.
-bool fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_STATELESS(void *const ,
+bool fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_STATELESS(void *const,
         const uint8_t *const key, const uint8_t *const iv,
         const uint8_t *const authtext, const uint8_t authtextSize,
         const uint8_t *const ciphertext, const uint8_t *const tag,
