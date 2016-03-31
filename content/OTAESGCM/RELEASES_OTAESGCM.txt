@@ -9,6 +9,17 @@ or release/freeze points.
 
 
 pending:
+
+
+
+
+
+20150804:
+    freezepoint name: V1.0
+    branch name: HEAD
+    Deployed where:  Production.
+    Changes since last freezepoint (developer/mgr initials and brief description): 
+    Previous significant freezepoint: V0.1
     DHD20160109: creating bridge functions for use in secure frame code from base lib.
     DHD20160109: various const and other minor fixes (typos, etc).
     DHD20150919: starting work on V0.2...  Pending spec/API comment updates, safety with non-block-size data.
