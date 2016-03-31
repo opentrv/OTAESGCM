@@ -41,8 +41,8 @@ static const int GCM_TAG_LENGTH = 16; // in bytes (default 16, 12 possible)
 static void testLibVersion()
   {
   Serial.println("LibVersion");
-  AssertIsEqual(0, ARDUINO_LIB_OTAESGCM_VERSION_MAJOR);
-  AssertIsEqual(2, ARDUINO_LIB_OTAESGCM_VERSION_MINOR);
+  AssertIsEqual(1, ARDUINO_LIB_OTAESGCM_VERSION_MAJOR);
+  AssertIsEqual(0, ARDUINO_LIB_OTAESGCM_VERSION_MINOR);
   }
 
 //    /**Test on specific simple plaintext/ADATA.key value.
