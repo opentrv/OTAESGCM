@@ -18,12 +18,18 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015
 */
 
 /* Atmel AVR/ATMega (eg ATMega328P) AES(128) implementation. */
+/* Also use as generic (8-bit) MCU implementation. */
 
-#if defined(__AVR_ARCH__) || defined(ARDUINO_ARCH_AVR) // Atmel AVR only.
-
+#include <stdint.h>
 #include <string.h>
 
+#if defined(__AVR_ARCH__) || defined(ARDUINO_ARCH_AVR) // Atmel AVR only.
 #include <avr/pgmspace.h>
+#else
+// Kludge code to treat PROGMEM as part of uniform memory space.
+#define PROGMEM
+inline uint8_t pgm_read_byte(const uint8_t *p) { return(*p); }
+#endif
 
 #include "OTAESGCM_OTAES128.h"
 #include "OTAESGCM_OTAES128AVR.h"
@@ -552,4 +558,4 @@ void OTAES128DE_AVR::blockDecrypt(const uint8_t* input, const uint8_t* key, uint
     }
 
 
-#endif
+//#endif // defined(__AVR_ARCH__) || defined(ARDUINO_ARCH_AVR) // Atmel AVR only.

@@ -20,7 +20,11 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015
 #ifndef OT_UNIT_TEST_H_
 #define OT_UNIT_TEST_H_
 
+#ifdef ARDUINO
 #include <Arduino.h>
+#else
+#define PROGMEM
+#endif
 
 // Test expression and bucket out with error if false, else continue, including line number.
 // Macros allow __LINE__ to work correctly.

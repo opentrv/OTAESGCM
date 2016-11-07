@@ -14,6 +14,8 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015
                            Damon Hart-Davis 2015--2016
 */
 
+#ifdef ARDUINO
+
 #include "unitTest.h"
 
 /**
@@ -46,3 +48,4 @@ void OTUnitTest::error(int expected, int actual, int line)
     }
   }
 
+#endif // ARDUINO

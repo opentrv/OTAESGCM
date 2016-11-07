@@ -18,11 +18,12 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015
 */
 
 /* Atmel AVR/ATMega (eg ATMega328P) AES(128) implementation. */
+/* Also use as generic (8-bit) MCU implementation. */
 
 #ifndef ARDUINO_LIB_OTAESGCM_OTAES128AVR_H
 #define ARDUINO_LIB_OTAESGCM_OTAES128AVR_H
 
-#if defined(__AVR_ARCH__) || defined(ARDUINO_ARCH_AVR) // Atmel AVR only.
+//#if defined(__AVR_ARCH__) || defined(ARDUINO_ARCH_AVR) // Atmel AVR only.
 
 #include <stdint.h>
 #include <string.h>
@@ -99,5 +100,6 @@ namespace OTAESGCM
 
     }
 
-#endif
+//#endif // defined(__AVR_ARCH__) || defined(ARDUINO_ARCH_AVR) // Atmel AVR only.
+
 #endif

@@ -38,6 +38,22 @@ namespace OTAESGCM
     typedef OTAES128DE_AVR OTAES128DE_small_t;
     typedef OTAES128DE_AVR OTAES128DE_default_t;
     }
+#else
+
+// Take this as a generic impl for MCUs.
+#include "OTAESGCM_OTAES128AVR.h"
+// Fast, small and default implementations, enc and enc+dec, for this architecture.
+namespace OTAESGCM
+    {
+    typedef OTAES128E_AVR OTAES128E_fast_t;
+    typedef OTAES128E_AVR OTAES128E_small_t;
+    typedef OTAES128E_AVR OTAES128E_default_t;
+    typedef OTAES128DE_AVR OTAES128DE_fast_t;
+    typedef OTAES128DE_AVR OTAES128DE_small_t;
+    typedef OTAES128DE_AVR OTAES128DE_default_t;
+    }
+
+
 #endif
 
 #endif
