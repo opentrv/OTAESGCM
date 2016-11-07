@@ -6,7 +6,7 @@
 <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_ARGUMENTS" value="--gtest_shuffle --gtest_repeat=1 --gtest_print_time=1 --gtest_color=no"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="Debug/OTAESGCM"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="OTAESGCM"/>
-<booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="true"/>
+<booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="false"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="cdt.managedbuild.config.gnu.exe.debug.1991014182.42112074"/>
 <stringAttribute key="org.eclipse.cdt.testsrunner.launch.TESTS_RUNNER" value="org.eclipse.cdt.testsrunner.gtest"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
