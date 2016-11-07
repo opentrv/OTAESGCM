@@ -419,19 +419,20 @@ TEST(Main,AESGCMadataOnly)
     // Space for outputs from encryption.
     uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
     uint8_t ADATA[16];
+    uint8_t cipherText[16]; // Space for encrypted text.
 
     // Instance to perform enc/dec.
     //OpenTRV::AESGCM::AES128GCM16small eo;
     // Do encryption.
     OTAESGCM::OTAES128GCMGeneric<> gen;
     ASSERT_TRUE(gen.gcmEncrypt(key, nonce, NULL, 0,
-                      ADATA, sizeof(ADATA), NULL, tag));
+                      ADATA, sizeof(ADATA), cipherText, tag));
     // Decrypt...
     uint8_t tempTag[GCM_TAG_LENGTH];
     memcpy(tempTag, tag, GCM_TAG_LENGTH);
 
     // Un-hacked tag should match.
-    ASSERT_TRUE(gen.gcmDecrypt(key, nonce, NULL, 0,
+    ASSERT_TRUE(gen.gcmDecrypt(key, nonce, cipherText, 0,
                       ADATA, sizeof(ADATA), tempTag, NULL));
 }
 
