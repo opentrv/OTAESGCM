@@ -383,7 +383,8 @@ static void generateAuthKey(OTAES128E * const ap, const uint8_t *pKey, uint8_t *
  * @param   PDATALength     length of plaintext array in bytes, can be zero
  * @param   ADATA           pointer to additional data array; NULL if length 0.
  * @param   ADATALength     length of additional data in bytes, can be zero
- * @param   CDATA           buffer to output ciphertext to, size MUST BE PADDED/EXPANDED TO FULL BLOCKSIZE MULTIPLE at/above PDATAlength; set to NULL if PDATA is NULL
+ * @param   CDATA           buffer to output ciphertext to, size MUST BE PADDED/EXPANDED TO FULL BLOCKSIZE MULTIPLE at/above PDATAlength;
+ *                          (nominally set to NULL if PDATA is NULL but seems to cause a crash)
  * @param   tag             pointer to 16 byte buffer to output tag to; never NULL
  * @retval  true if encryption successful, else false
  */
@@ -395,6 +396,8 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
 {
     uint8_t authKey[AES128GCM_BLOCK_SIZE];
     uint8_t ICB[AES128GCM_BLOCK_SIZE];
+
+    if(NULL == CDATA) { return(false); } // DHD20161107: NULL CDATA causes crashes in subroutines.
 
     // Check if there is input data.
     // Fail if there is nothing to encrypt and/or authenticate.
