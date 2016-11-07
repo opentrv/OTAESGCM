@@ -359,17 +359,17 @@ TEST(Main,AESGCMAuthentication)
                                     aad, sizeof(aad), tempTag, plain));
   // Various manglings of the tag should fail.
   tempTag[0]++;
-  ASSERT_TRUE(!gen.gcmDecrypt(key, nonce, cipherText, sizeof(cipherText),
+  ASSERT_FALSE(gen.gcmDecrypt(key, nonce, cipherText, sizeof(cipherText),
                                     aad, sizeof(aad), tempTag, plain));
   tempTag[0]--;
 
   tempTag[1]++;
-  ASSERT_TRUE(!gen.gcmDecrypt(key, nonce, cipherText, sizeof(cipherText),
+  ASSERT_FALSE(gen.gcmDecrypt(key, nonce, cipherText, sizeof(cipherText),
                                     aad, sizeof(aad), tempTag, plain));
   tempTag[1]--;
 
   tempTag[15]++;
-  ASSERT_TRUE(!gen.gcmDecrypt(key, nonce, cipherText, sizeof(cipherText),
+  ASSERT_FALSE(gen.gcmDecrypt(key, nonce, cipherText, sizeof(cipherText),
                                     aad, sizeof(aad), tempTag, plain));
   }
 
