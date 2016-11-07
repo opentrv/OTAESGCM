@@ -9,6 +9,7 @@ or release/freeze points.
 
 
 pending:
+    DHD20161107: added portable unit tests (and found some initial apparent bugs)
 
 
 
