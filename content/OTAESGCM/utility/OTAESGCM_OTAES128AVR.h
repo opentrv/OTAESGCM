@@ -18,12 +18,10 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015
 */
 
 /* Atmel AVR/ATMega (eg ATMega328P) AES(128) implementation. */
-/* Also use as generic (8-bit) MCU implementation. */
+/* Also use as generic (small / 8-bit) MCU implementation. */
 
 #ifndef ARDUINO_LIB_OTAESGCM_OTAES128AVR_H
 #define ARDUINO_LIB_OTAESGCM_OTAES128AVR_H
-
-//#if defined(__AVR_ARCH__) || defined(ARDUINO_ARCH_AVR) // Atmel AVR only.
 
 #include <stdint.h>
 #include <string.h>
@@ -35,12 +33,21 @@ namespace OTAESGCM
     {
 
 
-    // AVR encrypt-only implementation.
+    // AVR (8-bit MCU optimised) encrypt-only implementation.
     // Neither re-entrant nor ISR-safe except where stated.
     // Carries workspace but logically no state is carried from one operation to the next.
     // Residual state should be regarded as sensitive, and eg overwritten before being released to heap.
     class OTAES128E_AVR : public OTAES128E
         {
+        private:
+            // Size of RoundKey (bytes).
+            static constexpr uint8_t RoundKeySize = 176;
+
+        public:
+            // External workspace/scratch required minimum size, unaligned; strictly positive.
+            // At the moment just enough to cover the RoundKey.
+            static constexpr uint8_t workspaceRequired = RoundKeySize;
+
         protected:
             // The AES key (128 bits, 16 bytes); never NULL.
             // Note that Key is space passed in by caller.
@@ -51,7 +58,7 @@ namespace OTAESGCM
             state_t *state;
             // Nr+1 round keys.
             // Should be cleared before releasing space to (say) heap.
-            uint8_t RoundKey[176];
+            uint8_t RoundKey[RoundKeySize];
 
             void KeyExpansion();
             void AddRoundKey(uint8_t round);
@@ -69,17 +76,17 @@ namespace OTAESGCM
              */
             virtual void blockEncrypt(const uint8_t* input, const uint8_t* key, uint8_t *output);
 
-//            // Clean up sensitive state and removes pointers to external state.
-//            // If Key pointer already cleared then assumed to already have been done and is not repeated.
-//            // NOT YET TESTED.
-//            virtual void cleanup() { if(NULL!=Key) { memset(RoundKey, 0, sizeof(RoundKey)); state=NULL; Key=NULL; } }
+            // Clean up sensitive state and removes pointers to external state.
+            // If Key pointer already cleared then assumed to already have been done and is not repeated.
+            // NOT YET TESTED.
+            virtual void cleanup() { if(NULL != Key) { memset(RoundKey, 0, sizeof(RoundKey)); state=NULL; Key=NULL; } }
         };
 
     // AVR decrypt and encrypt implementation.
     // Neither re-entrant nor ISR-safe except where stated.
     // Carries workspace but logically no state is carried from one operation to the next.
     // Residual state should be regarded as sensitive, and eg overwritten before being released to heap.
-    class OTAES128DE_AVR : public OTAES128D, public OTAES128E_AVR
+    class OTAES128DE_AVR final : public OTAES128D, public OTAES128E_AVR
         {
         protected:
             void InvMixColumns();
@@ -99,7 +106,5 @@ namespace OTAESGCM
 
 
     }
-
-//#endif // defined(__AVR_ARCH__) || defined(ARDUINO_ARCH_AVR) // Atmel AVR only.
 
 #endif
