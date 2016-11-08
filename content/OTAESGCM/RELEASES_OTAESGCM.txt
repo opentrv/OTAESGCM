@@ -9,11 +9,16 @@ or release/freeze points.
 
 
 pending:
-    DHD20161108: (V2.0 coming) adjusting API to allow workspace to be passed in to better manage memory.
+
+
+20161108:
+    freezepoint name: V2.0
+    branch name: HEAD
+    Deployed where:
+    Changes since last freezepoint (developer/mgr initials and brief description): 
+    Previous significant freezepoint: V1.0
+    DHD20161108: adjusting API to allow workspace to be passed in to better manage memory.
     DHD20161107: added portable unit tests (and found some initial apparent bugs)
-
-
-
 
 
 20160331:
