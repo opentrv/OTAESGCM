@@ -392,7 +392,7 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
                         const uint8_t* key, const uint8_t* IV,
                         const uint8_t* PDATA, uint8_t PDATALength,
                         const uint8_t* ADATA, uint8_t ADATALength,
-                        uint8_t* CDATA, uint8_t *tag)
+                        uint8_t* CDATA, uint8_t *tag) const
 {
     uint8_t authKey[AES128GCM_BLOCK_SIZE];
     uint8_t ICB[AES128GCM_BLOCK_SIZE];
@@ -434,7 +434,7 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
                         const uint8_t* key, const uint8_t* IV,
                         const uint8_t* CDATA, uint8_t CDATALength,
                         const uint8_t* ADATA, uint8_t ADATALength,
-                        const uint8_t* messageTag, uint8_t *PDATA)
+                        const uint8_t* messageTag, uint8_t *PDATA) const
 {
     uint8_t authKey[AES128GCM_BLOCK_SIZE];
     uint8_t ICB[AES128GCM_BLOCK_SIZE];

@@ -46,7 +46,7 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
         {
         protected:
             // Only derived classes can construct an instance.
-            OTAES128GCM() { }
+            constexpr OTAES128GCM() { }
 
         public:
             /**
@@ -69,7 +69,7 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
                 const uint8_t* key, const uint8_t* IV,
                 const uint8_t* PDATA, uint8_t PDATALength,
                 const uint8_t* ADATA, uint8_t ADATALength,
-                uint8_t* CDATA, uint8_t *tag) = 0;
+                uint8_t* CDATA, uint8_t *tag) const = 0;
 
             /**
              * @brief   performs AES-GCM decryption and authentication
@@ -86,7 +86,7 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
                  const uint8_t* key, const uint8_t* IV,
                  const uint8_t* CDATA, uint8_t CDATALength,
                  const uint8_t* ADATA, uint8_t ADATALength,
-                 const uint8_t* messageTag, uint8_t *PDATA) = 0;
+                 const uint8_t* messageTag, uint8_t *PDATA) const = 0;
 
 #if 0 // Defining the virtual destructor uses ~800+ bytes of Flash by forcing use of malloc()/free().
             // Ensure safe instance destruction when derived from.
@@ -111,30 +111,30 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
             // Create an instance pointing at a suitable AES block enc/dec implementation.
             // The AES impl should not carry logical state between operations,
             // but may hold temporary workspace or non-key/data-dependent state.
-            OTAES128GCMGenericBase(OTAES128E *aptr) : ap(aptr) { }
+            constexpr OTAES128GCMGenericBase(OTAES128E *aptr) : ap(aptr) { }
             // Encrypt; true iff successful.
             virtual bool gcmEncrypt(
                 const uint8_t* key, const uint8_t* IV,
                 const uint8_t* PDATA, uint8_t PDATALength,
                 const uint8_t* ADATA, uint8_t ADATALength,
-                uint8_t* CDATA, uint8_t *tag);
+                uint8_t* CDATA, uint8_t *tag) const override;
             // Decrypt; true iff successful.
             virtual bool gcmDecrypt(
                  const uint8_t* key, const uint8_t* IV,
                  const uint8_t* CDATA, uint8_t CDATALength,
                  const uint8_t* ADATA, uint8_t ADATALength,
-                 const uint8_t* messageTag, uint8_t *PDATA);
+                 const uint8_t* messageTag, uint8_t *PDATA) const override;
         };
 
     // Generic implementation, parameterised with type of underlying AES implementation.
     // Carries the AES working state with it.
     template<class OTAESImpl = OTAESGCM::OTAES128E_default_t>
-    class OTAES128GCMGeneric : public OTAES128GCMGenericBase
+    class OTAES128GCMGeneric final : public OTAES128GCMGenericBase
         {
         private:
             OTAESImpl aesImpl;
         public:
-            OTAES128GCMGeneric() : OTAES128GCMGenericBase(&aesImpl) { }
+            constexpr OTAES128GCMGeneric() : OTAES128GCMGenericBase(&aesImpl) { }
         };
 
 
