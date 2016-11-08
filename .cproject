@@ -173,6 +173,7 @@
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
 		<configuration configurationName="Debug-lib">
+			<resource resourceType="PROJECT" workspacePath="/OTRadioLink"/>
 			<resource resourceType="PROJECT" workspacePath="/OTAESGCM"/>
 		</configuration>
 		<configuration configurationName="Build (GNU)">
@@ -210,4 +211,5 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 </cproject>
