@@ -39,16 +39,10 @@ namespace OTAESGCM
     // Residual state should be regarded as sensitive, and eg overwritten before being released to heap.
     class OTAES128E_AVR : public OTAES128E
         {
-        private:
+        protected:
             // Size of RoundKey (bytes).
             static constexpr uint8_t RoundKeySize = 176;
 
-        public:
-            // External workspace/scratch required minimum size, unaligned; strictly positive.
-            // At the moment just enough to cover the RoundKey.
-            static constexpr uint8_t workspaceRequired = RoundKeySize;
-
-        protected:
             // The AES key (128 bits, 16 bytes); never NULL.
             // Note that Key is space passed in by caller.
             const uint8_t *Key;
@@ -56,9 +50,10 @@ namespace OTAESGCM
             typedef uint8_t state_t[4][4];
             // Note that state is space passed in by caller.
             state_t *state;
-            // Nr+1 round keys.
+            // Nr+1 round keys; NULL if insufficent workspace is passed in.
             // Should be cleared before releasing space to (say) heap.
-            uint8_t RoundKey[RoundKeySize];
+            //uint8_t RoundKey[RoundKeySize];
+            uint8_t * const RoundKey;
 
             void KeyExpansion();
             void AddRoundKey(uint8_t round);
@@ -68,18 +63,32 @@ namespace OTAESGCM
             void Cipher();
 
         public:
+            // External workspace/scratch required minimum size, unaligned; strictly positive.
+            // At the moment just enough to cover the RoundKey.
+            // This constant, defined per class, is effectively part of the API.
+            static constexpr uint8_t workspaceRequired = RoundKeySize;
+            constexpr uint8_t getWorkspaceRequired() const { return(workspaceRequired); }
+
+            // Construct an instance: supplied workspace must be large enough.
+            OTAES128E_AVR(uint8_t *const workspace, uint8_t workspaceLen)
+              : RoundKey((workspaceLen >= workspaceRequired) ? workspace : NULL)
+                { }
+
+            // Clean up sensitive state and removes pointers to external state.
+            // If Key pointer already cleared then assumed to already have been done and is not repeated.
+            // NOT YET TESTED.
+            void cleanup() { if((NULL != RoundKey) && (NULL != Key)) { memset(RoundKey, 0, RoundKeySize); state=NULL; Key=NULL; } }
+
             /**
              *    @brief    AES128 block encryption
              *    @param    input takes a pointer to an array containing plaintext, of size 16 bytes; never NULL
              *    @param    key takes a pointer to a 128-bit (16-byte) secret key; never NULL
              *    @param    output takes a pointer to an array to fill with ciphertext, of size 16 bytes; never NULL
+             *
+             * Cleans up internal sensitive state when done.
              */
             virtual void blockEncrypt(const uint8_t* input, const uint8_t* key, uint8_t *output);
 
-            // Clean up sensitive state and removes pointers to external state.
-            // If Key pointer already cleared then assumed to already have been done and is not repeated.
-            // NOT YET TESTED.
-            virtual void cleanup() { if(NULL != Key) { memset(RoundKey, 0, sizeof(RoundKey)); state=NULL; Key=NULL; } }
         };
 
     // AVR decrypt and encrypt implementation.
@@ -88,6 +97,12 @@ namespace OTAESGCM
     // Residual state should be regarded as sensitive, and eg overwritten before being released to heap.
     class OTAES128DE_AVR final : public OTAES128D, public OTAES128E_AVR
         {
+        public:
+            // External workspace/scratch required minimum size, unaligned; strictly positive.
+            // At the moment just enough to cover the RoundKey.
+            // This constant, defined per class, is effectively part of the API.
+            static constexpr uint8_t workspaceRequired = OTAES128E_AVR::workspaceRequired;
+
         protected:
             void InvMixColumns();
             void InvSubBytes();
@@ -95,11 +110,16 @@ namespace OTAESGCM
             void InvCipher();
 
         public:
+            // Expose (version of) base-class constructor.
+            using OTAES128E_AVR::OTAES128E_AVR;
+
             /**
              *    @brief    AES128 block decryption
              *    @param    input takes a pointer to an array containing ciphertext, of size 16 bytes; never NULL
              *    @param    key takes a pointer to a 128-bit (16-byte) secret key; never NULL
              *    @param    output takes a pointer to an array to fill with plaintext, of size 16 bytes; never NULL
+             *
+             * Cleans up internal sensitive state when done.
              */
             virtual void blockDecrypt(const uint8_t* input, const uint8_t* key, uint8_t *output);
         };

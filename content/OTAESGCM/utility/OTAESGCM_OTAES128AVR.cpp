@@ -518,9 +518,15 @@ void OTAES128DE_AVR::InvCipher(void)
  *    @param    input takes a pointer to an array containing plaintext
  *    @param    key takes a pointer to a 128bit secret key
  *    @param    output takes a pointer to an array to fill with ciphertext
+ *
+ * Cleans up internal sensitive state when done.
  */
 void OTAES128E_AVR::blockEncrypt(const uint8_t* input, const uint8_t* key, uint8_t* output)
 {
+  // Abort if no workspace to avoid crashing..
+  // TODO: find a way of signalling the problem.
+  if(NULL == RoundKey) { return; }
+
   // Copy input to output, and work in-memory on output.
   //BlockCopy(output, input);
   memcpy(output, input, AES_BLOCK_SIZE);
@@ -531,6 +537,9 @@ void OTAES128E_AVR::blockEncrypt(const uint8_t* input, const uint8_t* key, uint8
 
   // Encrypt the plaintext with the Key using the AES algorithm.
   Cipher();
+
+  // Clean up private state.
+  cleanup();
 }
 
 
@@ -539,9 +548,15 @@ void OTAES128E_AVR::blockEncrypt(const uint8_t* input, const uint8_t* key, uint8
  *    @param    input takes a pointer to an array containing ciphertext
  *    @param    key takes a pointer to a 128bit secret key
  *    @param    output takes a pointer to an array to fill with plaintext
+ *
+ * Cleans up internal sensitive state when done.
  */
 void OTAES128DE_AVR::blockDecrypt(const uint8_t* input, const uint8_t* key, uint8_t *output)
 {
+  // Abort if no workspace to avoid crashing..
+  // TODO: find a way of signalling the problem.
+  if(NULL == RoundKey) { return; }
+
   // Copy input to output, and work in-memory on output.
   //BlockCopy(output, input);
   memcpy(output, input, AES_BLOCK_SIZE);
@@ -552,6 +567,9 @@ void OTAES128DE_AVR::blockDecrypt(const uint8_t* input, const uint8_t* key, uint
   KeyExpansion();
 
   InvCipher();
+
+  // Clean up private state.
+  cleanup();
 }
 
 

@@ -40,7 +40,7 @@ namespace OTAESGCM
         {
         protected:
             // Only derived classes can construct an instance.
-            OTAES128E() { }
+            constexpr OTAES128E() { }
 
         public:
             /**
@@ -70,7 +70,7 @@ namespace OTAESGCM
         {
         protected:
             // Only derived classes can construct an instance.
-            OTAES128D() { }
+            constexpr OTAES128D() { }
 
         public:
             /**

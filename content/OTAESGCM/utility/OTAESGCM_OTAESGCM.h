@@ -35,9 +35,9 @@ namespace OTAESGCM
     {
 
 
-static const uint8_t AES128GCM_BLOCK_SIZE = 16; // GCM block size in bytes. This must be the same as the AES block size.
-static const uint8_t AES128GCM_IV_SIZE    = 12; // GCM initialisation size in bytes.
-static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size in bytes.
+static constexpr uint8_t AES128GCM_BLOCK_SIZE = 16; // GCM block size in bytes. This must be the same as the AES block size.
+static constexpr uint8_t AES128GCM_IV_SIZE    = 12; // GCM initialisation size in bytes.
+static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size in bytes.
 
 
     // Base class / interface for AES128-GCM encryption/decryption.
@@ -128,13 +128,15 @@ static const uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag size i
 
     // Generic implementation, parameterised with type of underlying AES implementation.
     // Carries the AES working state with it.
+    // The OTAESImpl should clear up private state before returning from its methods.
     template<class OTAESImpl = OTAESGCM::OTAES128E_default_t>
-    class OTAES128GCMGeneric final : public OTAES128GCMGenericBase
+    class OTAES128GCMGeneric final : OTAESImpl, public OTAES128GCMGenericBase
         {
         private:
-            OTAESImpl aesImpl;
+            constexpr static uint8_t workspaceRequired = OTAESImpl::workspaceRequired;
+            uint8_t workspace[workspaceRequired];
         public:
-            constexpr OTAES128GCMGeneric() : OTAES128GCMGenericBase(&aesImpl) { }
+            constexpr OTAES128GCMGeneric() : OTAESImpl(workspace, workspaceRequired), OTAES128GCMGenericBase(this) { }
         };
 
 
