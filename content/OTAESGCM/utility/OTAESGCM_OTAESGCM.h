@@ -133,10 +133,30 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
     class OTAES128GCMGeneric final : OTAESImpl, public OTAES128GCMGenericBase
         {
         private:
+            // Minimum size of workspace required.
             constexpr static uint8_t workspaceRequired = OTAESImpl::workspaceRequired;
             uint8_t workspace[workspaceRequired];
         public:
+            // Construct an instance.
             constexpr OTAES128GCMGeneric() : OTAESImpl(workspace, workspaceRequired), OTAES128GCMGenericBase(this) { }
+        };
+
+    // Generic implementation, parameterised with type of underlying AES implementation.
+    // Carries the AES working state with it.
+    // The OTAESImpl should clear up private state before returning from its methods.
+    template<class OTAESImpl = OTAESGCM::OTAES128E_default_t>
+    class OTAES128GCMGenericWithWorkspace final : OTAESImpl, public OTAES128GCMGenericBase
+        {
+        public:
+            // Minimum size of workspace required.
+            constexpr static uint8_t workspaceRequired = OTAESImpl::workspaceRequired;
+            // Construct an instance, supplied with workspace.
+            constexpr OTAES128GCMGenericWithWorkspace(uint8_t *const workspace, const uint8_t workspaceSize)
+                : OTAESImpl(workspace, workspaceSize), OTAES128GCMGenericBase(this)
+                { }
+            // Verify that the workspace would be adequate before constructing an instance.
+            static constexpr bool isWorkspaceSufficient(uint8_t *const workspace, const uint8_t workspaceSize)
+                { return((NULL != workspace) && (workspaceSize >= workspaceRequired)); }
         };
 
 
@@ -188,6 +208,52 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
             uint8_t *plaintextOut);
 
 
+    // AES-GCM 128-bit-key fixed-size text (256-bit/32-byte) encryption/authentication function using work space passed in.
+    // This is an adaptor/bridge function to ease outside use in simple cases
+    // without explicit type/library dependencies, but use with care.
+    // A workspace is passed in (and cleared on exit);
+    // this routine will fail (safely, returning false) if the workspace is NULL or too small.
+    // The workspace requirement depends on the implementation used.
+    // Other than the authtext, all sizes are fixed:
+    //   * textSize is 32 (or zero if plaintext is NULL)
+    //   * keySize is 16
+    //   * nonceSize is 12
+    //   * tagSize is 16
+    // The plain-text (and identical cipher-text) size is picked to be
+    // a multiple of the cipher's block size, or zero,
+    // which implies likely requirement for padding of the plain text.
+    // Note that the authenticated text size is not fixed, ie is zero or more bytes.
+    // Returns true on success, false on failure.
+    bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_WITH_WORKSPACE(
+            uint8_t *workspace, uint8_t workspaceSize,
+            const uint8_t *key, const uint8_t *iv,
+            const uint8_t *authtext, uint8_t authtextSize,
+            const uint8_t *plaintext,
+            uint8_t *ciphertextOut, uint8_t *tagOut);
+
+    // AES-GCM 128-bit-key fixed-size text (256-bit/32-byte) decryption/authentication function using work space passed in.
+    // This is an adaptor/bridge function to ease outside use in simple cases
+    // without explicit type/library dependencies, but use with care.
+    // A workspace is passed in (and cleared on exit);
+    // this routine will fail (safely, returning false) if the workspace is NULL or too small.
+    // The workspace requirement depends on the implementation used.
+    // Other than the authtext, all sizes are fixed:
+    //   * textSize is 32 (or zero if ciphertext is NULL)
+    //   * keySize is 16
+    //   * nonceSize is 12
+    //   * tagSize is 16
+    // The plain-text (and identical cipher-text) size is picked to be
+    // a multiple of the cipher's block size, or zero,
+    // which implies likely requirement for padding of the plain text.
+    // Note that the authenticated text size is not fixed, ie is zero or more bytes.
+    // Decrypts/authenticates the output of fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS.)
+    // Returns true on success, false on failure.
+    bool fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_WITH_WORKSPACE(
+            uint8_t *workspace, uint8_t workspaceSize,
+            const uint8_t *key, const uint8_t *iv,
+            const uint8_t *authtext, uint8_t authtextSize,
+            const uint8_t *ciphertext, const uint8_t *tag,
+            uint8_t *plaintextOut);
     }
 
 

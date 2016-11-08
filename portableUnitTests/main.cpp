@@ -252,7 +252,7 @@ TEST(Main,GCMVS1)
 }
 
 
-// Check using NIST GCMVS test vector.
+// Check STATELESS methods using NIST GCMVS test vector.
 // Test via fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS interface.
 // See http://csrc.nist.gov/groups/STM/cavp/documents/mac/gcmvs.pdf
 // See http://csrc.nist.gov/groups/STM/cavp/documents/mac/gcmtestvectors.zip
@@ -274,7 +274,7 @@ TEST(Main,GCMVS1)
 // keylen = 128, ivlen = 96, ptlen = 256, aadlen = 128, taglen = 128, count = 0
 //
 // DHD20161107: copied from test.ino testGCMVS1ViaFixed32BTextSize().
-TEST(Main,GCMVS1ViaFixed32BTextSize)
+TEST(Main,GCMVS1ViaFixed32BTextSizeSTATELESS)
 {
     // Inputs to encryption.
     static const uint8_t input[32] = { 0xcc, 0x38, 0xbc, 0xcd, 0x6b, 0xc5, 0x36, 0xad, 0x91, 0x9b, 0x13, 0x95, 0xf5, 0xd6, 0x38, 0x01, 0xf9, 0x9f, 0x80, 0x68, 0xd6, 0x5c, 0xa5, 0xac, 0x63, 0x87, 0x2d, 0xaf, 0x16, 0xb9, 0x39, 0x01 };
@@ -312,13 +312,146 @@ TEST(Main,GCMVS1ViaFixed32BTextSize)
             NULL,
             cipherText, tag));
     // Check some of the tag.
-    //  ASSERT_EQ(0x24, tag[1]);
-    //  ASSERT_EQ(0xd9, tag[14]);
+    ASSERT_EQ(0x57, tag[1]);
+    ASSERT_EQ(0x25, tag[14]);
     // Auth/decrypt (auth should still succeed).
     ASSERT_TRUE(OTAESGCM::fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_STATELESS(NULL,
             key, nonce,
             aad, sizeof(aad),
             NULL, tag,
+            inputDecoded));
+}
+
+// Check WITH_WORKSPACE methods using NIST GCMVS test vector.
+// Test via fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS interface.
+// See http://csrc.nist.gov/groups/STM/cavp/documents/mac/gcmvs.pdf
+// See http://csrc.nist.gov/groups/STM/cavp/documents/mac/gcmtestvectors.zip
+//
+//[Keylen = 128]
+//[IVlen = 96]
+//[PTlen = 256]
+//[AADlen = 128]
+//[Taglen = 128]
+//
+//Count = 0
+//Key = 298efa1ccf29cf62ae6824bfc19557fc
+//IV = 6f58a93fe1d207fae4ed2f6d
+//PT = cc38bccd6bc536ad919b1395f5d63801f99f8068d65ca5ac63872daf16b93901
+//AAD = 021fafd238463973ffe80256e5b1c6b1
+//CT = dfce4e9cd291103d7fe4e63351d9e79d3dfd391e3267104658212da96521b7db
+//Tag = 542465ef599316f73a7a560509a2d9f2
+//
+// keylen = 128, ivlen = 96, ptlen = 256, aadlen = 128, taglen = 128, count = 0
+TEST(Main,GCMVS1ViaFixed32BTextSizeWITHWORKSPACE)
+{
+    // Inputs to encryption.
+    static const uint8_t input[32] = { 0xcc, 0x38, 0xbc, 0xcd, 0x6b, 0xc5, 0x36, 0xad, 0x91, 0x9b, 0x13, 0x95, 0xf5, 0xd6, 0x38, 0x01, 0xf9, 0x9f, 0x80, 0x68, 0xd6, 0x5c, 0xa5, 0xac, 0x63, 0x87, 0x2d, 0xaf, 0x16, 0xb9, 0x39, 0x01 };
+    static const uint8_t key[AES_KEY_SIZE/8] = { 0x29, 0x8e, 0xfa, 0x1c, 0xcf, 0x29, 0xcf, 0x62, 0xae, 0x68, 0x24, 0xbf, 0xc1, 0x95, 0x57, 0xfc };
+    static const uint8_t nonce[GCM_NONCE_LENGTH] = { 0x6f, 0x58, 0xa9, 0x3f, 0xe1, 0xd2, 0x07, 0xfa, 0xe4, 0xed, 0x2f, 0x6d };
+    static const uint8_t aad[16] = { 0x02, 0x1f, 0xaf, 0xd2, 0x38, 0x46, 0x39, 0x73, 0xff, 0xe8, 0x02, 0x56, 0xe5, 0xb1, 0xc6, 0xb1 };
+    // Space for outputs from encryption.
+    uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
+    uint8_t cipherText[std::max(32, (int)sizeof(input))]; // Space for encrypted text.
+    // Do encryption via simplified interface.
+    constexpr uint8_t workspaceRequired = OTAESGCM::OTAES128GCMGenericWithWorkspace<>::workspaceRequired;
+    uint8_t workspace[workspaceRequired];
+    ASSERT_TRUE(OTAESGCM::fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_WITH_WORKSPACE(
+            workspace, workspaceRequired,
+            key, nonce,
+            aad, sizeof(aad),
+            input,
+            cipherText, tag));
+    // Ensure that the workspace is completely zeroed after the call for security.
+    for(int i = workspaceRequired; --i >= 0; ) { ASSERT_EQ(0, workspace[i]); }
+    // Check some of the cipher text and tag.
+    //            "0388DACE60B6A392F328C2B971B2FE78F795AAAB494B5923F7FD89FF948B  61 47 72 C7 92 9C D0 DD 68 1B D8 A3 7A 65 6F 33" :
+    ASSERT_EQ(0xdf, cipherText[0]);
+    ASSERT_EQ(0x91, cipherText[5]);
+    ASSERT_EQ(0xdb, cipherText[sizeof(cipherText)-1]);
+    ASSERT_EQ(0x24, tag[1]);
+    ASSERT_EQ(0xd9, tag[14]);
+    // Decrypt via simplified interface...
+    uint8_t inputDecoded[32];
+    ASSERT_TRUE(OTAESGCM::fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_WITH_WORKSPACE(
+            workspace, workspaceRequired,
+            key, nonce,
+            aad, sizeof(aad),
+            cipherText, tag,
+            inputDecoded));
+    // Ensure that the workspace is completely zeroed after the call for security.
+    for(int i = workspaceRequired; --i >= 0; ) { ASSERT_EQ(0, workspace[i]); }
+    ASSERT_EQ(0, memcmp(input, inputDecoded, 32));
+    // Try enc/auth with no (ie zero-length) plaintext.
+    ASSERT_TRUE(OTAESGCM::fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_WITH_WORKSPACE(
+            workspace, workspaceRequired,
+            key, nonce,
+            aad, sizeof(aad),
+            NULL,
+            cipherText, tag));
+    // Ensure that the workspace is completely zeroed after the call for security.
+    for(int i = workspaceRequired; --i >= 0; ) { ASSERT_EQ(0, workspace[i]); }
+    // Check some of the tag.
+    ASSERT_EQ(0x57, tag[1]);
+    ASSERT_EQ(0x25, tag[14]);
+    // Auth/decrypt (auth should still succeed).
+    ASSERT_TRUE(OTAESGCM::fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_WITH_WORKSPACE(
+            workspace, workspaceRequired,
+            key, nonce,
+            aad, sizeof(aad),
+            NULL, tag,
+            inputDecoded));
+    // Ensure that the workspace is completely zeroed after the call for security.
+    for(int i = workspaceRequired; --i >= 0; ) { ASSERT_EQ(0, workspace[i]); }
+    // Check that too-small or NULL workspaces are rejected, but oversize ones accepted.
+    // Encrypt...
+    ASSERT_FALSE(OTAESGCM::fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_WITH_WORKSPACE(
+            NULL, workspaceRequired,
+            key, nonce,
+            aad, sizeof(aad),
+            input,
+            cipherText, tag));
+    ASSERT_FALSE(OTAESGCM::fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_WITH_WORKSPACE(
+            workspace, workspaceRequired-1,
+            key, nonce,
+            aad, sizeof(aad),
+            input,
+            cipherText, tag));
+    ASSERT_FALSE(OTAESGCM::fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_WITH_WORKSPACE(
+            workspace, 0,
+            key, nonce,
+            aad, sizeof(aad),
+            input,
+            cipherText, tag));
+    ASSERT_TRUE(OTAESGCM::fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_WITH_WORKSPACE(
+            workspace, workspaceRequired+1,
+            key, nonce,
+            aad, sizeof(aad),
+            input,
+            cipherText, tag));
+    // Decrypt..
+    ASSERT_FALSE(OTAESGCM::fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_WITH_WORKSPACE(
+            NULL, workspaceRequired,
+            key, nonce,
+            aad, sizeof(aad),
+            cipherText, tag,
+            inputDecoded));
+    ASSERT_FALSE(OTAESGCM::fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_WITH_WORKSPACE(
+            workspace, workspaceRequired-1,
+            key, nonce,
+            aad, sizeof(aad),
+            cipherText, tag,
+            inputDecoded));
+    ASSERT_FALSE(OTAESGCM::fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_WITH_WORKSPACE(
+            workspace, 0,
+            key, nonce,
+            aad, sizeof(aad),
+            cipherText, tag,
+            inputDecoded));
+    ASSERT_TRUE(OTAESGCM::fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_WITH_WORKSPACE(
+            workspace, workspaceRequired+1,
+            key, nonce,
+            aad, sizeof(aad),
+            cipherText, tag,
             inputDecoded));
 }
 
