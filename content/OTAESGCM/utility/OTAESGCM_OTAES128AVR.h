@@ -67,7 +67,7 @@ namespace OTAESGCM
             // At the moment just enough to cover the RoundKey.
             // This constant, defined per class, is effectively part of the API.
             static constexpr uint8_t workspaceRequired = RoundKeySize;
-            constexpr uint8_t getWorkspaceRequired() const { return(workspaceRequired); }
+//            constexpr uint8_t getWorkspaceRequired() const { return(workspaceRequired); }
 
             // Construct an instance: supplied workspace must be large enough.
             OTAES128E_AVR(uint8_t *const workspace, uint8_t workspaceLen)
