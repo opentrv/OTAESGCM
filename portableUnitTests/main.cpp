@@ -32,6 +32,9 @@ TEST(Main,SanityTest)
 //    fputs("*** Tests built: " __DATE__ " " __TIME__ "\n", stderr);
 }
 
+template <class T> constexpr const T& fnmin(const T& a, const T& b) { return((a>b)?b:a); }
+template <class T> constexpr const T& fnmax(const T& a, const T& b) { return((a<b)?b:a); }
+
 static const int AES_KEY_SIZE = 128; // in bits
 static const int GCM_NONCE_LENGTH = 12; // in bytes
 static const int GCM_TAG_LENGTH = 16; // in bytes (default 16, 12 possible)
@@ -66,7 +69,7 @@ TEST(Main,AESGCMAll0)
   // Space for outputs from encryption.
   uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
   memset(tag, 0, sizeof(tag));
-  uint8_t cipherText[std::max(32, (int)inputSize)]; // Space for encrypted text, rounded up to block size.
+  uint8_t cipherText[fnmax(32, (int)inputSize)]; // Space for encrypted text, rounded up to block size.
   memset(cipherText, 0, sizeof(cipherText));
 
   // Instance to perform enc/dec.
@@ -113,7 +116,7 @@ TEST(Main,AESGCMPadding)
 
     // Space for outputs from encryption.
     uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
-    uint8_t cipherText[std::max(16, (int)inputSize)]; // Space for encrypted text
+    uint8_t cipherText[fnmax(16, (int)inputSize)]; // Space for encrypted text
     memset(cipherText, 0, sizeof(cipherText));
 
     // Instance to perform enc/dec.
@@ -170,7 +173,7 @@ TEST(Main,GCMVS0)
 
     // Space for outputs from encryption.
     uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
-    uint8_t cipherText[std::max(16, (int)sizeof(input))]; // Space for encrypted text.
+    uint8_t cipherText[fnmax(16, (int)sizeof(input))]; // Space for encrypted text.
 
     // Instance to perform enc/dec.
     // Do encryption.
@@ -226,7 +229,7 @@ TEST(Main,GCMVS1)
 
     // Space for outputs from encryption.
     uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
-    uint8_t cipherText[std::max(32, (int)sizeof(input))]; // Space for encrypted text.
+    uint8_t cipherText[fnmax(32, (int)sizeof(input))]; // Space for encrypted text.
 
     // Instance to perform enc/dec.
     // Do encryption.
@@ -283,7 +286,7 @@ TEST(Main,GCMVS1ViaFixed32BTextSizeSTATELESS)
     static const uint8_t aad[16] = { 0x02, 0x1f, 0xaf, 0xd2, 0x38, 0x46, 0x39, 0x73, 0xff, 0xe8, 0x02, 0x56, 0xe5, 0xb1, 0xc6, 0xb1 };
     // Space for outputs from encryption.
     uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
-    uint8_t cipherText[std::max(32, (int)sizeof(input))]; // Space for encrypted text.
+    uint8_t cipherText[fnmax(32, (int)sizeof(input))]; // Space for encrypted text.
     // Do encryption via simplified interface.
     ASSERT_TRUE(OTAESGCM::fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS(NULL,
             key, nonce,
@@ -351,7 +354,7 @@ TEST(Main,GCMVS1ViaFixed32BTextSizeWITHWORKSPACE)
     static const uint8_t aad[16] = { 0x02, 0x1f, 0xaf, 0xd2, 0x38, 0x46, 0x39, 0x73, 0xff, 0xe8, 0x02, 0x56, 0xe5, 0xb1, 0xc6, 0xb1 };
     // Space for outputs from encryption.
     uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
-    uint8_t cipherText[std::max(32, (int)sizeof(input))]; // Space for encrypted text.
+    uint8_t cipherText[fnmax(32, (int)sizeof(input))]; // Space for encrypted text.
     // Do encryption via simplified interface.
     constexpr uint8_t workspaceRequired = OTAESGCM::OTAES128GCMGenericWithWorkspace<>::workspaceRequired;
     uint8_t workspace[workspaceRequired];
@@ -474,7 +477,7 @@ TEST(Main,AESGCMAuthentication)
   memset(aad, 0, sizeof(aad)); // All-zeros ADATA.
   // Space for outputs from encryption.
   uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
-  uint8_t cipherText[std::max(32, (int)sizeof(input))]; // Space for encrypted text.
+  uint8_t cipherText[fnmax(32, (int)sizeof(input))]; // Space for encrypted text.
 
   // Instance to perform enc/dec.
   //OpenTRV::AESGCM::AES128GCM16small eo;
@@ -520,7 +523,7 @@ TEST(Main,AESGCMNoData)
     memset(nonce, 0x0, sizeof(nonce)); // All-zeros nonce.
     // Space for outputs from encryption.
     uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
-    uint8_t cipherText[std::max(16, (int)sizeof(plainText))]; // Space for encrypted text.
+    uint8_t cipherText[fnmax(16, (int)sizeof(plainText))]; // Space for encrypted text.
 
     // Instance to perform enc/dec.
     //OpenTRV::AESGCM::AES128GCM16small eo;
@@ -584,7 +587,7 @@ TEST(Main,AESGCMcdataOnly)
   memset(nonce, 0x0, sizeof(nonce)); // All-zeros nonce.
   // Space for outputs from encryption.
   uint8_t tag[GCM_TAG_LENGTH]; // Space for tag.
-  uint8_t cipherText[std::max(16, (int)sizeof(plainText))]; // Space for encrypted text.
+  uint8_t cipherText[fnmax(16, (int)sizeof(plainText))]; // Space for encrypted text.
 
   // Instance to perform enc/dec.
   //OpenTRV::AESGCM::AES128GCM16small eo;

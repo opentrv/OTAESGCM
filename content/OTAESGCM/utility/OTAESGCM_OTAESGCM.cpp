@@ -213,7 +213,7 @@ static void GCTR(OTAES128E * const ap,
     }
 
     // check if there is a partial block at end
-    last = pInput + inputLength - xpos;
+    last = uint8_t(pInput + inputLength - xpos);
     if (last) {
         // encrypt into tmp and combine with last block of input
         ap->blockEncrypt(ctrBlock, pKey, tmp);
@@ -256,7 +256,7 @@ static void GHASH(  const uint8_t *pInput, uint8_t inputLength,
     // check if final partial block. Can be omitted if we use full blocks.
     if (pInput + inputLength > xpos) {
         // zero pad
-        uint8_t last = pInput + inputLength - xpos;
+        const uint8_t last = uint8_t(pInput + inputLength - xpos);
         memcpy(tmp, xpos, last);
         memset(tmp + last, 0, sizeof(tmp) - last);
 

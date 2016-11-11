@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the Licence.
 
 Author(s) / Copyright (s): Deniz Erbilgin 2015
-                           Damon Hart-Davis 2015
+                           Damon Hart-Davis 2015--2016
 */
 
 /* OpenTRV OTAESGCM microcontroller-/IoT- friendly AES128 implementations. */

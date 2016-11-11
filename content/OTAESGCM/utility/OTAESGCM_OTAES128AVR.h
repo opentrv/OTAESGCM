@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the Licence.
 
 Author(s) / Copyright (s): Deniz Erbilgin 2015
-                           Damon Hart-Davis 2015
+                           Damon Hart-Davis 2015--2016
 */
 
 /* Atmel AVR/ATMega (eg ATMega328P) AES(128) implementation. */

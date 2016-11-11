@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the Licence.
 
 Author(s) / Copyright (s): Deniz Erbilgin 2015
-                           Damon Hart-Davis 2015
+                           Damon Hart-Davis 2015--2016
 */
 
 /* Atmel AVR/ATMega (eg ATMega328P) AES(128) implementation. */
@@ -212,7 +212,7 @@ void OTAES128E_AVR::KeyExpansion(void)
         tempa[0] = tempa[1];
         tempa[1] = tempa[2];
         tempa[2] = tempa[3];
-        tempa[3] = k;
+        tempa[3] = uint8_t(k);
       }
 
       // SubWord() is a function that takes a four-byte input word and
@@ -320,7 +320,7 @@ void OTAES128E_AVR::ShiftRows(void)
  */
 static uint8_t xtime(uint8_t x)
 {
-  return ((x<<1) ^ (((x>>7) & 1) * 0x1b));
+  return(uint8_t((x<<1) ^ (((x>>7) & 1) * 0x1b)));
 }
 
 /**
