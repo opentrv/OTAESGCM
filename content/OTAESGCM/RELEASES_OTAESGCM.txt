@@ -9,6 +9,7 @@ or release/freeze points.
 
 
 pending:
+    DHD20161111: turned compiler strictness up to max, eg including -Wextra and pedantic and conversion.
 
 
 20161108:
