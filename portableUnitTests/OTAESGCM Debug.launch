@@ -3,7 +3,7 @@
 <stringAttribute key="bad_container_name" value="/OTAESGCM/portableUnitTests"/>
 <intAttribute key="org.eclipse.cdt.launch.ATTR_BUILD_BEFORE_LAUNCH_ATTR" value="2"/>
 <stringAttribute key="org.eclipse.cdt.launch.COREFILE_PATH" value=""/>
-<stringAttribute key="org.eclipse.cdt.launch.PROGRAM_ARGUMENTS" value="--gtest_shuffle --gtest_repeat=1 --gtest_print_time=1 --gtest_color=no"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROGRAM_ARGUMENTS" value="--gtest_shuffle --gtest_repeat=2 --gtest_print_time=1 --gtest_color=no"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="Debug/OTAESGCM"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="OTAESGCM"/>
 <booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="false"/>
