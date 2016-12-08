@@ -50,5 +50,5 @@ else
     exit 2
 fi
 
-# Run the tests.
-exec ./${EXENAME}
+# Run the tests, repeatedly, shuffled.
+exec ./${EXENAME} --gtest_shuffle --gtest_repeat=100
