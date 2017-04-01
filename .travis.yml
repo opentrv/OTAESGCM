@@ -20,7 +20,8 @@ notifications:
       - ci@opentrv.uk
     on_success: change
     on_failure: always
-  irc: "irc.z.je#opentrv"
+  irc:
+    channels: "irc.z.je#opentrv"
     on_success: change
     on_failure: change
   
