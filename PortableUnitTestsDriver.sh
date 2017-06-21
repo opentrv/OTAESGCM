@@ -43,7 +43,7 @@ INCLUDES="-I${PROJSRCROOT} -I${PROJSRCROOT}/utility"
 #echo "Using project sources: $PROJSRCS"
 
 rm -f ${EXENAME}
-if g++ -o ${EXENAME} -std=c++0x -O0 -Wall -Werror ${INCLUDES} ${GINCLUDES} ${PROJSRCS} ${TESTSRCS} ${GLIBDIRS} ${GLIBS} ${OTHERLIBS} ; then
+if g++ -o ${EXENAME} -std=c++0x -O0 -Wall -Werror -fstack-check -fstack-protector-strong ${INCLUDES} ${GINCLUDES} ${PROJSRCS} ${TESTSRCS} ${GLIBDIRS} ${GLIBS} ${OTHERLIBS} ; then
     echo Compiled.
 else
     echo Failed to compile.
