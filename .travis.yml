@@ -32,7 +32,8 @@ before_install:
  - sudo make
  - ls -l
  #- sudo cp -a libgtest_main.so libgtest.so /usr/lib/
- - sudo cp -a gtest_main.a /usr/lib/
+ - sudo cp -a gtest_main.a /usr/lib/libgtest_main.a
+ - sudo cp -a libgtest.a /usr/lib/libgtest.a
  - cd ..
  - sudo cp -a include/gtest /usr/include
  - cd "${TRAVIS_BUILD_DIR}"
