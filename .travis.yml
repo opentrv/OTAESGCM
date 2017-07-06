@@ -29,9 +29,12 @@ before_install:
  - cd googletest-release-1.7.0
 # - sudo cmake -DBUILD_SHARED_LIBS=ON .
  - cd make
- - sudo make install
-# - sudo cp -a include/gtest /usr/include
-# - sudo cp -a libgtest_main.so libgtest.so /usr/lib/
+ - sudo make
+ - ls -l
+ #- sudo cp -a libgtest_main.so libgtest.so /usr/lib/
+ - sudo cp -a gtest_main.a /usr/lib/
+ - cd ..
+ - sudo cp -a include/gtest /usr/include
  - cd "${TRAVIS_BUILD_DIR}"
  - chmod +x PortableUnitTestsDriver.sh
 script: ./PortableUnitTestsDriver.sh
