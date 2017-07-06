@@ -4,14 +4,14 @@ group: edge
 language: cpp
 matrix:
   include:
-#    - compiler: gcc
-#      addons:
-#        apt:
-#          sources:
-#            - ubuntu-toolchain-r-test
-#          packages:
-#            - g++-4.9
-#      env: COMPILER=g++-4.9
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-4.9
+      env: COMPILER=g++-4.9
     - compiler: clang
       addons:
         apt:
@@ -32,7 +32,7 @@ before_install:
 # - sudo cmake -DBUILD_SHARED_LIBS=ON .
  - cd make
  - make
- #- sudo cp -a libgtest_main.so libgtest.so /usr/lib/
+# - sudo cp -a libgtest_main.so libgtest.so /usr/lib/
  - sudo cp -a gtest_main.a /usr/lib/libgtest_main.a
  - sudo cp -a gtest_main.a /usr/lib/libgtest.a
  - cd ..
