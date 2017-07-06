@@ -22,6 +22,8 @@ matrix:
             - clang-3.7
       env: COMPILER=clang++-3.7
 before_install:
+ -- $CXX --version
+ - clang++ --version
  - sudo apt-get -qq update
  - sudo apt-get install -y libgtest-dev
  - sudo wget https://github.com/google/googletest/archive/release-1.7.0.tar.gz
@@ -30,7 +32,6 @@ before_install:
 # - sudo cmake -DBUILD_SHARED_LIBS=ON .
  - cd make
  - sudo make
- - ls -l
  #- sudo cp -a libgtest_main.so libgtest.so /usr/lib/
  - sudo cp -a gtest_main.a /usr/lib/libgtest_main.a
  - sudo cp -a gtest_main.a /usr/lib/libgtest.a
