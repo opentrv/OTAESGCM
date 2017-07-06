@@ -22,7 +22,7 @@ matrix:
             - clang-3.7
       env: COMPILER=clang++-3.7
 before_install:
- -- $CXX --version
+ - $CXX --version
  - clang++ --version
  - sudo apt-get -qq update
  - sudo apt-get install -y libgtest-dev
