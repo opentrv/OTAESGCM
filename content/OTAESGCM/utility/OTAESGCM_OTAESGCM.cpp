@@ -108,6 +108,13 @@ static uint8_t checkTag(const uint8_t *tag1, const uint8_t *tag2)
     return result;
 }
 
+
+/**@struct  Bulk of GCTRPadded() workspace. */
+struct GHASHWorkspace final
+{
+    uint8_t ghashTmp[AES128GCM_BLOCK_SIZE]; // If using full blocks, no need for tmp.
+    uint8_t gFieldMultiplyTmp[AES128GCM_BLOCK_SIZE]; // If using full blocks, no need for tmp.
+};
 /**
  * @note    gf_mult
  * @brief    Performs multiplications in 128 bit galois bit field
@@ -117,14 +124,11 @@ static uint8_t checkTag(const uint8_t *tag1, const uint8_t *tag2)
  * @param    result:    pointer to array to put result in
  * @note    output straight to *x and save on a memcpy loop?
  */
-static void gFieldMultiply(const uint8_t *x, const uint8_t *y, uint8_t *result)
+static void gFieldMultiply(const uint8_t *x, const uint8_t *y, GHASHWorkspace * const workspace)
 {
-    // working memory
-    uint8_t temp[AES128GCM_BLOCK_SIZE];
-
     // init result to 0s and copy y to temp
-    memcpy(temp, y, AES128GCM_BLOCK_SIZE);
-    memset(result, 0, AES128GCM_BLOCK_SIZE);
+    memcpy(workspace->gFieldMultiplyTmp, y, AES128GCM_BLOCK_SIZE);
+    memset(workspace->ghashTmp, 0, AES128GCM_BLOCK_SIZE);
 
     // multiplication algorithm
     for (uint8_t i = 0; i < AES128GCM_BLOCK_SIZE; i++) {
@@ -132,17 +136,17 @@ static void gFieldMultiply(const uint8_t *x, const uint8_t *y, uint8_t *result)
 
             if (x[i] & (1 << (7 - j))) {
                 /* Z_(i + 1) = Z_i XOR V_i */
-                xorBlock(result, temp);
+                xorBlock(workspace->ghashTmp, workspace->gFieldMultiplyTmp);
             }
             // if temp is odd, do something?
-            if (temp[15] & 0x01) {
+            if (workspace->gFieldMultiplyTmp[15] & 0x01) {
                 /* V_(i + 1) = (V_i >> 1) XOR R */
-                shiftBlockRight(temp);
+                shiftBlockRight(workspace->gFieldMultiplyTmp);
                 /* R = 11100001 || 0^120 */
-                temp[0] ^= 0xe1;
+                workspace->gFieldMultiplyTmp[0] ^= 0xe1;
             } else {
                 /* V_(i + 1) = V_i >> 1 */
-                shiftBlockRight(temp);
+                shiftBlockRight(workspace->gFieldMultiplyTmp);
             }
         }
     }
@@ -283,7 +287,6 @@ static void GCTRPadded(OTAES128E * const ap, GCTRPaddedWorkspace * const workspa
 //    }
 }
 
-
 /**
  * @note    ghash
  * @brief   performs authentication hashing
@@ -297,7 +300,7 @@ static void GHASH(  const uint8_t *pInput, uint8_t inputLength,
                     const uint8_t *pAuthKey, uint8_t *pOutput )
 {
     const uint8_t *xpos = pInput;
-    uint8_t tmp[AES128GCM_BLOCK_SIZE]; // If using full blocks, no need for tmp.
+    GHASHWorkspace workspace;
 
     // Calculate number of full blocks to hash.
     const uint8_t m = inputLength / AES128GCM_BLOCK_SIZE;
@@ -308,10 +311,10 @@ static void GHASH(  const uint8_t *pInput, uint8_t inputLength,
         xorBlock(pOutput, xpos);
         xpos += 16; // move to next block
 
-        gFieldMultiply(pOutput, pAuthKey, tmp);
+        gFieldMultiply(pOutput, pAuthKey, &workspace);
 
         // copy tmp to output
-        memcpy(pOutput, tmp, AES128GCM_BLOCK_SIZE);
+        memcpy(pOutput, workspace.ghashTmp, AES128GCM_BLOCK_SIZE);
     }
 
     // Check if final partial block.
@@ -319,13 +322,13 @@ static void GHASH(  const uint8_t *pInput, uint8_t inputLength,
     if (pInput + inputLength > xpos) {
         // zero pad
         const uint8_t last = uint8_t(pInput + inputLength - xpos);
-        memcpy(tmp, xpos, last);
-        memset(tmp + last, 0, sizeof(tmp) - last);
+        memcpy(workspace.ghashTmp, xpos, last);
+        memset(workspace.ghashTmp + last, 0, sizeof(workspace.ghashTmp) - last);
 
         // Y_i = (Y^(i-1) XOR X_i) dot H
-        xorBlock(pOutput, tmp);
-        gFieldMultiply(pOutput, pAuthKey, tmp);
-        memcpy(pOutput, tmp, AES128GCM_BLOCK_SIZE);
+        xorBlock(pOutput, workspace.ghashTmp);
+        gFieldMultiply(pOutput, pAuthKey, &workspace);
+        memcpy(pOutput, workspace.ghashTmp, AES128GCM_BLOCK_SIZE);
     }
 }
 
