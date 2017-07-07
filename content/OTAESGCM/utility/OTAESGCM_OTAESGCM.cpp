@@ -108,13 +108,6 @@ static uint8_t checkTag(const uint8_t *tag1, const uint8_t *tag2)
     return result;
 }
 
-
-/**@struct  Bulk of GCTRPadded() workspace. */
-struct GHASHWorkspace final
-{
-    uint8_t ghashTmp[AES128GCM_BLOCK_SIZE]; // If using full blocks, no need for tmp.
-    uint8_t gFieldMultiplyTmp[AES128GCM_BLOCK_SIZE]; // If using full blocks, no need for tmp.
-};
 /**
  * @note    gf_mult
  * @brief    Performs multiplications in 128 bit galois bit field
@@ -124,7 +117,7 @@ struct GHASHWorkspace final
  * @param    result:    pointer to array to put result in
  * @note    output straight to *x and save on a memcpy loop?
  */
-static void gFieldMultiply(GHASHWorkspace * const workspace, const uint8_t *x, const uint8_t *y)
+static void gFieldMultiply(WS::GHASHWorkspace * const workspace, const uint8_t *x, const uint8_t *y)
 {
     // init result to 0s and copy y to temp
     memcpy(workspace->gFieldMultiplyTmp, y, AES128GCM_BLOCK_SIZE);
@@ -175,14 +168,6 @@ static void incr32(uint8_t *pBlock)
 
 //**************** MAIN ENCRYPTION FUNCTIONS *************
 
-
-/**@struct  Bulk of GCTR() workspace. */
-struct GCTRWorkspace final
-{
-    uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
-    uint8_t tmp[AES128GCM_BLOCK_SIZE]; // if we use full blocks, no need for tmp
-};
-
 /**
  * @note    aes_gctr
  * @brief   performs gcntr operation for encryption
@@ -192,7 +177,7 @@ struct GCTRWorkspace final
  * @param   pICB            initial counter block J0
  * @param   pOutput         pointer to output data. length inputLength rounded up to 16.
  */
-static void GCTR(OTAES128E * const ap, GCTRWorkspace * const workspace,
+static void GCTR(OTAES128E * const ap, WS::GCTRWorkspace * const workspace,
                     const uint8_t *pInput, const uint8_t inputLength, const uint8_t *pKey,
                     const uint8_t *pCtrBlock, uint8_t *pOutput)
 {
@@ -232,12 +217,6 @@ static void GCTR(OTAES128E * const ap, GCTRWorkspace * const workspace,
     }
 }
 
-/**@struct  Bulk of GCTRPadded() workspace. */
-struct GCTRPaddedWorkspace final
-{
-    uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
-};
-
 /**
  * @note    aes_gctr
  * @brief   performs gcntr operation for encryption
@@ -247,7 +226,7 @@ struct GCTRPaddedWorkspace final
  * @param   pICB            initial counter block J0
  * @param   pOutput         pointer to output data. length inputLength rounded up to 16.
  */
-static void GCTRPadded(OTAES128E * const ap, GCTRPaddedWorkspace * const workspace,
+static void GCTRPadded(OTAES128E * const ap, WS::GCTRPaddedWorkspace * const workspace,
                     const uint8_t *pInput, const uint8_t inputLength, const uint8_t *pKey,
                     const uint8_t *pCtrBlock, uint8_t *pOutput)
 {
@@ -296,7 +275,7 @@ static void GCTRPadded(OTAES128E * const ap, GCTRPaddedWorkspace * const workspa
  * @param   pAuthKey        pointer to 128 bit authentication subkey H
  * @param   pOutput         pointer to 16 byte output array
  */
-static void GHASH(  GHASHWorkspace * const workspace,
+static void GHASH(  WS::GHASHWorkspace * const workspace,
                     const uint8_t *pInput, uint8_t inputLength,
                     const uint8_t *pAuthKey, uint8_t *pOutput )
 {
@@ -345,12 +324,6 @@ static void generateICB(const uint8_t *pIV, uint8_t *pOutput)
     pOutput[AES128GCM_BLOCK_SIZE - 1] = 0x01;
 }
 
-
-struct GenCDATAWorkspace final
-{
-    uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
-    GCTRWorkspace gctrSpace;
-};
 /**
  * @note    aes_gcm_ctr
  * @brief   encrypt PDATA to get CDATA
@@ -359,7 +332,7 @@ struct GenCDATAWorkspace final
  * @param   PDATALength length of plain text (need not be block-size multiple)
  * @param   pCDATA      pointer to array for cipher text. Length PDATALength rounded up to next 16 bytes
  */
-static void generateCDATA(OTAES128E * const ap, GenCDATAWorkspace * const workspace,
+static void generateCDATA(OTAES128E * const ap, WS::GenCDATAWorkspace * const workspace,
                             const uint8_t *pICB, const uint8_t *pPDATA, uint8_t PDATALength,
                             uint8_t *pCDATA, const uint8_t *pKey )
 {
@@ -374,11 +347,6 @@ static void generateCDATA(OTAES128E * const ap, GenCDATAWorkspace * const worksp
     GCTR(ap, &workspace->gctrSpace, pPDATA, PDATALength, pKey, workspace->ctrBlock, pCDATA);
 }
 
-struct GenCDATAPaddedWorkspace final
-{
-    uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
-    GCTRPaddedWorkspace gctrSpace;
-};
 /**
  * @note    aes_gcm_ctr
  * @brief   encrypt PDATA to get CDATA
@@ -387,7 +355,7 @@ struct GenCDATAPaddedWorkspace final
  * @param   PDATALength length of plain text (MUST BE block-size multiple)
  * @param   pCDATA      pointer to array for cipher text. Length PDATALength rounded up to next 16 bytes
  */
-static void generateCDATAPadded(OTAES128E * const ap, GenCDATAPaddedWorkspace * const cdataSpace,
+static void generateCDATAPadded(OTAES128E * const ap, WS::GenCDATAPaddedWorkspace * const cdataSpace,
                             const uint8_t *pICB, const uint8_t *pPDATAPadded, uint8_t PDATALength,
                             uint8_t *pCDATA, const uint8_t *pKey )
 {
@@ -402,19 +370,6 @@ static void generateCDATAPadded(OTAES128E * const ap, GenCDATAPaddedWorkspace * 
     GCTRPadded(ap, &cdataSpace->gctrSpace, pPDATAPadded, PDATALength, pKey, cdataSpace->ctrBlock, pCDATA);
 }
 
-
-struct GenerateTagWorkspace final
-{
-    uint8_t S[AES128GCM_BLOCK_SIZE];
-    GHASHWorkspace ghashSpace;
-    // lengthBuffer and gctrSpace are/contain 16 byte uint8_t arrays and are
-    // not used simultaneously.
-    union
-    {
-        uint8_t lengthBuffer[16];
-        GCTRPaddedWorkspace gctrSpace;
-    };
-};
 /**
  * @note    aes_gcm_ghash
  * @brief   makes message S from ADATA and CDATA
@@ -426,7 +381,7 @@ struct GenerateTagWorkspace final
  * @param   pTag            pointer to array to store tag
  */
 static void generateTag(OTAES128E * const ap,
-                            GenerateTagWorkspace * const workspace,
+                            WS::GenerateTagWorkspace * const workspace,
                             const uint8_t *pKey, const uint8_t *pAuthKey,
                             const uint8_t *pADATA, uint8_t ADATALength,
                             const uint8_t *pCDATA, uint8_t CDATALength,
@@ -494,24 +449,13 @@ static void generateAuthKey(OTAES128E * const ap, const uint8_t *pKey, uint8_t *
  * @param   tag             pointer to 16 byte buffer to output tag to; never NULL
  * @retval  true if encryption successful, else false
  */
-struct GCMEncryptWorkspace final
-{
-    uint8_t authKey[AES128GCM_BLOCK_SIZE];
-    uint8_t ICB[AES128GCM_BLOCK_SIZE];
-    // generateCDATA and generateTag are called separately and so their
-    // workspaces can be a union
-    union {
-        GenCDATAWorkspace cdataWorkspace;
-        GenerateTagWorkspace tagWorkspace;
-    };
-};
 bool OTAES128GCMGenericBase::gcmEncrypt(
                         const uint8_t* key, const uint8_t* IV,
                         const uint8_t* PDATA, uint8_t PDATALength,
                         const uint8_t* ADATA, uint8_t ADATALength,
                         uint8_t* CDATA, uint8_t *tag) const
 {
-    GCMEncryptWorkspace workspace;
+    WS::GCMEncryptWorkspace workspace;
 
     if(NULL == CDATA) { return(false); } // DHD20161107: NULL CDATA causes crashes in subroutines.
 
@@ -567,24 +511,13 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
  * This version may be smaller and faster and need less stack
  * if separately implemented, else default to generic gcmEncrypt().
  */
-struct GCMEncryptPaddedWorkspace final
-{
-    uint8_t authKey[AES128GCM_BLOCK_SIZE];
-    uint8_t ICB[AES128GCM_BLOCK_SIZE];
-    // generateCDATA and generateTag are called separately and so their
-    // workspaces can be a union
-    union {
-        GenCDATAPaddedWorkspace cdataWorkspace;
-        GenerateTagWorkspace tagWorkspace;
-    };
-};
 bool OTAES128GCMGenericBase::gcmEncryptPadded(
                         const uint8_t* key, const uint8_t* IV,
                         const uint8_t* PDATAPadded, uint8_t PDATALength,
                         const uint8_t* ADATA, uint8_t ADATALength,
                         uint8_t* CDATA, uint8_t *tag) const
 {
-    GCMEncryptPaddedWorkspace workspace;
+    WS::GCMEncryptPaddedWorkspace workspace;
 
     if(NULL == CDATA) { return(false); } // DHD20161107: NULL CDATA causes crashes in subroutines.
     if(0 != (PDATALength & (AES128GCM_BLOCK_SIZE-1))) { return(false); } // Reject non-padded data.
@@ -620,25 +553,13 @@ bool OTAES128GCMGenericBase::gcmEncryptPadded(
  * @param   PDATA           buffer to output plaintext to; must be same length as CDATA
  * @retval  true if decryption and authentication successful, else false
  */
-struct GCMDecryptWorkspace final
-{
-    uint8_t authKey[AES128GCM_BLOCK_SIZE];
-    uint8_t ICB[AES128GCM_BLOCK_SIZE];
-    uint8_t calculatedTag[AES128GCM_TAG_SIZE];
-    // generateCDATA and generateTag are called separately and so their
-    // workspaces can be a union
-    union {
-        GenCDATAPaddedWorkspace cdataWorkspace;
-        GenerateTagWorkspace tagWorkspace;
-    };
-};
 bool OTAES128GCMGenericBase::gcmDecrypt(
                         const uint8_t* key, const uint8_t* IV,
                         const uint8_t* CDATA, uint8_t CDATALength,
                         const uint8_t* ADATA, uint8_t ADATALength,
                         const uint8_t* messageTag, uint8_t *PDATA) const
 {
-    GCMDecryptWorkspace workspace;
+    WS::GCMDecryptWorkspace workspace;
     // Check if there is input data.
     // Fail if there is nothing to decrypt and/or authenticate.
     if((CDATALength == 0) && (ADATALength == 0)) { return(false); }
