@@ -182,7 +182,7 @@ struct GCTRWorkspace final
  * @note    aes_gctr
  * @brief   performs gcntr operation for encryption
  * @param   pInput          pointer to input data
- * @param   inputLength     length of input array
+ * @param   inputLength     length of input array (need not be block multiple)
  * @param   pKey            pointer to 128 bit AES key
  * @param   pICB            initial counter block J0
  * @param   pOutput         pointer to output data. length inputLength rounded up to 16.
@@ -292,7 +292,7 @@ static void generateICB(const uint8_t *pIV, uint8_t *pOutput)
  * @brief   encrypt PDATA to get CDATA
  * @param   pICB        pointer to initial counter block
  * @param   pPDATA      pointer to plain text
- * @param   PDATALength length of plain text
+ * @param   PDATALength length of plain text (need not by block size multiple)
  * @param   pCDATA      pointer to array for cipher text. Length PDATALength rounded up to next 16 bytes
  */
 static void generateCDATA(OTAES128E * const ap,
