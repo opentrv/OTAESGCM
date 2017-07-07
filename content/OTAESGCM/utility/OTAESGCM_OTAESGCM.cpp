@@ -416,9 +416,9 @@ static void generateTag(OTAES128E * const ap,
 {
     uint16_t temp;
     uint8_t lengthBuffer[16];
-    uint8_t S[16];
-    memset(lengthBuffer, 0, 16);
-    memset(S, 0, AES128GCM_BLOCK_SIZE);
+    uint8_t S[AES128GCM_BLOCK_SIZE];
+    memset(lengthBuffer, 0, sizeof(lengthBuffer));
+    memset(S, 0, sizeof(S));
     /*
      * u = 128 * ceil[len(C)/128] - len(C)
      * v = 128 * ceil[len(A)/128] - len(A)
