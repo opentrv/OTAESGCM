@@ -698,7 +698,7 @@ bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_WITH_WORKSPACE(
     typedef OTAES128GCMGenericWithWorkspace<> t;
     if(!t::isWorkspaceSufficient(workspace, workspaceSize)) { return(false); } // ERROR
     t i(workspace, workspaceSize);
-    return(i.gcmEncrypt(key, iv, plaintext, (NULL == plaintext) ? 0 : 32, (0 == authtextSize) ? NULL : authtext, authtextSize, ciphertextOut, tagOut));
+    return(i.gcmEncryptPadded(key, iv, plaintext, (NULL == plaintext) ? 0 : 32, (0 == authtextSize) ? NULL : authtext, authtextSize, ciphertextOut, tagOut));
     }
 
 // AES-GCM 128-bit-key fixed-size text (256-bit/32-byte) decryption/authentication function using work space passed in.
