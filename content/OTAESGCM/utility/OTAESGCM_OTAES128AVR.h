@@ -13,8 +13,8 @@ KIND, either express or implied. See the Licence for the
 specific language governing permissions and limitations
 under the Licence.
 
-Author(s) / Copyright (s): Deniz Erbilgin 2015
-                           Damon Hart-Davis 2015--2016
+Author(s) / Copyright (s): Deniz Erbilgin 2015==2017
+                           Damon Hart-Davis 2015--2017
 */
 
 /* Atmel AVR/ATMega (eg ATMega328P) AES(128) implementation. */
@@ -45,11 +45,11 @@ namespace OTAESGCM
 
             // The AES key (128 bits, 16 bytes); never NULL.
             // Note that Key is space passed in by caller.
-            const uint8_t *Key;
+            const uint8_t *Key = NULL;
             // Intermediate results during decryption.
             typedef uint8_t state_t[4][4];
             // Note that state is space passed in by caller.
-            state_t *state;
+            state_t *state = NULL;
             // Nr+1 round keys; NULL if insufficient workspace is passed in.
             // Should be cleared before releasing space to (say) heap.
             //uint8_t RoundKey[RoundKeySize];
@@ -63,21 +63,23 @@ namespace OTAESGCM
             void Cipher();
 
         public:
-            // External workspace/scratch required minimum size, unaligned; strictly positive.
+            // Minimum workspace required, unaligned; strictly positive.
             // At the moment just enough to cover the RoundKey.
             // This constant, defined per class, is effectively part of the API.
             static constexpr uint8_t workspaceRequired = RoundKeySize;
 //            constexpr uint8_t getWorkspaceRequired() const { return(workspaceRequired); }
 
             // Construct an instance: supplied workspace must be large enough.
+            // Only the initial 'workspaceRequired' bytes will be used.
             OTAES128E_AVR(uint8_t *const workspace, uint8_t workspaceLen)
               : RoundKey((workspaceLen >= workspaceRequired) ? workspace : NULL)
                 { }
 
-            // Clean up sensitive state and removes pointers to external state.
-            // If Key pointer already cleared then assumed to already have been done and is not repeated.
-            // NOT YET TESTED.
-            void cleanup() { if((NULL != RoundKey) && (NULL != Key)) { memset(RoundKey, 0, RoundKeySize); state=NULL; Key=NULL; } }
+            // Clean up sensitive state and remove pointers to external state.
+            // If the Key pointer is NULL then assume that the clear
+            // is already have been done and need not be repeated.
+            void cleanup() { if((NULL != RoundKey) && (NULL != Key))
+                { memset(RoundKey, 0, RoundKeySize); state=NULL; Key=NULL; } }
 
             /**
              *    @brief    AES128 block encryption

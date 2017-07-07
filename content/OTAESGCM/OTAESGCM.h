@@ -13,8 +13,8 @@ KIND, either express or implied. See the Licence for the
 specific language governing permissions and limitations
 under the Licence.
 
-Author(s) / Copyright (s): Deniz Erbilgin 2015
-                           Damon Hart-Davis 2015
+Author(s) / Copyright (s): Deniz Erbilgin 2015--2017
+                           Damon Hart-Davis 2015--2017
 */
 
 #ifndef ARDUINO_LIB_OTAESGCM_H
@@ -29,7 +29,7 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015
 /*
  * Thanks amongst others to:
  *
- *     https://github.com/kokke/tiny-AES128-C  for code and ideas, public domain.
+ *     https://github.com/kokke/tiny-AES128-C for code and ideas, public domain.
  */
 
 // Core support/APIs.
