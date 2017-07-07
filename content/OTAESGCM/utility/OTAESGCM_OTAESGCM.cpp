@@ -229,7 +229,7 @@ static void GCTR(OTAES128E * const ap, GCTRWorkspace * const workspace,
 }
 
 /**@struct  Bulk of GCTRPadded() workspace. */
-struct GCTRPadddedWorkspace final
+struct GCTRPaddedWorkspace final
 {
     uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
 };
@@ -243,7 +243,7 @@ struct GCTRPadddedWorkspace final
  * @param   pICB            initial counter block J0
  * @param   pOutput         pointer to output data. length inputLength rounded up to 16.
  */
-static void GCTRPaddded(OTAES128E * const ap, GCTRPadddedWorkspace * const workspace,
+static void GCTRPadded(OTAES128E * const ap, GCTRPaddedWorkspace * const workspace,
                     const uint8_t *pInput, const uint8_t inputLength, const uint8_t *pKey,
                     const uint8_t *pCtrBlock, uint8_t *pOutput)
 {
