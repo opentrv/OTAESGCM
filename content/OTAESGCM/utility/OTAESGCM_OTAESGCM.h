@@ -93,7 +93,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
              * @param   key     pointer to 16 byte (128 bit) key; never NULL
              * @param   IV              pointer to 12 byte (96 bit) IV;
              *                          never NULL
-             * @param   PDATA           pointer to plaintext input array,
+             * @param   PDATAPaddded    pointer to plaintext input array,
              *                          MUST BT a multiple of the blocksize;
              *                          NULL if length 0.
              * @param   PDATALength     length of plaintext array in bytes,
