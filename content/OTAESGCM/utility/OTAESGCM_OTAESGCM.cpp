@@ -297,12 +297,12 @@ static void GHASH(  const uint8_t *pInput, uint8_t inputLength,
                     const uint8_t *pAuthKey, uint8_t *pOutput )
 {
     const uint8_t *xpos = pInput;
-    uint8_t tmp[AES128GCM_BLOCK_SIZE]; // if we use full blocks, no need for tmp
+    uint8_t tmp[AES128GCM_BLOCK_SIZE]; // If using full blocks, no need for tmp.
 
-    // calculate number of full blocks to hash
+    // Calculate number of full blocks to hash.
     const uint8_t m = inputLength / AES128GCM_BLOCK_SIZE;
 
-    // hash full blocks
+    // Hash full blocks.
     for (uint8_t i = 0; i < m; i++) {
         // Y_i = (Y^(i-1) XOR X_i) dot H
         xorBlock(pOutput, xpos);
@@ -314,7 +314,8 @@ static void GHASH(  const uint8_t *pInput, uint8_t inputLength,
         memcpy(pOutput, tmp, AES128GCM_BLOCK_SIZE);
     }
 
-    // check if final partial block. Can be omitted if we use full blocks.
+    // Check if final partial block.
+    // Can be omitted if we use full blocks.
     if (pInput + inputLength > xpos) {
         // zero pad
         const uint8_t last = uint8_t(pInput + inputLength - xpos);
