@@ -187,13 +187,13 @@ struct GCTRWorkspace final
  * @param   pICB            initial counter block J0
  * @param   pOutput         pointer to output data. length inputLength rounded up to 16.
  */
-static void GCTR(OTAES128E * const ap, GCTRWorkspace * const /*workspace*/,
+static void GCTR(OTAES128E * const ap, GCTRWorkspace * const workspace,
                     const uint8_t *pInput, const uint8_t inputLength, const uint8_t *pKey,
                     const uint8_t *pCtrBlock, uint8_t *pOutput)
 {
     uint8_t last;
-    uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
-    uint8_t tmp[AES128GCM_BLOCK_SIZE]; // if we use full blocks, no need for tmp
+//    uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
+//    uint8_t tmp[AES128GCM_BLOCK_SIZE]; // if we use full blocks, no need for tmp
 
     const uint8_t *xpos = pInput;
     uint8_t *ypos = pOutput;
@@ -205,12 +205,12 @@ static void GCTR(OTAES128E * const ap, GCTRWorkspace * const /*workspace*/,
     const uint8_t n = inputLength / 16;
 
     // copy ICB to ctrBlock
-    memcpy(ctrBlock, pCtrBlock, AES128GCM_BLOCK_SIZE);
+    memcpy(workspace->ctrBlock, pCtrBlock, AES128GCM_BLOCK_SIZE);
 
     // for full blocks
     for (uint8_t i = 0; i < n; i++) {
         // cipher counterblock and combine with input
-        ap->blockEncrypt(ctrBlock, pKey, ypos);
+        ap->blockEncrypt(workspace->ctrBlock, pKey, ypos);
         xorBlock(ypos, xpos);
 
         // increment pointers to next block
@@ -218,16 +218,16 @@ static void GCTR(OTAES128E * const ap, GCTRWorkspace * const /*workspace*/,
         ypos += AES128GCM_BLOCK_SIZE;
 
         // increment counter
-        incr32(ctrBlock);
+        incr32(workspace->ctrBlock);
     }
 
     // check if there is a partial block at end
     last = uint8_t(pInput + inputLength - xpos);
     if (last) {
         // encrypt into tmp and combine with last block of input
-        ap->blockEncrypt(ctrBlock, pKey, tmp);
+        ap->blockEncrypt(workspace->ctrBlock, pKey, workspace->tmp);
         for (uint8_t i = 0; i < last; i++)
-            *ypos++ = *xpos++ ^ tmp[i];
+            *ypos++ = *xpos++ ^ workspace->tmp[i];
     }
 }
 
