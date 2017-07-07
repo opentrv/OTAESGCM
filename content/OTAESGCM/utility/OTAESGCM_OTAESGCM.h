@@ -273,6 +273,11 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                     GenerateTagWorkspace tagWorkspace;
                 };
             };
+
+            // Workspace required for OTAES128GCMGenericBase functions.
+            constexpr static uint8_t gcmEncryptWorkspaceRequired = sizeof(WS::GCMEncryptWorkspace);
+            constexpr static uint8_t gcmEncryptPaddedWorkspaceRequired = sizeof(WS::GCMEncryptPaddedWorkspace);
+            constexpr static uint8_t gcmDecryptWorkspaceRequired = sizeof(WS::GCMDecryptWorkspace);
         }
 
     // Generic implementation, parameterised with type of underlying AES implementation.
@@ -284,9 +289,6 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
         private:
             // Minimum size of workspace required.
             constexpr static uint8_t workspaceRequiredAES = OTAESImpl::workspaceRequired;
-//            constexpr static uint8_t workspaceRequiredEnc = 96; // FIXME
-//            constexpr static uint8_t workspaceRequiredEncPadded = 96; // FIXME
-//            constexpr static uint8_t workspaceRequiredDec = 112; // FIXME
             // Workspace is laid out starting with AES space
             // and followed by the GCM function workspace.
             // Note that we validate at compile time that at least the
