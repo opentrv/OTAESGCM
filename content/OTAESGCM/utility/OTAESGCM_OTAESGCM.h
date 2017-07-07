@@ -199,7 +199,16 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
         {
         private:
             // Minimum size of workspace required.
-            constexpr static uint8_t workspaceRequired = OTAESImpl::workspaceRequired;
+            constexpr static uint8_t workspaceRequiredAES = OTAESImpl::workspaceRequired;
+//            constexpr static uint8_t workspaceRequiredEnc = 96; // FIXME
+//            constexpr static uint8_t workspaceRequiredEncPadded = 96; // FIXME
+//            constexpr static uint8_t workspaceRequiredDec = 112; // FIXME
+            // Workspace is laid out starting with AES space
+            // and followed by the GCM function workspace.
+            // Note that we validate at compile time that at least the
+            // minimum requirement is met.
+            // The other more non-minimal functions will need a runtime check.
+            constexpr static uint8_t workspaceRequired = workspaceRequiredAES;
             uint8_t workspace[workspaceRequired];
         public:
             // Construct an instance.
@@ -214,7 +223,8 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
         {
         public:
             // Minimum size of workspace required.
-            constexpr static uint8_t workspaceRequired = OTAESImpl::workspaceRequired;
+            constexpr static uint8_t workspaceRequiredAES = OTAESImpl::workspaceRequired;
+            constexpr static uint8_t workspaceRequired = workspaceRequiredAES;
             // Construct an instance, supplied with workspace.
             constexpr OTAES128GCMGenericWithWorkspace(uint8_t *const workspace, const uint8_t workspaceSize)
                 : OTAESImpl(workspace, workspaceSize), OTAES128GCMGenericBase(this)

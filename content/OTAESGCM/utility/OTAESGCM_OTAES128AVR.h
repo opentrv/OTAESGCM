@@ -50,7 +50,7 @@ namespace OTAESGCM
             typedef uint8_t state_t[4][4];
             // Note that state is space passed in by caller.
             state_t *state;
-            // Nr+1 round keys; NULL if insufficent workspace is passed in.
+            // Nr+1 round keys; NULL if insufficient workspace is passed in.
             // Should be cleared before releasing space to (say) heap.
             //uint8_t RoundKey[RoundKeySize];
             uint8_t * const RoundKey;
