@@ -401,10 +401,15 @@ static void generateCDATAPadded(OTAES128E * const ap,
 
 struct GenerateTagWorkspace final
 {
-    uint8_t lengthBuffer[16];
     uint8_t S[AES128GCM_BLOCK_SIZE];
     GHASHWorkspace ghashSpace;
-    GCTRPaddedWorkspace gctrSpace;
+    // lengthBuffer and gctrSpace are/contain 16 byte uint8_t arrays and are
+    // not used simultaneously.
+    union
+    {
+        uint8_t lengthBuffer[16];
+        GCTRPaddedWorkspace gctrSpace;
+    };
 };
 /**
  * @note    aes_gcm_ghash
@@ -445,7 +450,6 @@ static void generateTag(OTAES128E * const ap,
     //lengthBuffer[13] = (temp >> 16) & 0xff;
     workspace->lengthBuffer[14] = (temp >> 8) & 0xff;
     workspace->lengthBuffer[15] = temp & 0xff;
-
 
     GHASH(&workspace->ghashSpace, pADATA, ADATALength, pAuthKey, workspace->S);
     GHASH(&workspace->ghashSpace, pCDATA, CDATALength, pAuthKey, workspace->S);
@@ -505,9 +509,10 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
     if(PDATALength >= (uint8_t)(256U - (uint16_t)AES128GCM_BLOCK_SIZE)) { return(false); } // Too big.
     const uint8_t CDATALength = (PDATALength + AES128GCM_BLOCK_SIZE-1) & ~(AES128GCM_BLOCK_SIZE-1);
 
-    // Encrypt data
+    // Encrypt data.
     generateAuthKey(ap, key, authKey);
     generateICB(IV, ICB);
+    // ICB is hashed with the key then XORed with PDATA to encrypt plain text.
     generateCDATA(ap, ICB, PDATA, PDATALength, CDATA, key);
 
     // Generate authentication tag.
@@ -567,9 +572,10 @@ bool OTAES128GCMGenericBase::gcmEncryptPadded(
 
     const uint8_t CDATALength = PDATALength;
 
-    // Encrypt data
+    // Encrypt data.
     generateAuthKey(ap, key, authKey);
     generateICB(IV, ICB);
+    // ICB is hashed with the key then XORed with PDATA to encrypt plain text.
     generateCDATAPadded(ap, ICB, PDATAPadded, PDATALength, CDATA, key);
 
     // Generate authentication tag.
@@ -613,6 +619,7 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
     generateAuthKey(ap, key, authKey);
     generateICB(IV, ICB);
 
+    // ICB is hashed with the key then XORed with CDATA to decrypt cipher text.
     generateCDATAPadded(ap, ICB, CDATA, CDATALength, PDATA, key);
 
     // Authenticate and return true if tag matches.
