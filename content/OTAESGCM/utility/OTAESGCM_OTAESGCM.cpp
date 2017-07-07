@@ -296,12 +296,11 @@ static void GCTRPadded(OTAES128E * const ap, GCTRPaddedWorkspace * const workspa
 static void GHASH(  const uint8_t *pInput, uint8_t inputLength,
                     const uint8_t *pAuthKey, uint8_t *pOutput )
 {
-    uint8_t m;
     const uint8_t *xpos = pInput;
     uint8_t tmp[AES128GCM_BLOCK_SIZE]; // if we use full blocks, no need for tmp
 
     // calculate number of full blocks to hash
-    m = inputLength / AES128GCM_BLOCK_SIZE;
+    const uint8_t m = inputLength / AES128GCM_BLOCK_SIZE;
 
     // hash full blocks
     for (uint8_t i = 0; i < m; i++) {
