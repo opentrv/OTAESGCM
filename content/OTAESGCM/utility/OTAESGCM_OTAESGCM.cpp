@@ -372,6 +372,11 @@ static void generateCDATA(OTAES128E * const ap,
     GCTR(ap, &workspace, pPDATA, PDATALength, pKey, ctrBlock, pCDATA);
 }
 
+struct GenCDATAPaddedWorkspace final
+{
+    uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
+    GCTRPaddedWorkspace gctrSpace;
+};
 /**
  * @note    aes_gcm_ctr
  * @brief   encrypt PDATA to get CDATA
@@ -380,22 +385,19 @@ static void generateCDATA(OTAES128E * const ap,
  * @param   PDATALength length of plain text (MUST BE block-size multiple)
  * @param   pCDATA      pointer to array for cipher text. Length PDATALength rounded up to next 16 bytes
  */
-static void generateCDATAPadded(OTAES128E * const ap,
+static void generateCDATAPadded(OTAES128E * const ap, GenCDATAPaddedWorkspace * const cdataSpace,
                             const uint8_t *pICB, const uint8_t *pPDATAPadded, uint8_t PDATALength,
                             uint8_t *pCDATA, const uint8_t *pKey )
 {
-    uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
-
     // Exit if no data to encrypt.
     if(PDATALength == 0) return;
 
     // Generate counter block J.
-    memcpy(ctrBlock, pICB, AES128GCM_BLOCK_SIZE);
-    incr32(ctrBlock);
+    memcpy(cdataSpace->ctrBlock, pICB, AES128GCM_BLOCK_SIZE);
+    incr32(cdataSpace->ctrBlock);
 
     // Encrypt.
-    GCTRPaddedWorkspace workspace;
-    GCTRPadded(ap, &workspace, pPDATAPadded, PDATALength, pKey, ctrBlock, pCDATA);
+    GCTRPadded(ap, &cdataSpace->gctrSpace, pPDATAPadded, PDATALength, pKey, cdataSpace->ctrBlock, pCDATA);
 }
 
 
@@ -576,7 +578,8 @@ bool OTAES128GCMGenericBase::gcmEncryptPadded(
     generateAuthKey(ap, key, authKey);
     generateICB(IV, ICB);
     // ICB is hashed with the key then XORed with PDATA to encrypt plain text.
-    generateCDATAPadded(ap, ICB, PDATAPadded, PDATALength, CDATA, key);
+    GenCDATAPaddedWorkspace cdataWorkspace;
+    generateCDATAPadded(ap, &cdataWorkspace, ICB, PDATAPadded, PDATALength, CDATA, key);
 
     // Generate authentication tag.
     GenerateTagWorkspace tagWorkspace;
@@ -620,7 +623,8 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
     generateICB(IV, ICB);
 
     // ICB is hashed with the key then XORed with CDATA to decrypt cipher text.
-    generateCDATAPadded(ap, ICB, CDATA, CDATALength, PDATA, key);
+    GenCDATAPaddedWorkspace cdataWorkspace;
+    generateCDATAPadded(ap, &cdataWorkspace, ICB, CDATA, CDATALength, PDATA, key);
 
     // Authenticate and return true if tag matches.
     GenerateTagWorkspace tagWorkspace;
