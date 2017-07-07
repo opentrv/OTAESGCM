@@ -168,6 +168,14 @@ static void incr32(uint8_t *pBlock)
     }
 }
 
+/**
+ * @struct  Workspace bulk of GCTR static allocations.
+ */
+struct GCTRWorkSpace final
+{
+
+};
+
 //**************** MAIN ENCRYPTION FUNCTIONS *************
 /**
  * @note    aes_gctr
@@ -179,10 +187,10 @@ static void incr32(uint8_t *pBlock)
  * @param   pOutput         pointer to output data. length inputLength rounded up to 16.
  */
 static void GCTR(OTAES128E * const ap,
-                    const uint8_t *pInput, uint8_t inputLength, const uint8_t *pKey,
+                    const uint8_t *pInput, const uint8_t inputLength, const uint8_t *pKey,
                     const uint8_t *pCtrBlock, uint8_t *pOutput)
 {
-    uint8_t n, last;
+    uint8_t last;
     uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
     uint8_t tmp[AES128GCM_BLOCK_SIZE]; // if we use full blocks, no need for tmp
 
@@ -193,7 +201,7 @@ static void GCTR(OTAES128E * const ap,
     if (inputLength == 0) return;
 
     // calculate number of full blocks to cipher
-    n = inputLength / 16;
+    const uint8_t n = inputLength / 16;
 
     // copy ICB to ctrBlock
     memcpy(ctrBlock, pCtrBlock, AES128GCM_BLOCK_SIZE);
