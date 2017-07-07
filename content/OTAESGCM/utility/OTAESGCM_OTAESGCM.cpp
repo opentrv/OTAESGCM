@@ -181,7 +181,7 @@ struct GCTRWorkspace final
 /**
  * @note    aes_gctr
  * @brief   performs gcntr operation for encryption
- * @param   pInput          pointer to input data
+ * @param   pInput          pointer to input data. Need not be a full 16 byte block.
  * @param   inputLength     length of input array
  * @param   pKey            pointer to 128 bit AES key
  * @param   pICB            initial counter block J0
@@ -217,7 +217,7 @@ static void GCTR(OTAES128E * const ap, GCTRWorkspace * const workspace,
         incr32(workspace->ctrBlock);
     }
 
-    // check if there is a partial block at end
+    // check if there is a partial block at end.
     const uint8_t last = uint8_t(pInput + inputLength - xpos);
     if (last) {
         // encrypt into tmp and combine with last block of input
