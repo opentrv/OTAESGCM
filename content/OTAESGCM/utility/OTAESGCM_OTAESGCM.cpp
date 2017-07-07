@@ -461,7 +461,7 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
  * This version may be smaller and faster and need less stack
  * if separately implemented, else default to generic gcmEncrypt().
  */
-bool OTAES128GCMGenericBase::generateCDATA(
+bool OTAES128GCMGenericBase::gcmEncryptPadded(
                         const uint8_t* key, const uint8_t* IV,
                         const uint8_t* PDATAPadded, uint8_t PDATALength,
                         const uint8_t* ADATA, uint8_t ADATALength,
