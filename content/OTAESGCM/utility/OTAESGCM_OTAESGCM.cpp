@@ -171,9 +171,10 @@ static void incr32(uint8_t *pBlock)
 /**
  * @struct  Workspace bulk of GCTR static allocations.
  */
-struct GCTRWorkSpace final
+struct GCTRWorkspace final
 {
-
+    uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
+    uint8_t tmp[AES128GCM_BLOCK_SIZE]; // if we use full blocks, no need for tmp
 };
 
 //**************** MAIN ENCRYPTION FUNCTIONS *************
@@ -186,7 +187,7 @@ struct GCTRWorkSpace final
  * @param   pICB            initial counter block J0
  * @param   pOutput         pointer to output data. length inputLength rounded up to 16.
  */
-static void GCTR(OTAES128E * const ap,
+static void GCTR(OTAES128E * const ap, GCTRWorkspace * const /*workspace*/,
                     const uint8_t *pInput, const uint8_t inputLength, const uint8_t *pKey,
                     const uint8_t *pCtrBlock, uint8_t *pOutput)
 {
@@ -312,7 +313,8 @@ static void generateCDATA(OTAES128E * const ap,
     incr32(ctrBlock);
 
     // encrypt
-    GCTR(ap, pPDATA, PDATALength, pKey, ctrBlock, pCDATA);
+    GCTRWorkspace workspace;
+    GCTR(ap, &workspace, pPDATA, PDATALength, pKey, ctrBlock, pCDATA);
 }
 
 /**
@@ -361,7 +363,8 @@ static void generateTag(OTAES128E * const ap,
     GHASH(pCDATA, CDATALength, pAuthKey, S);
     GHASH(lengthBuffer, sizeof(lengthBuffer), pAuthKey, S);
 
-    GCTR(ap, S, sizeof(S), pKey, pICB, pTag);
+    GCTRWorkspace workspace;
+    GCTR(ap, &workspace, S, sizeof(S), pKey, pICB, pTag);
 }
 
 /**
