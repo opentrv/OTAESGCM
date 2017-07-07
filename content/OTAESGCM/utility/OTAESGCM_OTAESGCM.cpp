@@ -429,6 +429,68 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
     return(true);
 }
 
+/**
+ * @brief   performs AES-GCM encryption on padded data.
+ *          If ADATA unused, set ADATA to NULL and ADATALength to 0.
+ *          If PDATA unused (this is GMAC),
+ *          then set PDATA and CDATA to NULL and PDATALength to 0.
+ * @todo    Make GMAC helper function.
+ * @param   key     pointer to 16 byte (128 bit) key; never NULL
+ * @param   IV              pointer to 12 byte (96 bit) IV;
+ *                          never NULL
+ * @param   PDATA           pointer to plaintext input array,
+ *                          MUST BT a multiple of the blocksize;
+ *                          NULL if length 0.
+ * @param   PDATALength     length of plaintext array in bytes,
+ *                          can be zero,
+ *                          MUST BE blocksize multiple.
+ * @param   ADATA           pointer to additional input data array;
+ *                          NULL if length 0.
+ * @param   ADATALength     length of additional data in bytes,
+ *                          can be zero
+ * @param   CDATA           buffer to output ciphertext to,
+ *                          size MUST BE PADDED/EXPANDED TO FULL
+ *                          BLOCKSIZE MULTIPLE at/above PDATAlength;
+ *                          (nominally set to NULL if PDATA is NULL
+ *                          but seems to cause a crash)
+ * @param   tag             pointer to 16 byte tag output buffer;
+ *                          never NULL
+ * @retval  true if encryption is successful, else false
+ *
+ * Plain-text must be an exact multiple of block length, eg padded.
+ * This version may be smaller and faster and need less stack
+ * if separately implemented, else default to generic gcmEncrypt().
+ */
+bool OTAES128GCMGenericBase::generateCDATA(
+                        const uint8_t* key, const uint8_t* IV,
+                        const uint8_t* PDATAPadded, uint8_t PDATALength,
+                        const uint8_t* ADATA, uint8_t ADATALength,
+                        uint8_t* CDATA, uint8_t *tag) const
+{
+    uint8_t authKey[AES128GCM_BLOCK_SIZE];
+    uint8_t ICB[AES128GCM_BLOCK_SIZE];
+
+    if(NULL == CDATA) { return(false); } // DHD20161107: NULL CDATA causes crashes in subroutines.
+    if(0 != (PDATALength & (AES128GCM_BLOCK_SIZE-1))) { return(false); } // Reject non-padded data.
+
+    // Check if there is input data.
+    // Fail if there is nothing to encrypt and/or authenticate.
+    if((PDATALength == 0) && (ADATALength == 0)) { return(false); }
+
+    const uint8_t CDATALength = PDATALength;
+
+    // Encrypt data
+    generateAuthKey(ap, key, authKey);
+    generateICB(IV, ICB);
+    generateCDATA(ap, ICB, PDATAPadded, PDATALength, CDATA, key);
+
+    // Generate authentication tag.
+    generateTag(ap, key, authKey, ADATA, ADATALength, CDATA, CDATALength, tag, ICB);
+
+    return(true);
+}
+
+
 
 /**
  * @brief   performs AES-GCM decryption and authentication
