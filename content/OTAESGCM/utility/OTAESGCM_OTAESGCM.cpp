@@ -191,10 +191,6 @@ static void GCTR(OTAES128E * const ap, GCTRWorkspace * const workspace,
                     const uint8_t *pInput, const uint8_t inputLength, const uint8_t *pKey,
                     const uint8_t *pCtrBlock, uint8_t *pOutput)
 {
-    uint8_t last;
-//    uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
-//    uint8_t tmp[AES128GCM_BLOCK_SIZE]; // if we use full blocks, no need for tmp
-
     const uint8_t *xpos = pInput;
     uint8_t *ypos = pOutput;
 
@@ -222,7 +218,7 @@ static void GCTR(OTAES128E * const ap, GCTRWorkspace * const workspace,
     }
 
     // check if there is a partial block at end
-    last = uint8_t(pInput + inputLength - xpos);
+    const uint8_t last = uint8_t(pInput + inputLength - xpos);
     if (last) {
         // encrypt into tmp and combine with last block of input
         ap->blockEncrypt(workspace->ctrBlock, pKey, workspace->tmp);
