@@ -498,8 +498,12 @@ struct GCMEncryptWorkspace final
 {
     uint8_t authKey[AES128GCM_BLOCK_SIZE];
     uint8_t ICB[AES128GCM_BLOCK_SIZE];
-    GenCDATAWorkspace cdataWorkspace;
-    GenerateTagWorkspace tagWorkspace;
+    // generateCDATA and generateTag are called separately and so their
+    // workspaces can be a union
+    union {
+        GenCDATAWorkspace cdataWorkspace;
+        GenerateTagWorkspace tagWorkspace;
+    };
 };
 bool OTAES128GCMGenericBase::gcmEncrypt(
                         const uint8_t* key, const uint8_t* IV,
@@ -567,8 +571,12 @@ struct GCMEncryptPaddedWorkspace final
 {
     uint8_t authKey[AES128GCM_BLOCK_SIZE];
     uint8_t ICB[AES128GCM_BLOCK_SIZE];
-    GenCDATAPaddedWorkspace cdataWorkspace;
-    GenerateTagWorkspace tagWorkspace;
+    // generateCDATA and generateTag are called separately and so their
+    // workspaces can be a union
+    union {
+        GenCDATAPaddedWorkspace cdataWorkspace;
+        GenerateTagWorkspace tagWorkspace;
+    };
 };
 bool OTAES128GCMGenericBase::gcmEncryptPadded(
                         const uint8_t* key, const uint8_t* IV,
@@ -617,8 +625,12 @@ struct GCMDecryptWorkspace final
     uint8_t authKey[AES128GCM_BLOCK_SIZE];
     uint8_t ICB[AES128GCM_BLOCK_SIZE];
     uint8_t calculatedTag[AES128GCM_TAG_SIZE];
-    GenCDATAPaddedWorkspace cdataWorkspace;
-    GenerateTagWorkspace tagWorkspace;
+    // generateCDATA and generateTag are called separately and so their
+    // workspaces can be a union
+    union {
+        GenCDATAPaddedWorkspace cdataWorkspace;
+        GenerateTagWorkspace tagWorkspace;
+    };
 };
 bool OTAES128GCMGenericBase::gcmDecrypt(
                         const uint8_t* key, const uint8_t* IV,
