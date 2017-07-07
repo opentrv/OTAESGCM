@@ -176,8 +176,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
             // Encrypt; true iff successful.
             // Plain-text must be an exact multiple of block length, eg padded.
             // This version may be smaller and faster and need less stack
-            // if separately implemented,
-            // else default to
+            // if separately implemented, else default to generic gcmEncrypt().
             virtual bool gcmEncryptPadded(
                 const uint8_t* key, const uint8_t* IV,
                 const uint8_t* PDATAPadded, uint8_t PDATALength,
