@@ -168,25 +168,22 @@ static void incr32(uint8_t *pBlock)
     }
 }
 
-/**
- * @struct  Workspace bulk of GCTR static allocations.
- */
+
+//**************** MAIN ENCRYPTION FUNCTIONS *************
+
+
+/**@struct  Bulk of GCTR() workspace. */
 struct GCTRWorkspace final
 {
     uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
     uint8_t tmp[AES128GCM_BLOCK_SIZE]; // if we use full blocks, no need for tmp
 };
 
-//**************** MAIN ENCRYPTION FUNCTIONS *************
 /**
  * @note    aes_gctr
  * @brief   performs gcntr operation for encryption
- * @param   pInput          pointer to input data. Need not be a full 16 byte block.
+ * @param   pInput          pointer to input data (need not be block multiple)
  * @param   inputLength     length of input array
-=======
- * @param   pInput          pointer to input data
- * @param   inputLength     length of input array (need not be block multiple)
->>>>>>> refs/remotes/origin/master
  * @param   pKey            pointer to 128 bit AES key
  * @param   pICB            initial counter block J0
  * @param   pOutput         pointer to output data. length inputLength rounded up to 16.
@@ -230,6 +227,62 @@ static void GCTR(OTAES128E * const ap, GCTRWorkspace * const workspace,
             *ypos++ = *xpos++ ^ workspace->tmp[i];
     }
 }
+
+/**@struct  Bulk of GCTRPadded() workspace. */
+struct GCTRPadddedWorkspace final
+{
+    uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
+};
+
+/**
+ * @note    aes_gctr
+ * @brief   performs gcntr operation for encryption
+ * @param   pInput          pointer to input data (MUST BE be block multiple)
+ * @param   inputLength     length of input array
+ * @param   pKey            pointer to 128 bit AES key
+ * @param   pICB            initial counter block J0
+ * @param   pOutput         pointer to output data. length inputLength rounded up to 16.
+ */
+static void GCTRPaddded(OTAES128E * const ap, GCTRPadddedWorkspace * const workspace,
+                    const uint8_t *pInput, const uint8_t inputLength, const uint8_t *pKey,
+                    const uint8_t *pCtrBlock, uint8_t *pOutput)
+{
+    const uint8_t *xpos = pInput;
+    uint8_t *ypos = pOutput;
+
+    // exit function if no input data
+    if (inputLength == 0) return;
+
+    // calculate number of full blocks to cipher
+    const uint8_t n = inputLength / 16;
+
+    // copy ICB to ctrBlock
+    memcpy(workspace->ctrBlock, pCtrBlock, AES128GCM_BLOCK_SIZE);
+
+    // for full blocks
+    for (uint8_t i = 0; i < n; i++) {
+        // cipher counterblock and combine with input
+        ap->blockEncrypt(workspace->ctrBlock, pKey, ypos);
+        xorBlock(ypos, xpos);
+
+        // increment pointers to next block
+        xpos += AES128GCM_BLOCK_SIZE;
+        ypos += AES128GCM_BLOCK_SIZE;
+
+        // increment counter
+        incr32(workspace->ctrBlock);
+    }
+
+//    // check if there is a partial block at end.
+//    const uint8_t last = uint8_t(pInput + inputLength - xpos);
+//    if (last) {
+//        // encrypt into tmp and combine with last block of input
+//        ap->blockEncrypt(workspace->ctrBlock, pKey, workspace->tmp);
+//        for (uint8_t i = 0; i < last; i++)
+//            *ypos++ = *xpos++ ^ workspace->tmp[i];
+//    }
+}
+
 
 /**
  * @note    ghash
@@ -296,7 +349,7 @@ static void generateICB(const uint8_t *pIV, uint8_t *pOutput)
  * @brief   encrypt PDATA to get CDATA
  * @param   pICB        pointer to initial counter block
  * @param   pPDATA      pointer to plain text
- * @param   PDATALength length of plain text (need not by block size multiple)
+ * @param   PDATALength length of plain text (need not be block-size multiple)
  * @param   pCDATA      pointer to array for cipher text. Length PDATALength rounded up to next 16 bytes
  */
 static void generateCDATA(OTAES128E * const ap,
@@ -305,16 +358,42 @@ static void generateCDATA(OTAES128E * const ap,
 {
     uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
 
-    // exit function if no data to encrypt
+    // Exit if no data to encrypt.
     if(PDATALength == 0) return;
 
-    // generate counterblock J
+    // Generate counter block J.
     memcpy(ctrBlock, pICB, AES128GCM_BLOCK_SIZE);
     incr32(ctrBlock);
 
-    // encrypt
+    // Encrypt.
     GCTRWorkspace workspace;
     GCTR(ap, &workspace, pPDATA, PDATALength, pKey, ctrBlock, pCDATA);
+}
+
+/**
+ * @note    aes_gcm_ctr
+ * @brief   encrypt PDATA to get CDATA
+ * @param   pICB        pointer to initial counter block
+ * @param   pPDATA      pointer to plain text
+ * @param   PDATALength length of plain text (MUST BE block-size multiple)
+ * @param   pCDATA      pointer to array for cipher text. Length PDATALength rounded up to next 16 bytes
+ */
+static void generateCDATAPadded(OTAES128E * const ap,
+                            const uint8_t *pICB, const uint8_t *pPDATAPadded, uint8_t PDATALength,
+                            uint8_t *pCDATA, const uint8_t *pKey )
+{
+    uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
+
+    // Exit if no data to encrypt.
+    if(PDATALength == 0) return;
+
+    // Generate counter block J.
+    memcpy(ctrBlock, pICB, AES128GCM_BLOCK_SIZE);
+    incr32(ctrBlock);
+
+    // Encrypt.
+    GCTRPaddedWorkspace workspace;
+    GCTRPadded(ap, &workspace, pPDATAPadded, PDATALength, pKey, ctrBlock, pCDATA);
 }
 
 /**
@@ -363,8 +442,8 @@ static void generateTag(OTAES128E * const ap,
     GHASH(pCDATA, CDATALength, pAuthKey, S);
     GHASH(lengthBuffer, sizeof(lengthBuffer), pAuthKey, S);
 
-    GCTRWorkspace workspace;
-    GCTR(ap, &workspace, S, sizeof(S), pKey, pICB, pTag);
+    GCTRPaddedWorkspace workspace;
+    GCTRPadded(ap, &workspace, S, sizeof(S), pKey, pICB, pTag);
 }
 
 /**
@@ -482,7 +561,7 @@ bool OTAES128GCMGenericBase::gcmEncryptPadded(
     // Encrypt data
     generateAuthKey(ap, key, authKey);
     generateICB(IV, ICB);
-    generateCDATA(ap, ICB, PDATAPadded, PDATALength, CDATA, key);
+    generateCDATAPadded(ap, ICB, PDATAPadded, PDATALength, CDATA, key);
 
     // Generate authentication tag.
     generateTag(ap, key, authKey, ADATA, ADATALength, CDATA, CDATALength, tag, ICB);
@@ -524,7 +603,7 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
     generateAuthKey(ap, key, authKey);
     generateICB(IV, ICB);
 
-    generateCDATA(ap, ICB, CDATA, CDATALength, PDATA, key);
+    generateCDATAPadded(ap, ICB, CDATA, CDATALength, PDATA, key);
 
     // Authenticate and return true if tag matches.
     generateTag(ap, key, authKey, ADATA, ADATALength, CDATA, CDATALength, calculatedTag, ICB);
