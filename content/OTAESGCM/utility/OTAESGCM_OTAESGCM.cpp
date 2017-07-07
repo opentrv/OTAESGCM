@@ -346,6 +346,11 @@ static void generateICB(const uint8_t *pIV, uint8_t *pOutput)
 }
 
 
+struct GenCDATAWorkspace final
+{
+    uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
+    GCTRWorkspace gctrSpace;
+};
 /**
  * @note    aes_gcm_ctr
  * @brief   encrypt PDATA to get CDATA
@@ -354,22 +359,19 @@ static void generateICB(const uint8_t *pIV, uint8_t *pOutput)
  * @param   PDATALength length of plain text (need not be block-size multiple)
  * @param   pCDATA      pointer to array for cipher text. Length PDATALength rounded up to next 16 bytes
  */
-static void generateCDATA(OTAES128E * const ap,
+static void generateCDATA(OTAES128E * const ap, GenCDATAWorkspace * const workspace,
                             const uint8_t *pICB, const uint8_t *pPDATA, uint8_t PDATALength,
                             uint8_t *pCDATA, const uint8_t *pKey )
 {
-    uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
-
     // Exit if no data to encrypt.
     if(PDATALength == 0) return;
 
     // Generate counter block J.
-    memcpy(ctrBlock, pICB, AES128GCM_BLOCK_SIZE);
-    incr32(ctrBlock);
+    memcpy(workspace->ctrBlock, pICB, AES128GCM_BLOCK_SIZE);
+    incr32(workspace->ctrBlock);
 
     // Encrypt.
-    GCTRWorkspace workspace;
-    GCTR(ap, &workspace, pPDATA, PDATALength, pKey, ctrBlock, pCDATA);
+    GCTR(ap, &workspace->gctrSpace, pPDATA, PDATALength, pKey, workspace->ctrBlock, pCDATA);
 }
 
 struct GenCDATAPaddedWorkspace final
@@ -492,14 +494,20 @@ static void generateAuthKey(OTAES128E * const ap, const uint8_t *pKey, uint8_t *
  * @param   tag             pointer to 16 byte buffer to output tag to; never NULL
  * @retval  true if encryption successful, else false
  */
+struct GCMEncryptWorkspace final
+{
+    uint8_t authKey[AES128GCM_BLOCK_SIZE];
+    uint8_t ICB[AES128GCM_BLOCK_SIZE];
+    GenCDATAWorkspace cdataWorkspace;
+    GenerateTagWorkspace tagWorkspace;
+};
 bool OTAES128GCMGenericBase::gcmEncrypt(
                         const uint8_t* key, const uint8_t* IV,
                         const uint8_t* PDATA, uint8_t PDATALength,
                         const uint8_t* ADATA, uint8_t ADATALength,
                         uint8_t* CDATA, uint8_t *tag) const
 {
-    uint8_t authKey[AES128GCM_BLOCK_SIZE];
-    uint8_t ICB[AES128GCM_BLOCK_SIZE];
+    GCMEncryptWorkspace workspace;
 
     if(NULL == CDATA) { return(false); } // DHD20161107: NULL CDATA causes crashes in subroutines.
 
@@ -512,14 +520,13 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
     const uint8_t CDATALength = (PDATALength + AES128GCM_BLOCK_SIZE-1) & ~(AES128GCM_BLOCK_SIZE-1);
 
     // Encrypt data.
-    generateAuthKey(ap, key, authKey);
-    generateICB(IV, ICB);
+    generateAuthKey(ap, key, workspace.authKey);
+    generateICB(IV, workspace.ICB);
     // ICB is hashed with the key then XORed with PDATA to encrypt plain text.
-    generateCDATA(ap, ICB, PDATA, PDATALength, CDATA, key);
+    generateCDATA(ap, &workspace.cdataWorkspace, workspace.ICB, PDATA, PDATALength, CDATA, key);
 
     // Generate authentication tag.
-    GenerateTagWorkspace tagWorkspace;
-    generateTag(ap, &tagWorkspace, key, authKey, ADATA, ADATALength, CDATA, CDATALength, tag, ICB);
+    generateTag(ap, &workspace.tagWorkspace, key, workspace.authKey, ADATA, ADATALength, CDATA, CDATALength, tag, workspace.ICB);
 
     return(true);
 }
@@ -556,14 +563,20 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
  * This version may be smaller and faster and need less stack
  * if separately implemented, else default to generic gcmEncrypt().
  */
+struct GCMEncryptPaddedWorkspace final
+{
+    uint8_t authKey[AES128GCM_BLOCK_SIZE];
+    uint8_t ICB[AES128GCM_BLOCK_SIZE];
+    GenCDATAPaddedWorkspace cdataWorkspace;
+    GenerateTagWorkspace tagWorkspace;
+};
 bool OTAES128GCMGenericBase::gcmEncryptPadded(
                         const uint8_t* key, const uint8_t* IV,
                         const uint8_t* PDATAPadded, uint8_t PDATALength,
                         const uint8_t* ADATA, uint8_t ADATALength,
                         uint8_t* CDATA, uint8_t *tag) const
 {
-    uint8_t authKey[AES128GCM_BLOCK_SIZE];
-    uint8_t ICB[AES128GCM_BLOCK_SIZE];
+    GCMEncryptPaddedWorkspace workspace;
 
     if(NULL == CDATA) { return(false); } // DHD20161107: NULL CDATA causes crashes in subroutines.
     if(0 != (PDATALength & (AES128GCM_BLOCK_SIZE-1))) { return(false); } // Reject non-padded data.
@@ -575,15 +588,13 @@ bool OTAES128GCMGenericBase::gcmEncryptPadded(
     const uint8_t CDATALength = PDATALength;
 
     // Encrypt data.
-    generateAuthKey(ap, key, authKey);
-    generateICB(IV, ICB);
+    generateAuthKey(ap, key, workspace.authKey);
+    generateICB(IV, workspace.ICB);
     // ICB is hashed with the key then XORed with PDATA to encrypt plain text.
-    GenCDATAPaddedWorkspace cdataWorkspace;
-    generateCDATAPadded(ap, &cdataWorkspace, ICB, PDATAPadded, PDATALength, CDATA, key);
+    generateCDATAPadded(ap, &workspace.cdataWorkspace, workspace.ICB, PDATAPadded, PDATALength, CDATA, key);
 
     // Generate authentication tag.
-    GenerateTagWorkspace tagWorkspace;
-    generateTag(ap, &tagWorkspace, key, authKey, ADATA, ADATALength, CDATA, CDATALength, tag, ICB);
+    generateTag(ap, &workspace.tagWorkspace, key, workspace.authKey, ADATA, ADATALength, CDATA, CDATALength, tag, workspace.ICB);
 
     return(true);
 }
@@ -601,16 +612,21 @@ bool OTAES128GCMGenericBase::gcmEncryptPadded(
  * @param   PDATA           buffer to output plaintext to; must be same length as CDATA
  * @retval  true if decryption and authentication successful, else false
  */
+struct GCMDecryptWorkspace final
+{
+    uint8_t authKey[AES128GCM_BLOCK_SIZE];
+    uint8_t ICB[AES128GCM_BLOCK_SIZE];
+    uint8_t calculatedTag[AES128GCM_TAG_SIZE];
+    GenCDATAPaddedWorkspace cdataWorkspace;
+    GenerateTagWorkspace tagWorkspace;
+};
 bool OTAES128GCMGenericBase::gcmDecrypt(
                         const uint8_t* key, const uint8_t* IV,
                         const uint8_t* CDATA, uint8_t CDATALength,
                         const uint8_t* ADATA, uint8_t ADATALength,
                         const uint8_t* messageTag, uint8_t *PDATA) const
 {
-    uint8_t authKey[AES128GCM_BLOCK_SIZE];
-    uint8_t ICB[AES128GCM_BLOCK_SIZE];
-    uint8_t calculatedTag[AES128GCM_TAG_SIZE];
-
+    GCMDecryptWorkspace workspace;
     // Check if there is input data.
     // Fail if there is nothing to decrypt and/or authenticate.
     if((CDATALength == 0) && (ADATALength == 0)) { return(false); }
@@ -619,17 +635,15 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
     if(0 != (CDATALength & (AES128GCM_BLOCK_SIZE-1))) { return(false); }
 
     // Decrypt CDATA.
-    generateAuthKey(ap, key, authKey);
-    generateICB(IV, ICB);
+    generateAuthKey(ap, key, workspace.authKey);
+    generateICB(IV, workspace.ICB);
 
     // ICB is hashed with the key then XORed with CDATA to decrypt cipher text.
-    GenCDATAPaddedWorkspace cdataWorkspace;
-    generateCDATAPadded(ap, &cdataWorkspace, ICB, CDATA, CDATALength, PDATA, key);
+    generateCDATAPadded(ap, &workspace.cdataWorkspace, workspace.ICB, CDATA, CDATALength, PDATA, key);
 
     // Authenticate and return true if tag matches.
-    GenerateTagWorkspace tagWorkspace;
-    generateTag(ap, &tagWorkspace, key, authKey, ADATA, ADATALength, CDATA, CDATALength, calculatedTag, ICB);
-    return(0 == checkTag(calculatedTag, messageTag));
+    generateTag(ap, &workspace.tagWorkspace, key, workspace.authKey, ADATA, ADATALength, CDATA, CDATALength, workspace.calculatedTag, workspace.ICB);
+    return(0 == checkTag(workspace.calculatedTag, messageTag));
 }
 
 
