@@ -131,8 +131,10 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
              * @param    CDATALength     length of ciphertext array
              * @param    ADATA           pointer to additional data array
              * @param    ADATALength     length of additional data
-             * @param    PDATA           buffer to output plaintext to; must be same length as CDATA
-             * @retval   true if decryption and authentication successful, else false
+             * @param    PDATA           buffer to output plaintext to;
+             *                           must be same length as CDATA
+             * @retval   true if decryption and authentication successful,
+             *           else false
              */
             virtual bool gcmDecrypt(
                  const uint8_t* key, const uint8_t* IV,
@@ -171,16 +173,16 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 const uint8_t* PDATA, uint8_t PDATALength,
                 const uint8_t* ADATA, uint8_t ADATALength,
                 uint8_t* CDATA, uint8_t *tag) const override;
-            // Encrypt; true iff successful.
-            // Plain-text must be an exact multiple of block length, eg padded.
-            // This version may be smaller and faster and need less stack
-            // if separately implemented,
-            // else default to
-            virtual bool gcmEncryptPadded(
-                const uint8_t* key, const uint8_t* IV,
-                const uint8_t* PDATAPadded, uint8_t PDATALength,
-                const uint8_t* ADATA, uint8_t ADATALength,
-                uint8_t* CDATA, uint8_t *tag) const override;
+//            // Encrypt; true iff successful.
+//            // Plain-text must be an exact multiple of block length, eg padded.
+//            // This version may be smaller and faster and need less stack
+//            // if separately implemented,
+//            // else default to
+//            virtual bool gcmEncryptPadded(
+//                const uint8_t* key, const uint8_t* IV,
+//                const uint8_t* PDATAPadded, uint8_t PDATALength,
+//                const uint8_t* ADATA, uint8_t ADATALength,
+//                uint8_t* CDATA, uint8_t *tag) const override;
             // Decrypt; true iff successful.
             // Crypto text must always be a multiple of block length.
             virtual bool gcmDecrypt(
