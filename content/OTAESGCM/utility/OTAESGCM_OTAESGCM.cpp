@@ -398,6 +398,14 @@ static void generateCDATAPadded(OTAES128E * const ap,
     GCTRPadded(ap, &workspace, pPDATAPadded, PDATALength, pKey, ctrBlock, pCDATA);
 }
 
+
+struct GenerateTagWorkspace final
+{
+    uint8_t lengthBuffer[16];
+    uint8_t S[AES128GCM_BLOCK_SIZE];
+    GHASHWorkspace ghashSpace;
+    GCTRPaddedWorkspace gctrSpace;
+};
 /**
  * @note    aes_gcm_ghash
  * @brief   makes message S from ADATA and CDATA
@@ -409,16 +417,15 @@ static void generateCDATAPadded(OTAES128E * const ap,
  * @param   pTag            pointer to array to store tag
  */
 static void generateTag(OTAES128E * const ap,
+                            GenerateTagWorkspace * const workspace,
                             const uint8_t *pKey, const uint8_t *pAuthKey,
                             const uint8_t *pADATA, uint8_t ADATALength,
                             const uint8_t *pCDATA, uint8_t CDATALength,
                             uint8_t * pTag, const uint8_t *pICB)
 {
     uint16_t temp;
-    uint8_t lengthBuffer[16];
-    uint8_t S[AES128GCM_BLOCK_SIZE];
-    memset(lengthBuffer, 0, sizeof(lengthBuffer));
-    memset(S, 0, sizeof(S));
+    memset(workspace->lengthBuffer, 0, sizeof(workspace->lengthBuffer));
+    memset(workspace->S, 0, sizeof(workspace->S));
     /*
      * u = 128 * ceil[len(C)/128] - len(C)
      * v = 128 * ceil[len(A)/128] - len(A)
@@ -430,22 +437,21 @@ static void generateTag(OTAES128E * const ap,
     temp = (uint16_t) ADATALength * 8;
     //lengthBuffer[4] = (temp >> 24) & 0xff;    // these two are not needed as only using 16 bit values
     //lengthBuffer[5] = (temp >> 16) & 0xff;
-    lengthBuffer[6] = (temp >> 8) & 0xff;
-    lengthBuffer[7] = temp & 0xff;
+    workspace->lengthBuffer[6] = (temp >> 8) & 0xff;
+    workspace->lengthBuffer[7] = temp & 0xff;
 
     temp = (uint16_t) CDATALength * 8;
     //lengthBuffer[12] = (temp >> 24) & 0xff;
     //lengthBuffer[13] = (temp >> 16) & 0xff;
-    lengthBuffer[14] = (temp >> 8) & 0xff;
-    lengthBuffer[15] = temp & 0xff;
+    workspace->lengthBuffer[14] = (temp >> 8) & 0xff;
+    workspace->lengthBuffer[15] = temp & 0xff;
 
-    GHASHWorkspace ghashSpace;
-    GHASH(&ghashSpace, pADATA, ADATALength, pAuthKey, S);
-    GHASH(&ghashSpace, pCDATA, CDATALength, pAuthKey, S);
-    GHASH(&ghashSpace, lengthBuffer, sizeof(lengthBuffer), pAuthKey, S);
 
-    GCTRPaddedWorkspace gctrSpace;
-    GCTRPadded(ap, &gctrSpace, S, sizeof(S), pKey, pICB, pTag);
+    GHASH(&workspace->ghashSpace, pADATA, ADATALength, pAuthKey, workspace->S);
+    GHASH(&workspace->ghashSpace, pCDATA, CDATALength, pAuthKey, workspace->S);
+    GHASH(&workspace->ghashSpace, workspace->lengthBuffer, sizeof(workspace->lengthBuffer), pAuthKey, workspace->S);
+
+    GCTRPadded(ap, &workspace->gctrSpace, workspace->S, sizeof(workspace->S), pKey, pICB, pTag);
 }
 
 /**
@@ -505,7 +511,8 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
     generateCDATA(ap, ICB, PDATA, PDATALength, CDATA, key);
 
     // Generate authentication tag.
-    generateTag(ap, key, authKey, ADATA, ADATALength, CDATA, CDATALength, tag, ICB);
+    GenerateTagWorkspace tagWorkspace;
+    generateTag(ap, &tagWorkspace, key, authKey, ADATA, ADATALength, CDATA, CDATALength, tag, ICB);
 
     return(true);
 }
@@ -566,7 +573,8 @@ bool OTAES128GCMGenericBase::gcmEncryptPadded(
     generateCDATAPadded(ap, ICB, PDATAPadded, PDATALength, CDATA, key);
 
     // Generate authentication tag.
-    generateTag(ap, key, authKey, ADATA, ADATALength, CDATA, CDATALength, tag, ICB);
+    GenerateTagWorkspace tagWorkspace;
+    generateTag(ap, &tagWorkspace, key, authKey, ADATA, ADATALength, CDATA, CDATALength, tag, ICB);
 
     return(true);
 }
@@ -608,7 +616,8 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
     generateCDATAPadded(ap, ICB, CDATA, CDATALength, PDATA, key);
 
     // Authenticate and return true if tag matches.
-    generateTag(ap, key, authKey, ADATA, ADATALength, CDATA, CDATALength, calculatedTag, ICB);
+    GenerateTagWorkspace tagWorkspace;
+    generateTag(ap, &tagWorkspace, key, authKey, ADATA, ADATALength, CDATA, CDATALength, calculatedTag, ICB);
     return(0 == checkTag(calculatedTag, messageTag));
 }
 
