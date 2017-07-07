@@ -190,90 +190,91 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                  const uint8_t* messageTag, uint8_t *PDATA) const override;
         };
 
-namespace WS
-{
-    /**@struct  Bulk of GCTRPadded() workspace. */
-    struct GHASHWorkspace final
-    {
-        uint8_t ghashTmp[AES128GCM_BLOCK_SIZE]; // If using full blocks, no need for tmp.
-        uint8_t gFieldMultiplyTmp[AES128GCM_BLOCK_SIZE]; // If using full blocks, no need for tmp.
-    };
-
-    /**@struct  Bulk of GCTR() workspace. */
-    struct GCTRWorkspace final
-    {
-        uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
-        uint8_t tmp[AES128GCM_BLOCK_SIZE]; // if we use full blocks, no need for tmp
-    };
-
-    /**@struct  Bulk of GCTRPadded() workspace. */
-    struct GCTRPaddedWorkspace final
-    {
-        uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
-    };
-
-    struct GenCDATAWorkspace final
-    {
-        uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
-        GCTRWorkspace gctrSpace;
-    };
-
-    struct GenCDATAPaddedWorkspace final
-    {
-        uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
-        GCTRPaddedWorkspace gctrSpace;
-    };
-
-    struct GenerateTagWorkspace final
-    {
-        uint8_t S[AES128GCM_BLOCK_SIZE];
-        GHASHWorkspace ghashSpace;
-        // lengthBuffer and gctrSpace are/contain 16 byte uint8_t arrays and are
-        // not used simultaneously.
-        union
+        namespace WS
         {
-            uint8_t lengthBuffer[16];
-            GCTRPaddedWorkspace gctrSpace;
-        };
-    };
+            /**@struct  Bulk of GCTRPadded() workspace. */
+            struct GHASHWorkspace final
+            {
+                uint8_t ghashTmp[AES128GCM_BLOCK_SIZE]; // If using full blocks, no need for tmp.
+                uint8_t gFieldMultiplyTmp[AES128GCM_BLOCK_SIZE]; // If using full blocks, no need for tmp.
+            };
 
-    struct GCMEncryptWorkspace final
-    {
-        uint8_t authKey[AES128GCM_BLOCK_SIZE];
-        uint8_t ICB[AES128GCM_BLOCK_SIZE];
-        // generateCDATA and generateTag are called separately and so their
-        // workspaces can be a union
-        union {
-            GenCDATAWorkspace cdataWorkspace;
-            GenerateTagWorkspace tagWorkspace;
-        };
-    };
+            /**@struct  Bulk of GCTR() workspace. */
+            struct GCTRWorkspace final
+            {
+                uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
+                uint8_t tmp[AES128GCM_BLOCK_SIZE]; // if we use full blocks, no need for tmp
+            };
 
-    struct GCMEncryptPaddedWorkspace final
-    {
-        uint8_t authKey[AES128GCM_BLOCK_SIZE];
-        uint8_t ICB[AES128GCM_BLOCK_SIZE];
-        // generateCDATA and generateTag are called separately and so their
-        // workspaces can be a union
-        union {
-            GenCDATAPaddedWorkspace cdataWorkspace;
-            GenerateTagWorkspace tagWorkspace;
-        };
-    };
+            /**@struct  Bulk of GCTRPadded() workspace. */
+            struct GCTRPaddedWorkspace final
+            {
+                uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
+            };
 
-    struct GCMDecryptWorkspace final
-    {
-        uint8_t authKey[AES128GCM_BLOCK_SIZE];
-        uint8_t ICB[AES128GCM_BLOCK_SIZE];
-        uint8_t calculatedTag[AES128GCM_TAG_SIZE];
-        // generateCDATA and generateTag are called separately and so their
-        // workspaces can be a union
-        union {
-            GenCDATAPaddedWorkspace cdataWorkspace;
-            GenerateTagWorkspace tagWorkspace;
-        };
-    };
-}
+            struct GenCDATAWorkspace final
+            {
+                uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
+                GCTRWorkspace gctrSpace;
+            };
+
+            struct GenCDATAPaddedWorkspace final
+            {
+                uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
+                GCTRPaddedWorkspace gctrSpace;
+            };
+
+            struct GenerateTagWorkspace final
+            {
+                uint8_t S[AES128GCM_BLOCK_SIZE];
+                GHASHWorkspace ghashSpace;
+                // lengthBuffer and gctrSpace are/contain 16 byte uint8_t arrays and are
+                // not used simultaneously.
+                union
+                {
+                    uint8_t lengthBuffer[16];
+                    GCTRPaddedWorkspace gctrSpace;
+                };
+            };
+
+            struct GCMEncryptWorkspace final
+            {
+                uint8_t authKey[AES128GCM_BLOCK_SIZE];
+                uint8_t ICB[AES128GCM_BLOCK_SIZE];
+                // generateCDATA and generateTag are called separately and so their
+                // workspaces can be a union
+                union {
+                    GenCDATAWorkspace cdataWorkspace;
+                    GenerateTagWorkspace tagWorkspace;
+                };
+            };
+
+            struct GCMEncryptPaddedWorkspace final
+            {
+                uint8_t authKey[AES128GCM_BLOCK_SIZE];
+                uint8_t ICB[AES128GCM_BLOCK_SIZE];
+                // generateCDATA and generateTag are called separately and so their
+                // workspaces can be a union
+                union {
+                    GenCDATAPaddedWorkspace cdataWorkspace;
+                    GenerateTagWorkspace tagWorkspace;
+                };
+            };
+
+            struct GCMDecryptWorkspace final
+            {
+                uint8_t authKey[AES128GCM_BLOCK_SIZE];
+                uint8_t ICB[AES128GCM_BLOCK_SIZE];
+                uint8_t calculatedTag[AES128GCM_TAG_SIZE];
+                // generateCDATA and generateTag are called separately and so their
+                // workspaces can be a union
+                union {
+                    GenCDATAPaddedWorkspace cdataWorkspace;
+                    GenerateTagWorkspace tagWorkspace;
+                };
+            };
+        }
+
     // Generic implementation, parameterised with type of underlying AES implementation.
     // Carries the AES working state with it.
     // The OTAESImpl should clear up private state before returning from its methods.
@@ -290,7 +291,7 @@ namespace WS
             // and followed by the GCM function workspace.
             // Note that we validate at compile time that at least the
             // minimum requirement is met.
-            // The other more non-minimal functions will need a runtime check.
+            // The other non-minimal functions will need a runtime check.
             constexpr static uint8_t workspaceRequired = workspaceRequiredAES;
             uint8_t workspace[workspaceRequired];
         public:
