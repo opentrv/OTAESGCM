@@ -124,7 +124,7 @@ struct GHASHWorkspace final
  * @param    result:    pointer to array to put result in
  * @note    output straight to *x and save on a memcpy loop?
  */
-static void gFieldMultiply(const uint8_t *x, const uint8_t *y, GHASHWorkspace * const workspace)
+static void gFieldMultiply(GHASHWorkspace * const workspace, const uint8_t *x, const uint8_t *y)
 {
     // init result to 0s and copy y to temp
     memcpy(workspace->gFieldMultiplyTmp, y, AES128GCM_BLOCK_SIZE);
@@ -296,12 +296,11 @@ static void GCTRPadded(OTAES128E * const ap, GCTRPaddedWorkspace * const workspa
  * @param   pAuthKey        pointer to 128 bit authentication subkey H
  * @param   pOutput         pointer to 16 byte output array
  */
-static void GHASH(  const uint8_t *pInput, uint8_t inputLength,
+static void GHASH(  GHASHWorkspace * const workspace,
+                    const uint8_t *pInput, uint8_t inputLength,
                     const uint8_t *pAuthKey, uint8_t *pOutput )
 {
     const uint8_t *xpos = pInput;
-    GHASHWorkspace workspace;
-
     // Calculate number of full blocks to hash.
     const uint8_t m = inputLength / AES128GCM_BLOCK_SIZE;
 
@@ -311,10 +310,10 @@ static void GHASH(  const uint8_t *pInput, uint8_t inputLength,
         xorBlock(pOutput, xpos);
         xpos += 16; // move to next block
 
-        gFieldMultiply(pOutput, pAuthKey, &workspace);
+        gFieldMultiply(workspace, pOutput, pAuthKey);
 
         // copy tmp to output
-        memcpy(pOutput, workspace.ghashTmp, AES128GCM_BLOCK_SIZE);
+        memcpy(pOutput, workspace->ghashTmp, AES128GCM_BLOCK_SIZE);
     }
 
     // Check if final partial block.
@@ -322,13 +321,13 @@ static void GHASH(  const uint8_t *pInput, uint8_t inputLength,
     if (pInput + inputLength > xpos) {
         // zero pad
         const uint8_t last = uint8_t(pInput + inputLength - xpos);
-        memcpy(workspace.ghashTmp, xpos, last);
-        memset(workspace.ghashTmp + last, 0, sizeof(workspace.ghashTmp) - last);
+        memcpy(workspace->ghashTmp, xpos, last);
+        memset(workspace->ghashTmp + last, 0, sizeof(workspace->ghashTmp) - last);
 
         // Y_i = (Y^(i-1) XOR X_i) dot H
-        xorBlock(pOutput, workspace.ghashTmp);
-        gFieldMultiply(pOutput, pAuthKey, &workspace);
-        memcpy(pOutput, workspace.ghashTmp, AES128GCM_BLOCK_SIZE);
+        xorBlock(pOutput, workspace->ghashTmp);
+        gFieldMultiply(workspace, pOutput, pAuthKey);
+        memcpy(pOutput, workspace->ghashTmp, AES128GCM_BLOCK_SIZE);
     }
 }
 
@@ -440,13 +439,13 @@ static void generateTag(OTAES128E * const ap,
     lengthBuffer[14] = (temp >> 8) & 0xff;
     lengthBuffer[15] = temp & 0xff;
 
+    GHASHWorkspace ghashSpace;
+    GHASH(&ghashSpace, pADATA, ADATALength, pAuthKey, S);
+    GHASH(&ghashSpace, pCDATA, CDATALength, pAuthKey, S);
+    GHASH(&ghashSpace, lengthBuffer, sizeof(lengthBuffer), pAuthKey, S);
 
-    GHASH(pADATA, ADATALength, pAuthKey, S);
-    GHASH(pCDATA, CDATALength, pAuthKey, S);
-    GHASH(lengthBuffer, sizeof(lengthBuffer), pAuthKey, S);
-
-    GCTRPaddedWorkspace workspace;
-    GCTRPadded(ap, &workspace, S, sizeof(S), pKey, pICB, pTag);
+    GCTRPaddedWorkspace gctrSpace;
+    GCTRPadded(ap, &gctrSpace, S, sizeof(S), pKey, pICB, pTag);
 }
 
 /**
