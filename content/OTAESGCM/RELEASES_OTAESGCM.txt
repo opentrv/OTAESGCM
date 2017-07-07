@@ -9,7 +9,9 @@ or release/freeze points.
 
 
 pending:
+    *** V3.0
     DHD20170707: improving stack usage management
+    DHD20170707: allowing > 255 byte workspace for encode/decode
     DHD20161111: turned compiler strictness up to max, eg including -Wextra and pedantic and conversion.
 
 

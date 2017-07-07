@@ -21,7 +21,7 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015--2017
 #define ARDUINO_LIB_OTAESGCM_H
 
 #define ARDUINO_LIB_OTAESGCM // Can be used to enable features dependent on this library.
-#define ARDUINO_LIB_OTAESGCM_VERSION_MAJOR 2
+#define ARDUINO_LIB_OTAESGCM_VERSION_MAJOR 3
 #define ARDUINO_LIB_OTAESGCM_VERSION_MINOR 0
 
 /* OpenTRV OTAESGCM microcontroller-/IoT- friendly AES(128)-GCM implementation. */

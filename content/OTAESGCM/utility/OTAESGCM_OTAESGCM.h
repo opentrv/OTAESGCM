@@ -151,6 +151,112 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
 #endif
         };
 
+    // Workspaces for OTAES128GCMGenericBase functions.
+    // Having the large byte arrays broken out explicitly
+    // rather than allocated from the stack
+    // allows more visibility and (potentially) control.
+    namespace GGBWS
+    {
+        /**@struct Bulk of GCTRPadded() workspace. */
+        struct GHASHWorkspace final
+        {
+            uint8_t ghashTmp[AES128GCM_BLOCK_SIZE]; // If using full blocks, no need for tmp.
+            uint8_t gFieldMultiplyTmp[AES128GCM_BLOCK_SIZE]; // If using full blocks, no need for tmp.
+        };
+
+        /**@struct Bulk of GCTR() workspace. */
+        struct GCTRWorkspace final
+        {
+            uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
+            uint8_t tmp[AES128GCM_BLOCK_SIZE]; // If using full blocks, no need for tmp.
+        };
+
+        /**@struct Bulk of GCTRPadded() workspace. */
+        struct GCTRPaddedWorkspace final
+        {
+            uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
+        };
+
+        struct GenCDATAWorkspace final
+        {
+            uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
+            GCTRWorkspace gctrSpace;
+        };
+
+        struct GenCDATAPaddedWorkspace final
+        {
+            uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
+            GCTRPaddedWorkspace gctrSpace;
+        };
+
+        struct GenerateTagWorkspace final
+        {
+            uint8_t S[AES128GCM_BLOCK_SIZE];
+            GHASHWorkspace ghashSpace;
+            // lengthBuffer and gctrSpace are/contain 16 byte uint8_t arrays
+            // and are not used simultaneously.
+            union
+            {
+                uint8_t lengthBuffer[16];
+                GCTRPaddedWorkspace gctrSpace;
+            };
+        };
+
+        struct GCMEncryptWorkspace final
+        {
+            uint8_t authKey[AES128GCM_BLOCK_SIZE];
+            uint8_t ICB[AES128GCM_BLOCK_SIZE];
+            // generateCDATA and generateTag are called separately
+            // and so their workspaces can be a union.
+            union {
+                GenCDATAWorkspace cdataWorkspace;
+                GenerateTagWorkspace tagWorkspace;
+            };
+        };
+
+        struct GCMEncryptPaddedWorkspace final
+        {
+            uint8_t authKey[AES128GCM_BLOCK_SIZE];
+            uint8_t ICB[AES128GCM_BLOCK_SIZE];
+            // generateCDATA and generateTag are called separately
+            // and so their workspaces can be a union.
+            union {
+                GenCDATAPaddedWorkspace cdataWorkspace;
+                GenerateTagWorkspace tagWorkspace;
+            };
+        };
+
+        struct GCMDecryptWorkspace final
+        {
+            uint8_t authKey[AES128GCM_BLOCK_SIZE];
+            uint8_t ICB[AES128GCM_BLOCK_SIZE];
+            uint8_t calculatedTag[AES128GCM_TAG_SIZE];
+            // generateCDATA and generateTag are called separately
+            // and so their workspaces can be a union.
+            union {
+                GenCDATAPaddedWorkspace cdataWorkspace;
+                GenerateTagWorkspace tagWorkspace;
+            };
+        };
+
+        // Workspace required for OTAES128GCMGenericBase functions.
+        // All expected to be < 256.
+        constexpr static uint8_t gcmEncryptWorkspaceRequired = sizeof(GGBWS::GCMEncryptWorkspace);
+        constexpr static uint8_t gcmEncryptPaddedWorkspaceRequired = sizeof(GGBWS::GCMEncryptPaddedWorkspace);
+        constexpr static uint8_t gcmDecryptWorkspaceRequired = sizeof(GGBWS::GCMDecryptWorkspace);
+
+        // Compute the minimum and maximum workspace sizes
+        // required or the GCM functions (excluding the underlying AES).
+        constexpr static uint8_t minEncWS =
+            (gcmEncryptWorkspaceRequired < gcmEncryptPaddedWorkspaceRequired) ? gcmEncryptWorkspaceRequired : gcmEncryptPaddedWorkspaceRequired;
+        constexpr static uint8_t minWS =
+            (minEncWS < gcmDecryptWorkspaceRequired) ? minEncWS : gcmDecryptWorkspaceRequired;
+        constexpr static uint8_t maxEncWS =
+            (gcmEncryptWorkspaceRequired > gcmEncryptPaddedWorkspaceRequired) ? gcmEncryptWorkspaceRequired : gcmEncryptPaddedWorkspaceRequired;
+        constexpr static uint8_t maxWS =
+            (maxEncWS > gcmDecryptWorkspaceRequired) ? maxEncWS : gcmDecryptWorkspaceRequired;
+    }
+
     // Generic implementation, parameterised with type of underlying AES implementation.
     // The default AES implementation for the architecture is used unless otherwise specified.
     // This implementation is not specialised for a particular CPU/MCU for example.
@@ -160,12 +266,19 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
         private:
             // Pointer to an AES block encryption implementation instance; never NULL.
             OTAES128E * const ap;
+            // Only one is ever needed for any one call,
+            // and calls cannot be made concurrently on any one instance.
+            // Return appropriate temporary workspace.
+            virtual GGBWS::GCMEncryptWorkspace &getGCMEncryptWorkspace() const = 0;
+            virtual GGBWS::GCMEncryptPaddedWorkspace &getGCMEncryptPaddedWorkspace() const = 0;
+            virtual GGBWS::GCMDecryptWorkspace &getGCMDecryptWorkspace() const = 0;
 
         public:
             // Create an instance pointing at a suitable AES block enc/dec implementation.
             // The AES impl should not carry logical state between operations,
             // but may hold temporary workspace or non-key/data-dependent state.
             constexpr OTAES128GCMGenericBase(OTAES128E *aptr) : ap(aptr) { }
+
             // Encrypt; true iff successful.
             // Plain text need not be padded to a block-size multiple.
             virtual bool gcmEncrypt(
@@ -176,8 +289,8 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
 
             // Encrypt; true iff successful.
             // Plain-text must be an exact multiple of block length, eg padded.
-            // This version may be smaller and faster and need less stack
-            // if separately implemented, else default to generic gcmEncrypt().
+            // This version should be smaller and faster and need less stack
+            // than more generic gcmEncrypt().
             virtual bool gcmEncryptPadded(
                 const uint8_t* key, const uint8_t* IV,
                 const uint8_t* PDATAPadded, uint8_t PDATALength,
@@ -192,112 +305,6 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                  const uint8_t* ADATA, uint8_t ADATALength,
                  const uint8_t* messageTag, uint8_t *PDATA) const override;
         };
-
-        // Workspaces for OTAES128GCMGenericBase functions.
-        // Having the large byet arrays broken out explicitly
-        // rather than allocated from the stack
-        // allows more visibility and (potentially) control.
-        namespace GGBWS
-        {
-            /**@struct Bulk of GCTRPadded() workspace. */
-            struct GHASHWorkspace final
-            {
-                uint8_t ghashTmp[AES128GCM_BLOCK_SIZE]; // If using full blocks, no need for tmp.
-                uint8_t gFieldMultiplyTmp[AES128GCM_BLOCK_SIZE]; // If using full blocks, no need for tmp.
-            };
-
-            /**@struct Bulk of GCTR() workspace. */
-            struct GCTRWorkspace final
-            {
-                uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
-                uint8_t tmp[AES128GCM_BLOCK_SIZE]; // If using full blocks, no need for tmp.
-            };
-
-            /**@struct Bulk of GCTRPadded() workspace. */
-            struct GCTRPaddedWorkspace final
-            {
-                uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
-            };
-
-            struct GenCDATAWorkspace final
-            {
-                uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
-                GCTRWorkspace gctrSpace;
-            };
-
-            struct GenCDATAPaddedWorkspace final
-            {
-                uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
-                GCTRPaddedWorkspace gctrSpace;
-            };
-
-            struct GenerateTagWorkspace final
-            {
-                uint8_t S[AES128GCM_BLOCK_SIZE];
-                GHASHWorkspace ghashSpace;
-                // lengthBuffer and gctrSpace are/contain 16 byte uint8_t arrays
-                // and are not used simultaneously.
-                union
-                {
-                    uint8_t lengthBuffer[16];
-                    GCTRPaddedWorkspace gctrSpace;
-                };
-            };
-
-            struct GCMEncryptWorkspace final
-            {
-                uint8_t authKey[AES128GCM_BLOCK_SIZE];
-                uint8_t ICB[AES128GCM_BLOCK_SIZE];
-                // generateCDATA and generateTag are called separately
-                // and so their workspaces can be a union.
-                union {
-                    GenCDATAWorkspace cdataWorkspace;
-                    GenerateTagWorkspace tagWorkspace;
-                };
-            };
-
-            struct GCMEncryptPaddedWorkspace final
-            {
-                uint8_t authKey[AES128GCM_BLOCK_SIZE];
-                uint8_t ICB[AES128GCM_BLOCK_SIZE];
-                // generateCDATA and generateTag are called separately
-                // and so their workspaces can be a union.
-                union {
-                    GenCDATAPaddedWorkspace cdataWorkspace;
-                    GenerateTagWorkspace tagWorkspace;
-                };
-            };
-
-            struct GCMDecryptWorkspace final
-            {
-                uint8_t authKey[AES128GCM_BLOCK_SIZE];
-                uint8_t ICB[AES128GCM_BLOCK_SIZE];
-                uint8_t calculatedTag[AES128GCM_TAG_SIZE];
-                // generateCDATA and generateTag are called separately
-                // and so their workspaces can be a union.
-                union {
-                    GenCDATAPaddedWorkspace cdataWorkspace;
-                    GenerateTagWorkspace tagWorkspace;
-                };
-            };
-
-            // Workspace required for OTAES128GCMGenericBase functions.
-            // All expected to be < 256.
-            constexpr static uint8_t gcmEncryptWorkspaceRequired = sizeof(GGBWS::GCMEncryptWorkspace);
-            constexpr static uint8_t gcmEncryptPaddedWorkspaceRequired = sizeof(GGBWS::GCMEncryptPaddedWorkspace);
-            constexpr static uint8_t gcmDecryptWorkspaceRequired = sizeof(GGBWS::GCMDecryptWorkspace);
-
-            // Compute the minimum and maximum workspace sizes
-            // required or the GCM functions (excluding the underlying AES).
-            constexpr static uint8_t minEncWS =
-                (gcmEncryptWorkspaceRequired < gcmEncryptPaddedWorkspaceRequired) ? gcmEncryptWorkspaceRequired : gcmEncryptPaddedWorkspaceRequired;
-            constexpr static uint8_t minWS =
-                (minEncWS < gcmDecryptWorkspaceRequired) ? minEncWS : gcmDecryptWorkspaceRequired;
-            constexpr static uint8_t maxEncWS =
-                (gcmEncryptWorkspaceRequired > gcmEncryptPaddedWorkspaceRequired) ? gcmEncryptWorkspaceRequired : gcmEncryptPaddedWorkspaceRequired;
-            constexpr static uint8_t maxWS =
-                (maxEncWS > gcmDecryptWorkspaceRequired) ? maxEncWS : gcmDecryptWorkspaceRequired;
-        }
 
     // Generic implementation, parameterised with type of underlying AES implementation.
     // Carries the AES working state with it.
@@ -318,6 +325,20 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
             // The other non-minimal functions will need a runtime check.
             uint8_t workspaceAES[workspaceRequiredAES];
 
+            // Union of temporary workspaces for the GCM functions.
+            // Only one is ever needed for any one call,
+            // and calls cannot be made concurrently on any one instance.
+            union
+                {
+                GGBWS::GCMEncryptWorkspace encWS;
+                GGBWS::GCMEncryptPaddedWorkspace encPaddedWS;
+                GGBWS::GCMDecryptWorkspace decWS;
+                };
+            // Return appropriate temporary workspace.
+            virtual GGBWS::GCMEncryptWorkspace &getGCMEncryptWorkspace() const override { return(encWS); }
+            virtual GGBWS::GCMEncryptPaddedWorkspace &getGCMEncryptPaddedWorkspace() const override { return(encPaddedWS); }
+            virtual GGBWS::GCMDecryptWorkspace &getGCMDecryptWorkspace() const override { return(decWS); }
+
         public:
             // Construct an instance.
             constexpr OTAES128GCMGeneric() : OTAESImpl(workspaceAES, workspaceRequiredAES), OTAES128GCMGenericBase(this) { }
@@ -332,6 +353,15 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
     template<class OTAESImpl = OTAESGCM::OTAES128E_default_t>
     class OTAES128GCMGenericWithWorkspace final : OTAESImpl, public OTAES128GCMGenericBase
         {
+        private:
+            // GCM workspace part of that passed into to constructor.
+            uint8_t *const gcmWorkspace;
+
+            // Return appropriate temporary workspace.
+            virtual GGBWS::GCMEncryptWorkspace &getGCMEncryptWorkspace() const override { return(*(GGBWS::GCMEncryptWorkspace *)(gcmWorkspace)); }
+            virtual GGBWS::GCMEncryptPaddedWorkspace &getGCMEncryptPaddedWorkspace() const override { return(*(GGBWS::GCMEncryptPaddedWorkspace *)(gcmWorkspace)); }
+            virtual GGBWS::GCMDecryptWorkspace &getGCMDecryptWorkspace() const override { return(*(GGBWS::GCMDecryptWorkspace *)(gcmWorkspace)); }
+
         public:
             constexpr static uint8_t workspaceRequiredAES = OTAESImpl::workspaceRequired;
 
@@ -356,7 +386,9 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
             // Construct an instance, supplied with workspace.
             // Pass the AES support class the leading part of the workspace.
             constexpr OTAES128GCMGenericWithWorkspace(uint8_t *const workspace, const workspacesize_t workspaceSize)
-                : OTAESImpl(workspace, isWorkspaceSufficientMin(workspace, workspaceSize) ? workspaceRequiredAES : 0), OTAES128GCMGenericBase(this)
+                : OTAESImpl(workspace, isWorkspaceSufficientMin(workspace, workspaceSize) ? workspaceRequiredAES : 0),
+                  OTAES128GCMGenericBase(this),
+                  gcmWorkspace(workspace + workspaceRequiredAES)
                 { }
             // Verify that the workspace is adequate
             // at least for the least-demanding function.

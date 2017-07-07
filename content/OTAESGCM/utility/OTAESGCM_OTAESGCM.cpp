@@ -24,6 +24,8 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015--2017
 
 #include "OTAESGCM_OTAESGCM.h"
 
+#include <stdio.h>
+
 
 // Use namespaces to help avoid collisions.
 namespace OTAESGCM
@@ -465,7 +467,7 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
     if(PDATALength >= (uint8_t)(256U - (uint16_t)AES128GCM_BLOCK_SIZE)) { return(false); } // Too big.
     const uint8_t CDATALength = (PDATALength + AES128GCM_BLOCK_SIZE-1) & ~(AES128GCM_BLOCK_SIZE-1);
 
-    GGBWS::GCMEncryptWorkspace workspace;
+    GGBWS::GCMEncryptWorkspace workspace = getGCMEncryptWorkspace();
 
     // Encrypt data.
     generateAuthKey(ap, key, workspace.authKey);
@@ -529,7 +531,7 @@ bool OTAES128GCMGenericBase::gcmEncryptPadded(
 
     const uint8_t CDATALength = PDATALength;
 
-    GGBWS::GCMEncryptPaddedWorkspace workspace;
+    GGBWS::GCMEncryptPaddedWorkspace workspace = getGCMEncryptPaddedWorkspace();
 
     // Encrypt data.
     generateAuthKey(ap, key, workspace.authKey);
@@ -572,7 +574,7 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
     // Fail if the CDATA length is not a multiple of the block size.
     if(0 != (CDATALength & (AES128GCM_BLOCK_SIZE-1))) { return(false); }
 
-    GGBWS::GCMDecryptWorkspace workspace;
+    GGBWS::GCMDecryptWorkspace workspace = getGCMDecryptWorkspace();
 
     // Decrypt CDATA.
     generateAuthKey(ap, key, workspace.authKey);
@@ -677,7 +679,20 @@ bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_WITH_LWORKSPACE(
     {
     if((NULL == key) || (NULL == iv) || (NULL == ciphertextOut) || (NULL == tagOut)) { return(false); } // ERROR
     typedef OTAES128GCMGenericWithWorkspace<> t;
-    if(!t::isWorkspaceSufficientEncPadded(workspace, workspaceSize)) { return(false); } // ERROR
+    if(!t::isWorkspaceSufficientEncPadded(workspace, workspaceSize))
+        {
+#if 1
+// V0P2BASE_DEBUG_SERIAL_PRINTLN_FLASHSTRING(fs) { OTV0P2BASE::serialPrintlnAndFlush(F(fs)); }
+        fprintf(stderr, "ERROR: insufficient workspace to encrypt: %lu vs %lu\n", workspaceSize, t::workspaceRequiredEncPadded);
+#endif
+        return(false); // ERROR
+        }
+#if 1
+    else if(workspaceSize > t::workspaceRequiredMax)
+        {
+        fprintf(stderr, "WARNING: clear excess workspace to encrypt: %lu vs %lu\n", workspaceSize, t::workspaceRequiredEncPadded);
+        }
+#endif
     t i(workspace, workspaceSize);
     return(i.gcmEncryptPadded(key, iv, plaintext, (NULL == plaintext) ? 0 : 32, (0 == authtextSize) ? NULL : authtext, authtextSize, ciphertextOut, tagOut));
     }
@@ -708,7 +723,20 @@ bool fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_WITH_LWORKSPACE(
     {
     if((NULL == key) || (NULL == iv) || (NULL == tag) || (NULL == plaintextOut)) { return(false); } // ERROR
     typedef OTAES128GCMGenericWithWorkspace<> t;
-    if(!t::isWorkspaceSufficientDec(workspace, workspaceSize)) { return(false); } // ERROR
+    if(!t::isWorkspaceSufficientDec(workspace, workspaceSize))
+        {
+#if 1
+        fprintf(stderr, "ERROR: insufficient workspace to decrypt: %lu vs %lu\n", workspaceSize, t::workspaceRequiredDec);
+#endif
+        return(false); // ERROR
+        }
+#if 1
+    else if(workspaceSize > t::workspaceRequiredMax)
+        {
+        fprintf(stderr, "WARNING: clear excess workspace to decrypt: %lu vs %lu\n", workspaceSize, t::workspaceRequiredDec);
+        }
+#endif
+
     t i(workspace, workspaceSize);
     return(i.gcmDecrypt(key, iv, ciphertext, (NULL == ciphertext) ? 0 : 32, (0 == authtextSize) ? NULL : authtext, authtextSize, tag, plaintextOut));
     }
