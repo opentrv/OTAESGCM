@@ -330,9 +330,9 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
             // and calls cannot be made concurrently on any one instance.
             union
                 {
-                GGBWS::GCMEncryptWorkspace encWS;
-                GGBWS::GCMEncryptPaddedWorkspace encPaddedWS;
-                GGBWS::GCMDecryptWorkspace decWS;
+                mutable GGBWS::GCMEncryptWorkspace encWS;
+                mutable GGBWS::GCMEncryptPaddedWorkspace encPaddedWS;
+                mutable GGBWS::GCMDecryptWorkspace decWS;
                 };
             // Return appropriate temporary workspace.
             virtual GGBWS::GCMEncryptWorkspace &getGCMEncryptWorkspace() const override { return(encWS); }
