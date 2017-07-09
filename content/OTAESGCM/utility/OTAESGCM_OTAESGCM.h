@@ -81,7 +81,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 const uint8_t* key, const uint8_t* IV,
                 const uint8_t* PDATA, uint8_t PDATALength,
                 const uint8_t* ADATA, uint8_t ADATALength,
-                uint8_t* CDATA, uint8_t *tag) const = 0;
+                uint8_t* CDATA, uint8_t *tag) = 0;
 
             /**
              * @brief   performs AES-GCM encryption on padded data.
@@ -119,7 +119,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 const uint8_t* key, const uint8_t* IV,
                 const uint8_t* PDATAPadded, uint8_t PDATALength,
                 const uint8_t* ADATA, uint8_t ADATALength,
-                uint8_t* CDATA, uint8_t *tag) const
+                uint8_t* CDATA, uint8_t *tag)
                 { return(gcmEncrypt(key, IV, PDATAPadded, PDATALength, ADATA, ADATALength, CDATA, tag)); }
 
             /**
@@ -139,7 +139,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                  const uint8_t* key, const uint8_t* IV,
                  const uint8_t* CDATA, uint8_t CDATALength,
                  const uint8_t* ADATA, uint8_t ADATALength,
-                 const uint8_t* messageTag, uint8_t *PDATA) const = 0;
+                 const uint8_t* messageTag, uint8_t *PDATA) = 0;
 
 #if 0 // Defining the virtual destructor uses ~800+ bytes of Flash by forcing use of malloc()/free().
             // Ensure safe instance destruction when derived from.
@@ -269,9 +269,9 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
             // Only one is ever needed for any one call,
             // and calls cannot be made concurrently on any one instance.
             // Return appropriate temporary workspace.
-            virtual GGBWS::GCMEncryptWorkspace &getGCMEncryptWorkspace() const = 0;
-            virtual GGBWS::GCMEncryptPaddedWorkspace &getGCMEncryptPaddedWorkspace() const = 0;
-            virtual GGBWS::GCMDecryptWorkspace &getGCMDecryptWorkspace() const = 0;
+            virtual GGBWS::GCMEncryptWorkspace &getGCMEncryptWorkspace() = 0;
+            virtual GGBWS::GCMEncryptPaddedWorkspace &getGCMEncryptPaddedWorkspace() = 0;
+            virtual GGBWS::GCMDecryptWorkspace &getGCMDecryptWorkspace() = 0;
 
         public:
             // Create an instance pointing at a suitable AES block enc/dec implementation.
@@ -285,7 +285,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 const uint8_t* key, const uint8_t* IV,
                 const uint8_t* PDATA, uint8_t PDATALength,
                 const uint8_t* ADATA, uint8_t ADATALength,
-                uint8_t* CDATA, uint8_t *tag) const override;
+                uint8_t* CDATA, uint8_t *tag) override;
 
             // Encrypt; true iff successful.
             // Plain-text must be an exact multiple of block length, eg padded.
@@ -295,7 +295,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 const uint8_t* key, const uint8_t* IV,
                 const uint8_t* PDATAPadded, uint8_t PDATALength,
                 const uint8_t* ADATA, uint8_t ADATALength,
-                uint8_t* CDATA, uint8_t *tag) const override;
+                uint8_t* CDATA, uint8_t *tag) override;
 
             // Decrypt; true iff successful.
             // Crypto text must always be a multiple of block length.
@@ -303,7 +303,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                  const uint8_t* key, const uint8_t* IV,
                  const uint8_t* CDATA, uint8_t CDATALength,
                  const uint8_t* ADATA, uint8_t ADATALength,
-                 const uint8_t* messageTag, uint8_t *PDATA) const override;
+                 const uint8_t* messageTag, uint8_t *PDATA) override;
         };
 
     // Generic implementation, parameterised with type of underlying AES implementation.
@@ -330,14 +330,14 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
             // and calls cannot be made concurrently on any one instance.
             union
                 {
-                mutable GGBWS::GCMEncryptWorkspace encWS;
-                mutable GGBWS::GCMEncryptPaddedWorkspace encPaddedWS;
-                mutable GGBWS::GCMDecryptWorkspace decWS;
+                GGBWS::GCMEncryptWorkspace encWS;
+                GGBWS::GCMEncryptPaddedWorkspace encPaddedWS;
+                GGBWS::GCMDecryptWorkspace decWS;
                 };
             // Return appropriate temporary workspace.
-            virtual GGBWS::GCMEncryptWorkspace &getGCMEncryptWorkspace() const override { return(encWS); }
-            virtual GGBWS::GCMEncryptPaddedWorkspace &getGCMEncryptPaddedWorkspace() const override { return(encPaddedWS); }
-            virtual GGBWS::GCMDecryptWorkspace &getGCMDecryptWorkspace() const override { return(decWS); }
+            virtual GGBWS::GCMEncryptWorkspace &getGCMEncryptWorkspace() override { return(encWS); }
+            virtual GGBWS::GCMEncryptPaddedWorkspace &getGCMEncryptPaddedWorkspace() override { return(encPaddedWS); }
+            virtual GGBWS::GCMDecryptWorkspace &getGCMDecryptWorkspace() override { return(decWS); }
 
         public:
             // Construct an instance.
@@ -358,9 +358,9 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
             uint8_t *const gcmWorkspace;
 
             // Return appropriate temporary workspace.
-            virtual GGBWS::GCMEncryptWorkspace &getGCMEncryptWorkspace() const override { return(*(GGBWS::GCMEncryptWorkspace *)(gcmWorkspace)); }
-            virtual GGBWS::GCMEncryptPaddedWorkspace &getGCMEncryptPaddedWorkspace() const override { return(*(GGBWS::GCMEncryptPaddedWorkspace *)(gcmWorkspace)); }
-            virtual GGBWS::GCMDecryptWorkspace &getGCMDecryptWorkspace() const override { return(*(GGBWS::GCMDecryptWorkspace *)(gcmWorkspace)); }
+            virtual GGBWS::GCMEncryptWorkspace &getGCMEncryptWorkspace() override { return(*(GGBWS::GCMEncryptWorkspace *)(gcmWorkspace)); }
+            virtual GGBWS::GCMEncryptPaddedWorkspace &getGCMEncryptPaddedWorkspace() override { return(*(GGBWS::GCMEncryptPaddedWorkspace *)(gcmWorkspace)); }
+            virtual GGBWS::GCMDecryptWorkspace &getGCMDecryptWorkspace() override { return(*(GGBWS::GCMDecryptWorkspace *)(gcmWorkspace)); }
 
         public:
             constexpr static uint8_t workspaceRequiredAES = OTAESImpl::workspaceRequired;

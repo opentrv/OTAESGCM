@@ -455,7 +455,7 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
                         const uint8_t* key, const uint8_t* IV,
                         const uint8_t* PDATA, uint8_t PDATALength,
                         const uint8_t* ADATA, uint8_t ADATALength,
-                        uint8_t* CDATA, uint8_t *tag) const
+                        uint8_t* CDATA, uint8_t *tag)
 {
     if(NULL == CDATA) { return(false); } // DHD20161107: NULL CDATA causes crashes in subroutines.
 
@@ -520,7 +520,7 @@ bool OTAES128GCMGenericBase::gcmEncryptPadded(
                         const uint8_t* key, const uint8_t* IV,
                         const uint8_t* PDATAPadded, uint8_t PDATALength,
                         const uint8_t* ADATA, uint8_t ADATALength,
-                        uint8_t* CDATA, uint8_t *tag) const
+                        uint8_t* CDATA, uint8_t *tag)
 {
     if(NULL == CDATA) { return(false); } // DHD20161107: NULL CDATA causes crashes in subroutines.
     if(0 != (PDATALength & (AES128GCM_BLOCK_SIZE-1))) { return(false); } // Reject non-padded data.
@@ -565,7 +565,7 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
                         const uint8_t* key, const uint8_t* IV,
                         const uint8_t* CDATA, uint8_t CDATALength,
                         const uint8_t* ADATA, uint8_t ADATALength,
-                        const uint8_t* messageTag, uint8_t *PDATA) const
+                        const uint8_t* messageTag, uint8_t *PDATA)
 {
     // Check if there is input data.
     // Fail if there is nothing to decrypt and/or authenticate.
