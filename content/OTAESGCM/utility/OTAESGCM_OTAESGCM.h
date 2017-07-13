@@ -157,38 +157,57 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
     // allows more visibility and (potentially) control.
     namespace GGBWS
     {
-        /**@struct Bulk of GCTRPadded() workspace. */
+        /**
+         * @struct  Bulk of GHASH() workspace.
+         * @note    32 bytes for AES128.
+         * */
         struct GHASHWorkspace final
         {
             uint8_t ghashTmp[AES128GCM_BLOCK_SIZE]; // If using full blocks, no need for tmp.
             uint8_t gFieldMultiplyTmp[AES128GCM_BLOCK_SIZE]; // If using full blocks, no need for tmp.
         };
 
-        /**@struct Bulk of GCTR() workspace. */
+        /**
+         * @struct  Bulk of GCTR() workspace.
+         * @note    32 bytes for AES128.
+         * */
         struct GCTRWorkspace final
         {
             uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
             uint8_t tmp[AES128GCM_BLOCK_SIZE]; // If using full blocks, no need for tmp.
         };
 
-        /**@struct Bulk of GCTRPadded() workspace. */
+        /**
+         * @struct  Bulk of GCTRPadded() workspace.
+         * @note    16 bytes for AES128.
+         * */
         struct GCTRPaddedWorkspace final
         {
             uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
         };
 
+        /**
+         * @struct  Bulk of generateCDATA() workspace.
+         * @note    48 = 16 + 32 bytes.
+         */
         struct GenCDATAWorkspace final
         {
             uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
             GCTRWorkspace gctrSpace;
         };
-
+        /**
+         * @struct  Bulk of generateCDATAPadded() workspace.
+         * @note    32 = 16 + 16 bytes.
+         */
         struct GenCDATAPaddedWorkspace final
         {
             uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
             GCTRPaddedWorkspace gctrSpace;
         };
-
+        /**
+         * @struct  Bulk of generateTag() workspace.
+         * @note    64 = 16 + 32 + 16 bytes.
+         */
         struct GenerateTagWorkspace final
         {
             uint8_t S[AES128GCM_BLOCK_SIZE];
@@ -201,7 +220,10 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 GCTRPaddedWorkspace gctrSpace;
             };
         };
-
+        /**
+         * @struct  Bulk of gcmEncrypt() workspace
+         * @note    96 = 16 + 16 + 64 bytes.
+         */
         struct GCMEncryptWorkspace final
         {
             uint8_t authKey[AES128GCM_BLOCK_SIZE];
@@ -213,7 +235,10 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 GenerateTagWorkspace tagWorkspace;
             };
         };
-
+        /**
+         * @struct  Bulk of generateCDATA() workspace
+         * @note    96 = 16 + 16 + 64 bytes.
+         */
         struct GCMEncryptPaddedWorkspace final
         {
             uint8_t authKey[AES128GCM_BLOCK_SIZE];
@@ -225,7 +250,10 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 GenerateTagWorkspace tagWorkspace;
             };
         };
-
+        /**
+         * @struct  Bulk of generateCDATA() workspace
+         * @note    112 = 16 + 16 + 16 + 64 bytes.
+         */
         struct GCMDecryptWorkspace final
         {
             uint8_t authKey[AES128GCM_BLOCK_SIZE];
