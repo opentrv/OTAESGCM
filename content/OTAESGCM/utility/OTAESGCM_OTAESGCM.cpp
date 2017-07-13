@@ -330,24 +330,12 @@ static void generateCDATA(OTAES128E * const ap, WS::GenCDATAWorkspace * const wo
 {
     // Exit if no data to encrypt.
     if(PDATALength == 0) return;
-#if 1
     // Generate counter block J.
     memcpy(workspace->ctrBlock, pICB, AES128GCM_BLOCK_SIZE);
     incr32(workspace->ctrBlock);
 
     // Encrypt.
     GCTR(ap, &workspace->gctrSpace, pPDATA, PDATALength, pKey, workspace->ctrBlock, pCDATA);
-#else
-        uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
-
-    // generate counterblock J
-    memcpy(ctrBlock, pICB, AES128GCM_BLOCK_SIZE);
-    incr32(ctrBlock);
-
-    // encrypt
-    WS::GCTRWorkspace workspace;
-    GCTR(ap, &workspace, pPDATA, PDATALength, pKey, ctrBlock, pCDATA);
-#endif
 }
 
 /**
@@ -483,7 +471,7 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
     return(true);
 }
 
-#if 0
+#if 1
 /**
  * @brief   performs AES-GCM encryption on padded data.
  *          If ADATA unused, set ADATA to NULL and ADATALength to 0.

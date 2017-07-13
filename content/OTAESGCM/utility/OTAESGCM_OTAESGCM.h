@@ -82,7 +82,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 const uint8_t* PDATA, uint8_t PDATALength,
                 const uint8_t* ADATA, uint8_t ADATALength,
                 uint8_t* CDATA, uint8_t *tag) const = 0;
-#if 0
+#if 1
 
             /**
              * @brief   performs AES-GCM encryption on padded data.
@@ -173,7 +173,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 const uint8_t* PDATA, uint8_t PDATALength,
                 const uint8_t* ADATA, uint8_t ADATALength,
                 uint8_t* CDATA, uint8_t *tag) const override;
-#if 0
+#if 1
             // Encrypt; true iff successful.
             // Plain-text must be an exact multiple of block length, eg padded.
             // This version may be smaller and faster and need less stack
