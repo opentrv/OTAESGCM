@@ -560,5 +560,40 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
             uint8_t *plaintextOut);
     }
 
+/**
+# (20170713) Flash investigation notes:
+
+## Commits:
+### Working
+- V0p2:         a56a21c
+- OTRadioLink:  eff6d4b
+- OTAESGCM:     3e3bd24
+
+This is before padded functions are introduced.
+Slight increase in REV10_AS_BHR flash usage.
+
+### Testing AESGCM Original
+| COMMIT  | DORM1   | REV10_BHR | CHANGE    |
+| :------ | ------: | --------: | --------: |
+| 3e3bd24 |   31968 |     30180 |       n/a |
+| ec60f97 |   32438 |     30652 | +470/+472 | Padded functions?
+| d7bba44 |   32462 |     30676 |   +24/+24 |
+| d7bba44 |   32462 |     30676 |   +24/+24 |
+
+### Testing AESGCM on flashTesting Branch
+| COMMIT  | DORM1   | REV10_BHR | CHANGE    |
+| :------ | ------: | --------: | --------: |
+| d7bba44 |   32462 |     30676 |       n/a |
+| 093311c |   31968 |     30180 |       n/a | Should be equivalent to 3e3bd24
+| c6dd3a1 |   31968 |     30180 |       n/a |
+| a48ad06 |   32012 |     30224 |   +44/+44 | Reintroduced workspaces but avoided using padded functions
+| 770183e |   32504 |     30718 | +492/+494 | Reintroduced padded top level functions but avoided using them
+| ??????? |   31844 |     30056 | -168/-168 | Removed unpadded functions (compared to a48ad06)
+| c70fa80 |   33206 |     31596 | +1362/+1540 |
+| e2eef7a |   31512 |     29886 |       n/a | Disabled fprintf on arduino. Slight? saving over before refactoring/extending OTAESGCM.
+
+ */
+
+
 
 #endif
