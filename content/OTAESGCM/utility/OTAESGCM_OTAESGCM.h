@@ -236,7 +236,8 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 union
                 {
                     uint8_t lengthBuffer[16];
-                    GCTRPaddedWorkspace gctrSpace;
+                    // GCTRPaddedWorkspace gctrSpace; XXX
+                    GCTRWorkspace gctrSpace;
                 };
             };
 
@@ -272,7 +273,8 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 // generateCDATA and generateTag are called separately and so their
                 // workspaces can be a union
                 union {
-                    GenCDATAPaddedWorkspace cdataWorkspace;
+//                    GenCDATAPaddedWorkspace cdataWorkspace;
+                    GenCDATAWorkspace cdataWorkspace;
                     GenerateTagWorkspace tagWorkspace;
                 };
             };
