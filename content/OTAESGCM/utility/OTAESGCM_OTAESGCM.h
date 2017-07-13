@@ -83,6 +83,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 const uint8_t* ADATA, uint8_t ADATALength,
                 uint8_t* CDATA, uint8_t *tag) const = 0;
 
+#if 0
             /**
              * @brief   performs AES-GCM encryption on padded data.
              *          If ADATA unused, set ADATA to NULL and ADATALength to 0.
@@ -121,7 +122,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 const uint8_t* ADATA, uint8_t ADATALength,
                 uint8_t* CDATA, uint8_t *tag) const
                 { return(gcmEncrypt(key, IV, PDATAPadded, PDATALength, ADATA, ADATALength, CDATA, tag)); }
-
+#endif
             /**
              * @brief   performs AES-GCM decryption and authentication
              * @param    key             pointer to 16 byte (128 bit) key
@@ -172,6 +173,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 const uint8_t* PDATA, uint8_t PDATALength,
                 const uint8_t* ADATA, uint8_t ADATALength,
                 uint8_t* CDATA, uint8_t *tag) const override;
+#if 0
             // Encrypt; true iff successful.
             // Plain-text must be an exact multiple of block length, eg padded.
             // This version may be smaller and faster and need less stack
@@ -181,6 +183,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 const uint8_t* PDATAPadded, uint8_t PDATALength,
                 const uint8_t* ADATA, uint8_t ADATALength,
                 uint8_t* CDATA, uint8_t *tag) const override;
+#endif
             // Decrypt; true iff successful.
             // Crypto text must always be a multiple of block length.
             virtual bool gcmDecrypt(
@@ -190,6 +193,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                  const uint8_t* messageTag, uint8_t *PDATA) const override;
         };
 
+#if 0
         namespace WS
         {
             /**@struct  Bulk of GCTRPadded() workspace. */
@@ -274,7 +278,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 };
             };
         }
-
+#endif
     // Generic implementation, parameterised with type of underlying AES implementation.
     // Carries the AES working state with it.
     // The OTAESImpl should clear up private state before returning from its methods.

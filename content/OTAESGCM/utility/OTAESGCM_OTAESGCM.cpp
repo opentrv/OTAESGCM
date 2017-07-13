@@ -117,13 +117,14 @@ static uint8_t checkTag(const uint8_t *tag1, const uint8_t *tag2)
  * @param    result:    pointer to array to put result in
  * @note    output straight to *x and save on a memcpy loop?
  */
-static void gFieldMultiply(WS::GHASHWorkspace * const workspace, const uint8_t *x, const uint8_t *y)
+static void gFieldMultiply(/*WS::GHASHWorkspace * const workspace, */ const uint8_t *x, const uint8_t *y, uint8_t *result)
 {
     // init result to 0s and copy y to temp
+#if 0
     memcpy(workspace->gFieldMultiplyTmp, y, AES128GCM_BLOCK_SIZE);
     memset(workspace->ghashTmp, 0, AES128GCM_BLOCK_SIZE);
-
-    // multiplication algorithm
+    
+        // multiplication algorithm
     for (uint8_t i = 0; i < AES128GCM_BLOCK_SIZE; i++) {
         for (uint8_t j = 0; j < 8; j++) {
 
@@ -143,6 +144,36 @@ static void gFieldMultiply(WS::GHASHWorkspace * const workspace, const uint8_t *
             }
         }
     }
+#else
+    // working memory
+    uint8_t temp[AES128GCM_BLOCK_SIZE];
+
+    // init result to 0s and copy y to temp
+    memcpy(temp, y, AES128GCM_BLOCK_SIZE);
+    memset(result, 0, AES128GCM_BLOCK_SIZE);
+    
+        // multiplication algorithm
+    for (uint8_t i = 0; i < AES128GCM_BLOCK_SIZE; i++) {
+        for (uint8_t j = 0; j < 8; j++) {
+
+            if (x[i] & (1 << (7 - j))) {
+                /* Z_(i + 1) = Z_i XOR V_i */
+                xorBlock(result, temp);
+            }
+            // if temp is odd, do something?
+            if (temp[15] & 0x01) {
+                /* V_(i + 1) = (V_i >> 1) XOR R */
+                shiftBlockRight(temp);
+                /* R = 11100001 || 0^120 */
+                temp[0] ^= 0xe1;
+            } else {
+                /* V_(i + 1) = V_i >> 1 */
+                shiftBlockRight(temp);
+            }
+        }
+    }
+#endif
+
 }
 
 /**
@@ -167,7 +198,16 @@ static void incr32(uint8_t *pBlock)
 
 
 //**************** MAIN ENCRYPTION FUNCTIONS *************
-
+#if 1
+/**
+ * @struct  Workspace bulk of GCTR static allocations.
+ */
+struct GCTRWorkspace final
+{
+    uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
+    uint8_t tmp[AES128GCM_BLOCK_SIZE]; // if we use full blocks, no need for tmp
+};
+#endif
 /**
  * @note    aes_gctr
  * @brief   performs gcntr operation for encryption
@@ -177,7 +217,7 @@ static void incr32(uint8_t *pBlock)
  * @param   pICB            initial counter block J0
  * @param   pOutput         pointer to output data. length inputLength rounded up to 16.
  */
-static void GCTR(OTAES128E * const ap, WS::GCTRWorkspace * const workspace,
+static void GCTR(OTAES128E * const ap, /* WS::*/ GCTRWorkspace * const workspace,
                     const uint8_t *pInput, const uint8_t inputLength, const uint8_t *pKey,
                     const uint8_t *pCtrBlock, uint8_t *pOutput)
 {
@@ -217,6 +257,7 @@ static void GCTR(OTAES128E * const ap, WS::GCTRWorkspace * const workspace,
     }
 }
 
+#if 0
 /**
  * @note    aes_gctr
  * @brief   performs gcntr operation for encryption
@@ -265,7 +306,7 @@ static void GCTRPadded(OTAES128E * const ap, WS::GCTRPaddedWorkspace * const wor
 //            *ypos++ = *xpos++ ^ workspace->tmp[i];
 //    }
 }
-
+#endif
 /**
  * @note    ghash
  * @brief   performs authentication hashing
@@ -275,7 +316,7 @@ static void GCTRPadded(OTAES128E * const ap, WS::GCTRPaddedWorkspace * const wor
  * @param   pAuthKey        pointer to 128 bit authentication subkey H
  * @param   pOutput         pointer to 16 byte output array
  */
-static void GHASH(  WS::GHASHWorkspace * const workspace,
+static void GHASH(  /* WS::GHASHWorkspace * const workspace, */
                     const uint8_t *pInput, uint8_t inputLength,
                     const uint8_t *pAuthKey, uint8_t *pOutput )
 {
@@ -283,6 +324,7 @@ static void GHASH(  WS::GHASHWorkspace * const workspace,
     // Calculate number of full blocks to hash.
     const uint8_t m = inputLength / AES128GCM_BLOCK_SIZE;
 
+#if 0
     // Hash full blocks.
     for (uint8_t i = 0; i < m; i++) {
         // Y_i = (Y^(i-1) XOR X_i) dot H
@@ -308,6 +350,34 @@ static void GHASH(  WS::GHASHWorkspace * const workspace,
         gFieldMultiply(workspace, pOutput, pAuthKey);
         memcpy(pOutput, workspace->ghashTmp, AES128GCM_BLOCK_SIZE);
     }
+#else
+    uint8_t tmp[AES128GCM_BLOCK_SIZE]; // if we use full blocks, no need for tmp
+    // hash full blocks
+    for (uint8_t i = 0; i < m; i++) {
+        // Y_i = (Y^(i-1) XOR X_i) dot H
+        xorBlock(pOutput, xpos);
+        xpos += 16; // move to next block
+
+        gFieldMultiply(pOutput, pAuthKey, tmp);
+
+        // copy tmp to output
+        memcpy(pOutput, tmp, AES128GCM_BLOCK_SIZE);
+    }
+
+    // check if final partial block. Can be omitted if we use full blocks.
+    if (pInput + inputLength > xpos) {
+        // zero pad
+        const uint8_t last = uint8_t(pInput + inputLength - xpos);
+        memcpy(tmp, xpos, last);
+        memset(tmp + last, 0, sizeof(tmp) - last);
+
+        // Y_i = (Y^(i-1) XOR X_i) dot H
+        xorBlock(pOutput, tmp);
+        gFieldMultiply(pOutput, pAuthKey, tmp);
+        memcpy(pOutput, tmp, AES128GCM_BLOCK_SIZE);
+    }
+#endif
+    
 }
 
 /**
@@ -332,21 +402,33 @@ static void generateICB(const uint8_t *pIV, uint8_t *pOutput)
  * @param   PDATALength length of plain text (need not be block-size multiple)
  * @param   pCDATA      pointer to array for cipher text. Length PDATALength rounded up to next 16 bytes
  */
-static void generateCDATA(OTAES128E * const ap, WS::GenCDATAWorkspace * const workspace,
+static void generateCDATA(OTAES128E * const ap, /*WS::GenCDATAWorkspace * const workspace, */
                             const uint8_t *pICB, const uint8_t *pPDATA, uint8_t PDATALength,
                             uint8_t *pCDATA, const uint8_t *pKey )
 {
     // Exit if no data to encrypt.
     if(PDATALength == 0) return;
-
+#if 0
     // Generate counter block J.
     memcpy(workspace->ctrBlock, pICB, AES128GCM_BLOCK_SIZE);
     incr32(workspace->ctrBlock);
 
     // Encrypt.
     GCTR(ap, &workspace->gctrSpace, pPDATA, PDATALength, pKey, workspace->ctrBlock, pCDATA);
+#else
+        uint8_t ctrBlock[AES128GCM_BLOCK_SIZE];
+
+    // generate counterblock J
+    memcpy(ctrBlock, pICB, AES128GCM_BLOCK_SIZE);
+    incr32(ctrBlock);
+
+    // encrypt
+    GCTRWorkspace workspace;
+    GCTR(ap, &workspace, pPDATA, PDATALength, pKey, ctrBlock, pCDATA);
+#endif
 }
 
+#if 0
 /**
  * @note    aes_gcm_ctr
  * @brief   encrypt PDATA to get CDATA
@@ -370,6 +452,8 @@ static void generateCDATAPadded(OTAES128E * const ap, WS::GenCDATAPaddedWorkspac
     GCTRPadded(ap, &cdataSpace->gctrSpace, pPDATAPadded, PDATALength, pKey, cdataSpace->ctrBlock, pCDATA);
 }
 
+#endif
+
 /**
  * @note    aes_gcm_ghash
  * @brief   makes message S from ADATA and CDATA
@@ -381,13 +465,14 @@ static void generateCDATAPadded(OTAES128E * const ap, WS::GenCDATAPaddedWorkspac
  * @param   pTag            pointer to array to store tag
  */
 static void generateTag(OTAES128E * const ap,
-                            WS::GenerateTagWorkspace * const workspace,
+                            /*WS::GenerateTagWorkspace * const workspace,*/
                             const uint8_t *pKey, const uint8_t *pAuthKey,
                             const uint8_t *pADATA, uint8_t ADATALength,
                             const uint8_t *pCDATA, uint8_t CDATALength,
                             uint8_t * pTag, const uint8_t *pICB)
 {
     uint16_t temp;
+#if 0
     memset(workspace->lengthBuffer, 0, sizeof(workspace->lengthBuffer));
     memset(workspace->S, 0, sizeof(workspace->S));
     /*
@@ -415,6 +500,39 @@ static void generateTag(OTAES128E * const ap,
     GHASH(&workspace->ghashSpace, workspace->lengthBuffer, sizeof(workspace->lengthBuffer), pAuthKey, workspace->S);
 
     GCTRPadded(ap, &workspace->gctrSpace, workspace->S, sizeof(workspace->S), pKey, pICB, pTag);
+#else
+    uint8_t lengthBuffer[16];
+    uint8_t S[16];
+    memset(lengthBuffer, 0, 16);
+    memset(S, 0, AES128GCM_BLOCK_SIZE);
+    /*
+     * u = 128 * ceil[len(C)/128] - len(C)
+     * v = 128 * ceil[len(A)/128] - len(A)
+     * S = GHASH_H(A || 0^v || C || 0^u || [len(A)]64 || [len(C)]64)
+     * (i.e., zero padded to block size A || C and lengths of each in bits)
+     */
+
+    // function to put [len(A)]64 || [len(C)]64 in temp. could be saved as using fixed method length
+    temp = (uint16_t) ADATALength * 8;
+    //lengthBuffer[4] = (temp >> 24) & 0xff;    // these two are not needed as only using 16 bit values
+    //lengthBuffer[5] = (temp >> 16) & 0xff;
+    lengthBuffer[6] = (temp >> 8) & 0xff;
+    lengthBuffer[7] = temp & 0xff;
+
+    temp = (uint16_t) CDATALength * 8;
+    //lengthBuffer[12] = (temp >> 24) & 0xff;
+    //lengthBuffer[13] = (temp >> 16) & 0xff;
+    lengthBuffer[14] = (temp >> 8) & 0xff;
+    lengthBuffer[15] = temp & 0xff;
+
+
+    GHASH(pADATA, ADATALength, pAuthKey, S);
+    GHASH(pCDATA, CDATALength, pAuthKey, S);
+    GHASH(lengthBuffer, sizeof(lengthBuffer), pAuthKey, S);
+
+    GCTRWorkspace workspace;
+    GCTR(ap, &workspace, S, sizeof(S), pKey, pICB, pTag);
+#endif
 }
 
 /**
@@ -455,7 +573,9 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
                         const uint8_t* ADATA, uint8_t ADATALength,
                         uint8_t* CDATA, uint8_t *tag) const
 {
+#if 0
     WS::GCMEncryptWorkspace workspace;
+#endif
 
     if(NULL == CDATA) { return(false); } // DHD20161107: NULL CDATA causes crashes in subroutines.
 
@@ -467,6 +587,7 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
     if(PDATALength >= (uint8_t)(256U - (uint16_t)AES128GCM_BLOCK_SIZE)) { return(false); } // Too big.
     const uint8_t CDATALength = (PDATALength + AES128GCM_BLOCK_SIZE-1) & ~(AES128GCM_BLOCK_SIZE-1);
 
+#if 0
     // Encrypt data.
     generateAuthKey(ap, key, workspace.authKey);
     generateICB(IV, workspace.ICB);
@@ -475,10 +596,22 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
 
     // Generate authentication tag.
     generateTag(ap, &workspace.tagWorkspace, key, workspace.authKey, ADATA, ADATALength, CDATA, CDATALength, tag, workspace.ICB);
+#else
+    uint8_t authKey[AES128GCM_BLOCK_SIZE];
+    uint8_t ICB[AES128GCM_BLOCK_SIZE];
+    // Encrypt data
+    generateAuthKey(ap, key, authKey);
+    generateICB(IV, ICB);
+    generateCDATA(ap, ICB, PDATA, PDATALength, CDATA, key);
+
+    // Generate authentication tag.
+    generateTag(ap, key, authKey, ADATA, ADATALength, CDATA, CDATALength, tag, ICB);
+#endif
 
     return(true);
 }
 
+#if 0
 /**
  * @brief   performs AES-GCM encryption on padded data.
  *          If ADATA unused, set ADATA to NULL and ADATALength to 0.
@@ -540,7 +673,7 @@ bool OTAES128GCMGenericBase::gcmEncryptPadded(
     return(true);
 }
 
-
+#endif
 
 /**
  * @brief   performs AES-GCM decryption and authentication
@@ -559,14 +692,16 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
                         const uint8_t* ADATA, uint8_t ADATALength,
                         const uint8_t* messageTag, uint8_t *PDATA) const
 {
+#if 0
     WS::GCMDecryptWorkspace workspace;
+#endif
     // Check if there is input data.
     // Fail if there is nothing to decrypt and/or authenticate.
     if((CDATALength == 0) && (ADATALength == 0)) { return(false); }
 
     // Fail if the CDATA length is not a multiple of the block size.
     if(0 != (CDATALength & (AES128GCM_BLOCK_SIZE-1))) { return(false); }
-
+#if 0
     // Decrypt CDATA.
     generateAuthKey(ap, key, workspace.authKey);
     generateICB(IV, workspace.ICB);
@@ -577,6 +712,20 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
     // Authenticate and return true if tag matches.
     generateTag(ap, &workspace.tagWorkspace, key, workspace.authKey, ADATA, ADATALength, CDATA, CDATALength, workspace.calculatedTag, workspace.ICB);
     return(0 == checkTag(workspace.calculatedTag, messageTag));
+#else
+    uint8_t authKey[AES128GCM_BLOCK_SIZE];
+    uint8_t ICB[AES128GCM_BLOCK_SIZE];
+    uint8_t calculatedTag[AES128GCM_TAG_SIZE];
+    // Decrypt CDATA.
+    generateAuthKey(ap, key, authKey);
+    generateICB(IV, ICB);
+
+    generateCDATA(ap, ICB, CDATA, CDATALength, PDATA, key);
+
+    // Authenticate and return true if tag matches.
+    generateTag(ap, key, authKey, ADATA, ADATALength, CDATA, CDATALength, calculatedTag, ICB);
+    return(0 == checkTag(calculatedTag, messageTag));
+#endif
 }
 
 
@@ -667,7 +816,11 @@ bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_WITH_WORKSPACE(
     typedef OTAES128GCMGenericWithWorkspace<> t;
     if(!t::isWorkspaceSufficient(workspace, workspaceSize)) { return(false); } // ERROR
     t i(workspace, workspaceSize);
+#if 0
     return(i.gcmEncryptPadded(key, iv, plaintext, (NULL == plaintext) ? 0 : 32, (0 == authtextSize) ? NULL : authtext, authtextSize, ciphertextOut, tagOut));
+#else
+    return(i.gcmEncrypt(key, iv, plaintext, (NULL == plaintext) ? 0 : 32, (0 == authtextSize) ? NULL : authtext, authtextSize, ciphertextOut, tagOut));
+#endif
     }
 
 // AES-GCM 128-bit-key fixed-size text (256-bit/32-byte) decryption/authentication function using work space passed in.
