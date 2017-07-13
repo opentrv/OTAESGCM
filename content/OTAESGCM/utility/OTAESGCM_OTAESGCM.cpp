@@ -13,8 +13,8 @@ KIND, either express or implied. See the Licence for the
 specific language governing permissions and limitations
 under the Licence.
 
-Author(s) / Copyright (s): Deniz Erbilgin 2015
-                           Damon Hart-Davis 2015--2016
+Author(s) / Copyright (s): Deniz Erbilgin 2015--2017
+                           Damon Hart-Davis 2015--2017
 */
 
 /* OpenTRV OTAESGCM microcontroller-/IoT- friendly AES(128)-GCM implementation. */
@@ -23,6 +23,8 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015
 #include <string.h>
 
 #include "OTAESGCM_OTAESGCM.h"
+
+#include <stdio.h>
 
 
 // Use namespaces to help avoid collisions.
@@ -110,7 +112,7 @@ static uint8_t checkTag(const uint8_t *tag1, const uint8_t *tag2)
  * @param    result:    pointer to array to put result in
  * @note    output straight to *x and save on a memcpy loop?
  */
-static void gFieldMultiply(WS::GHASHWorkspace * const workspace, const uint8_t *x, const uint8_t *y)
+static void gFieldMultiply(GGBWS::GHASHWorkspace * const workspace, const uint8_t *x, const uint8_t *y)
 {
     // init result to 0s and copy y to temp
     memcpy(workspace->gFieldMultiplyTmp, y, AES128GCM_BLOCK_SIZE);
@@ -169,7 +171,7 @@ static void incr32(uint8_t *pBlock)
  * @param   pICB            initial counter block J0
  * @param   pOutput         pointer to output data. length inputLength rounded up to 16.
  */
-static void GCTR(OTAES128E * const ap, WS::GCTRWorkspace * const workspace,
+static void GCTR(OTAES128E * const ap, GGBWS::GCTRWorkspace * const workspace,
                     const uint8_t *pInput, const uint8_t inputLength, const uint8_t *pKey,
                     const uint8_t *pCtrBlock, uint8_t *pOutput)
 {
@@ -218,7 +220,7 @@ static void GCTR(OTAES128E * const ap, WS::GCTRWorkspace * const workspace,
  * @param   pICB            initial counter block J0
  * @param   pOutput         pointer to output data. length inputLength rounded up to 16.
  */
-static void GCTRPadded(OTAES128E * const ap, WS::GCTRPaddedWorkspace * const workspace,
+static void GCTRPadded(OTAES128E * const ap, GGBWS::GCTRPaddedWorkspace * const workspace,
                     const uint8_t *pInput, const uint8_t inputLength, const uint8_t *pKey,
                     const uint8_t *pCtrBlock, uint8_t *pOutput)
 {
@@ -267,7 +269,7 @@ static void GCTRPadded(OTAES128E * const ap, WS::GCTRPaddedWorkspace * const wor
  * @param   pAuthKey        pointer to 128 bit authentication subkey H
  * @param   pOutput         pointer to 16 byte output array
  */
-static void GHASH( WS::GHASHWorkspace * const workspace,
+static void GHASH(  GGBWS::GHASHWorkspace * const workspace,
                     const uint8_t *pInput, uint8_t inputLength,
                     const uint8_t *pAuthKey, uint8_t *pOutput )
 {
@@ -325,7 +327,7 @@ static void generateICB(const uint8_t *pIV, uint8_t *pOutput)
  * @param   PDATALength length of plain text (need not be block-size multiple)
  * @param   pCDATA      pointer to array for cipher text. Length PDATALength rounded up to next 16 bytes
  */
-static void generateCDATA(OTAES128E * const ap, WS::GenCDATAWorkspace * const workspace,
+static void generateCDATA(OTAES128E * const ap, GGBWS::GenCDATAWorkspace * const workspace,
                             const uint8_t *pICB, const uint8_t *pPDATA, uint8_t PDATALength,
                             uint8_t *pCDATA, const uint8_t *pKey )
 {
@@ -347,7 +349,7 @@ static void generateCDATA(OTAES128E * const ap, WS::GenCDATAWorkspace * const wo
  * @param   PDATALength length of plain text (MUST BE block-size multiple)
  * @param   pCDATA      pointer to array for cipher text. Length PDATALength rounded up to next 16 bytes
  */
-static void generateCDATAPadded(OTAES128E * const ap, WS::GenCDATAPaddedWorkspace * const cdataSpace,
+static void generateCDATAPadded(OTAES128E * const ap, GGBWS::GenCDATAPaddedWorkspace * const cdataSpace,
                             const uint8_t *pICB, const uint8_t *pPDATAPadded, uint8_t PDATALength,
                             uint8_t *pCDATA, const uint8_t *pKey )
 {
@@ -373,7 +375,7 @@ static void generateCDATAPadded(OTAES128E * const ap, WS::GenCDATAPaddedWorkspac
  * @param   pTag            pointer to array to store tag
  */
 static void generateTag(OTAES128E * const ap,
-                            WS::GenerateTagWorkspace * const workspace,
+                            GGBWS::GenerateTagWorkspace * const workspace,
                             const uint8_t *pKey, const uint8_t *pAuthKey,
                             const uint8_t *pADATA, uint8_t ADATALength,
                             const uint8_t *pCDATA, uint8_t CDATALength,
@@ -446,10 +448,8 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
                         const uint8_t* key, const uint8_t* IV,
                         const uint8_t* PDATA, uint8_t PDATALength,
                         const uint8_t* ADATA, uint8_t ADATALength,
-                        uint8_t* CDATA, uint8_t *tag) const
+                        uint8_t* CDATA, uint8_t *tag)
 {
-    WS::GCMEncryptWorkspace workspace;
-
     if(NULL == CDATA) { return(false); } // DHD20161107: NULL CDATA causes crashes in subroutines.
 
     // Check if there is input data.
@@ -460,6 +460,8 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
     if(PDATALength >= (uint8_t)(256U - (uint16_t)AES128GCM_BLOCK_SIZE)) { return(false); } // Too big.
     const uint8_t CDATALength = (PDATALength + AES128GCM_BLOCK_SIZE-1) & ~(AES128GCM_BLOCK_SIZE-1);
 
+    GGBWS::GCMEncryptWorkspace workspace = getGCMEncryptWorkspace();
+
     // Encrypt data.
     generateAuthKey(ap, key, workspace.authKey);
     generateICB(IV, workspace.ICB);
@@ -468,6 +470,9 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
 
     // Generate authentication tag.
     generateTag(ap, &workspace.tagWorkspace, key, workspace.authKey, ADATA, ADATALength, CDATA, CDATALength, tag, workspace.ICB);
+
+    // Erase workspace for security.
+    memset(&workspace, 0, sizeof(workspace));
 
     return(true);
 }
@@ -509,10 +514,8 @@ bool OTAES128GCMGenericBase::gcmEncryptPadded(
                         const uint8_t* key, const uint8_t* IV,
                         const uint8_t* PDATAPadded, uint8_t PDATALength,
                         const uint8_t* ADATA, uint8_t ADATALength,
-                        uint8_t* CDATA, uint8_t *tag) const
+                        uint8_t* CDATA, uint8_t *tag)
 {
-    WS::GCMEncryptPaddedWorkspace workspace;
-
     if(NULL == CDATA) { return(false); } // DHD20161107: NULL CDATA causes crashes in subroutines.
     if(0 != (PDATALength & (AES128GCM_BLOCK_SIZE-1))) { return(false); } // Reject non-padded data.
 
@@ -522,6 +525,8 @@ bool OTAES128GCMGenericBase::gcmEncryptPadded(
 
     const uint8_t CDATALength = PDATALength;
 
+    GGBWS::GCMEncryptPaddedWorkspace workspace = getGCMEncryptPaddedWorkspace();
+
     // Encrypt data.
     generateAuthKey(ap, key, workspace.authKey);
     generateICB(IV, workspace.ICB);
@@ -530,6 +535,9 @@ bool OTAES128GCMGenericBase::gcmEncryptPadded(
 
     // Generate authentication tag.
     generateTag(ap, &workspace.tagWorkspace, key, workspace.authKey, ADATA, ADATALength, CDATA, CDATALength, tag, workspace.ICB);
+
+    // Erase workspace for security.
+    memset(&workspace, 0, sizeof(workspace));
 
     return(true);
 }
@@ -551,15 +559,16 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
                         const uint8_t* key, const uint8_t* IV,
                         const uint8_t* CDATA, uint8_t CDATALength,
                         const uint8_t* ADATA, uint8_t ADATALength,
-                        const uint8_t* messageTag, uint8_t *PDATA) const
+                        const uint8_t* messageTag, uint8_t *PDATA)
 {
-    WS::GCMDecryptWorkspace workspace;
     // Check if there is input data.
     // Fail if there is nothing to decrypt and/or authenticate.
     if((CDATALength == 0) && (ADATALength == 0)) { return(false); }
 
     // Fail if the CDATA length is not a multiple of the block size.
     if(0 != (CDATALength & (AES128GCM_BLOCK_SIZE-1))) { return(false); }
+    GGBWS::GCMDecryptWorkspace workspace = getGCMDecryptWorkspace();
+
     // Decrypt CDATA.
     generateAuthKey(ap, key, workspace.authKey);
     generateICB(IV, workspace.ICB);
@@ -569,7 +578,12 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
 
     // Authenticate and return true if tag matches.
     generateTag(ap, &workspace.tagWorkspace, key, workspace.authKey, ADATA, ADATALength, CDATA, CDATALength, workspace.calculatedTag, workspace.ICB);
-    return(0 == checkTag(workspace.calculatedTag, messageTag));
+    const bool success = (0 == checkTag(workspace.calculatedTag, messageTag));
+
+    // Erase workspace for security.
+    memset(&workspace, 0, sizeof(workspace));
+
+    return(success);
 }
 
 
@@ -649,8 +663,8 @@ bool fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_STATELESS(void *const,
 // which implies likely requirement for padding of the plain text.
 // Note that the authenticated text size is not fixed, ie is zero or more bytes.
 // Returns true on success, false on failure.
-bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_WITH_WORKSPACE(
-        uint8_t *const workspace, const uint8_t workspaceSize,
+bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_WITH_LWORKSPACE(
+        uint8_t *const workspace, const size_t workspaceSize,
         const uint8_t *const key, const uint8_t *const iv,
         const uint8_t *const authtext, const uint8_t authtextSize,
         const uint8_t *const plaintext,
@@ -658,7 +672,20 @@ bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_WITH_WORKSPACE(
     {
     if((NULL == key) || (NULL == iv) || (NULL == ciphertextOut) || (NULL == tagOut)) { return(false); } // ERROR
     typedef OTAES128GCMGenericWithWorkspace<> t;
-    if(!t::isWorkspaceSufficient(workspace, workspaceSize)) { return(false); } // ERROR
+    if(!t::isWorkspaceSufficientEncPadded(workspace, workspaceSize))
+        {
+#if 1
+// V0P2BASE_DEBUG_SERIAL_PRINTLN_FLASHSTRING(fs) { OTV0P2BASE::serialPrintlnAndFlush(F(fs)); }
+        fprintf(stderr, "ERROR: insufficient workspace to encrypt: %lu vs %lu\n", workspaceSize, t::workspaceRequiredEncPadded);
+#endif
+        return(false); // ERROR
+        }
+#if 1
+    else if(workspaceSize > t::workspaceRequiredMax)
+        {
+        fprintf(stderr, "WARNING: clear excess workspace to encrypt: %lu vs %lu\n", workspaceSize, t::workspaceRequiredEncPadded);
+        }
+#endif
     t i(workspace, workspaceSize);
 #if !defined(OTAESGCM_ALLOW_UNPADDED)
     return(i.gcmEncryptPadded(key, iv, plaintext, (NULL == plaintext) ? 0 : 32, (0 == authtextSize) ? NULL : authtext, authtextSize, ciphertextOut, tagOut));
@@ -684,8 +711,8 @@ bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_WITH_WORKSPACE(
 // Note that the authenticated text size is not fixed, ie is zero or more bytes.
 // Decrypts/authenticates the output of fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS.)
 // Returns true on success, false on failure.
-bool fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_WITH_WORKSPACE(
-        uint8_t *const workspace, const uint8_t workspaceSize,
+bool fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_WITH_LWORKSPACE(
+        uint8_t *const workspace, const size_t workspaceSize,
         const uint8_t *const key, const uint8_t *const iv,
         const uint8_t *const authtext, const uint8_t authtextSize,
         const uint8_t *const ciphertext, const uint8_t *const tag,
@@ -693,7 +720,20 @@ bool fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_WITH_WORKSPACE(
     {
     if((NULL == key) || (NULL == iv) || (NULL == tag) || (NULL == plaintextOut)) { return(false); } // ERROR
     typedef OTAES128GCMGenericWithWorkspace<> t;
-    if(!t::isWorkspaceSufficient(workspace, workspaceSize)) { return(false); } // ERROR
+    if(!t::isWorkspaceSufficientDec(workspace, workspaceSize))
+        {
+#if 1
+        fprintf(stderr, "ERROR: insufficient workspace to decrypt: %lu vs %lu\n", workspaceSize, t::workspaceRequiredDec);
+#endif
+        return(false); // ERROR
+        }
+#if 1
+    else if(workspaceSize > t::workspaceRequiredMax)
+        {
+        fprintf(stderr, "WARNING: clear excess workspace to decrypt: %lu vs %lu\n", workspaceSize, t::workspaceRequiredDec);
+        }
+#endif
+
     t i(workspace, workspaceSize);
     return(i.gcmDecrypt(key, iv, ciphertext, (NULL == ciphertext) ? 0 : 32, (0 == authtextSize) ? NULL : authtext, authtextSize, tag, plaintextOut));
     }
