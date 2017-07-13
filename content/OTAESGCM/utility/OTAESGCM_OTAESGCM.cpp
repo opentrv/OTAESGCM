@@ -258,7 +258,6 @@ static void GCTRPadded(OTAES128E * const ap, WS::GCTRPaddedWorkspace * const wor
 //    }
 }
 
-#if 1 || defined(OTAESGCM_ALLOW_UNPADDED)
 /**
  * @note    ghash
  * @brief   performs authentication hashing
@@ -302,7 +301,7 @@ static void GHASH( WS::GHASHWorkspace * const workspace,
         memcpy(pOutput, workspace->ghashTmp, AES128GCM_BLOCK_SIZE);
     }
 }
-#endif
+
 /**
  * @note    aes_gcm_prepare_j0
  * @brief   generates initial counter block from IV
