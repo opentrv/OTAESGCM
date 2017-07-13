@@ -158,7 +158,7 @@ static void incr32(uint8_t *pBlock)
     }
 }
 
-
+#if defined(OTAESGCM_ALLOW_UNPADDED)
 //**************** MAIN ENCRYPTION FUNCTIONS *************
 /**
  * @note    aes_gctr
@@ -208,7 +208,7 @@ static void GCTR(OTAES128E * const ap, WS::GCTRWorkspace * const workspace,
             *ypos++ = *xpos++ ^ workspace->tmp[i];
     }
 }
-
+#endif
 /**
  * @note    aes_gctr
  * @brief   performs gcntr operation for encryption
@@ -258,6 +258,7 @@ static void GCTRPadded(OTAES128E * const ap, WS::GCTRPaddedWorkspace * const wor
 //    }
 }
 
+#if 1 || defined(OTAESGCM_ALLOW_UNPADDED)
 /**
  * @note    ghash
  * @brief   performs authentication hashing
@@ -301,7 +302,7 @@ static void GHASH( WS::GHASHWorkspace * const workspace,
         memcpy(pOutput, workspace->ghashTmp, AES128GCM_BLOCK_SIZE);
     }
 }
-
+#endif
 /**
  * @note    aes_gcm_prepare_j0
  * @brief   generates initial counter block from IV
@@ -316,6 +317,7 @@ static void generateICB(const uint8_t *pIV, uint8_t *pOutput)
     pOutput[AES128GCM_BLOCK_SIZE - 1] = 0x01;
 }
 
+#if defined(OTAESGCM_ALLOW_UNPADDED)
 /**
  * @note    aes_gcm_ctr
  * @brief   encrypt PDATA to get CDATA
@@ -337,7 +339,7 @@ static void generateCDATA(OTAES128E * const ap, WS::GenCDATAWorkspace * const wo
     // Encrypt.
     GCTR(ap, &workspace->gctrSpace, pPDATA, PDATALength, pKey, workspace->ctrBlock, pCDATA);
 }
-
+#endif
 /**
  * @note    aes_gcm_ctr
  * @brief   encrypt PDATA to get CDATA
@@ -405,8 +407,8 @@ static void generateTag(OTAES128E * const ap,
     GHASH(&workspace->ghashSpace, pCDATA, CDATALength, pAuthKey, workspace->S);
     GHASH(&workspace->ghashSpace, workspace->lengthBuffer, sizeof(workspace->lengthBuffer), pAuthKey, workspace->S);
 
-//    GCTRPadded(ap, &workspace->gctrSpace, workspace->S, sizeof(workspace->S), pKey, pICB, pTag); XXX
-    GCTR(ap, &workspace->gctrSpace, workspace->S, sizeof(workspace->S), pKey, pICB, pTag);
+//    GCTR(ap, &workspace->gctrSpace, workspace->S, sizeof(workspace->S), pKey, pICB, pTag);
+    GCTRPadded(ap, &workspace->gctrSpace, workspace->S, sizeof(workspace->S), pKey, pICB, pTag);
 }
 
 /**
@@ -427,7 +429,7 @@ static void generateAuthKey(OTAES128E * const ap, const uint8_t *pKey, uint8_t *
 
 
 /******************* Public Functions ********************/
-
+#if defined(OTAESGCM_ALLOW_UNPADDED)
 /**
  * @brief   performs AES-GCM encryption.
  * @param   key             pointer to 16 byte (128 bit) key; never NULL
@@ -470,7 +472,7 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
 
     return(true);
 }
-
+#endif
 #if 1
 /**
  * @brief   performs AES-GCM encryption on padded data.
@@ -564,8 +566,7 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
     generateICB(IV, workspace.ICB);
 
     // ICB is hashed with the key then XORed with CDATA to decrypt cipher text.
-//    generateCDATAPadded(ap, &workspace.cdataWorkspace, workspace.ICB, CDATA, CDATALength, PDATA, key);
-    generateCDATA(ap, &workspace.cdataWorkspace, workspace.ICB, CDATA, CDATALength, PDATA, key);
+    generateCDATAPadded(ap, &workspace.cdataWorkspace, workspace.ICB, CDATA, CDATALength, PDATA, key);
 
     // Authenticate and return true if tag matches.
     generateTag(ap, &workspace.tagWorkspace, key, workspace.authKey, ADATA, ADATALength, CDATA, CDATALength, workspace.calculatedTag, workspace.ICB);
@@ -599,7 +600,7 @@ bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_STATELESS(void *const,
     {
     if((NULL == key) || (NULL == iv) || (NULL == ciphertextOut) || (NULL == tagOut)) { return(false); } // ERROR
     OTAES128GCMGeneric<> i;
-    return(i.gcmEncrypt(key, iv, plaintext, (NULL == plaintext) ? 0 : 32, (0 == authtextSize) ? NULL : authtext, authtextSize, ciphertextOut, tagOut));
+    return(i.gcmEncryptPadded(key, iv, plaintext, (NULL == plaintext) ? 0 : 32, (0 == authtextSize) ? NULL : authtext, authtextSize, ciphertextOut, tagOut));  // FIXME originally unpadded version
     }
 
 // AES-GCM 128-bit-key fixed-size text (256-bit/32-byte) decryption/authentication function.
@@ -660,7 +661,7 @@ bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_WITH_WORKSPACE(
     typedef OTAES128GCMGenericWithWorkspace<> t;
     if(!t::isWorkspaceSufficient(workspace, workspaceSize)) { return(false); } // ERROR
     t i(workspace, workspaceSize);
-#if 0
+#if !defined(OTAESGCM_ALLOW_UNPADDED)
     return(i.gcmEncryptPadded(key, iv, plaintext, (NULL == plaintext) ? 0 : 32, (0 == authtextSize) ? NULL : authtext, authtextSize, ciphertextOut, tagOut));
 #else
     return(i.gcmEncrypt(key, iv, plaintext, (NULL == plaintext) ? 0 : 32, (0 == authtextSize) ? NULL : authtext, authtextSize, ciphertextOut, tagOut));

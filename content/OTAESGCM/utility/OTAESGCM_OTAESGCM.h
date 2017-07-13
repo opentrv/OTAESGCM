@@ -29,6 +29,7 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015
 #include "OTAESGCM_OTAES128.h"
 #include "OTAESGCM_OTAES128Impls.h"
 
+#undef OTAESGCM_ALLOW_UNPADDED
 
 // Use namespaces to help avoid collisions.
 namespace OTAESGCM
@@ -48,6 +49,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
             constexpr OTAES128GCM() { }
 
         public:
+#if defined(OTAESGCM_ALLOW_UNPADDED)
             /**
              * @brief   performs AES-GCM encryption.
              * 			If ADATA unused, set ADATA to NULL and ADATALength to 0.
@@ -82,8 +84,6 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 const uint8_t* PDATA, uint8_t PDATALength,
                 const uint8_t* ADATA, uint8_t ADATALength,
                 uint8_t* CDATA, uint8_t *tag) const = 0;
-#if 1
-
             /**
              * @brief   performs AES-GCM encryption on padded data.
              *          If ADATA unused, set ADATA to NULL and ADATALength to 0.
@@ -122,6 +122,12 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 const uint8_t* ADATA, uint8_t ADATALength,
                 uint8_t* CDATA, uint8_t *tag) const
                 { return(gcmEncrypt(key, IV, PDATAPadded, PDATALength, ADATA, ADATALength, CDATA, tag)); }
+#else
+            virtual bool gcmEncryptPadded(
+                const uint8_t* key, const uint8_t* IV,
+                const uint8_t* PDATAPadded, uint8_t PDATALength,
+                const uint8_t* ADATA, uint8_t ADATALength,
+                uint8_t* CDATA, uint8_t *tag) const = 0;
 #endif
             /**
              * @brief   performs AES-GCM decryption and authentication
@@ -168,12 +174,13 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
             constexpr OTAES128GCMGenericBase(OTAES128E *aptr) : ap(aptr) { }
             // Encrypt; true iff successful.
             // Plain text need not be padded to a block-size multiple.
+#if defined(OTAESGCM_ALLOW_UNPADDED)
             virtual bool gcmEncrypt(
                 const uint8_t* key, const uint8_t* IV,
                 const uint8_t* PDATA, uint8_t PDATALength,
                 const uint8_t* ADATA, uint8_t ADATALength,
                 uint8_t* CDATA, uint8_t *tag) const override;
-#if 1
+#endif
             // Encrypt; true iff successful.
             // Plain-text must be an exact multiple of block length, eg padded.
             // This version may be smaller and faster and need less stack
@@ -183,7 +190,6 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 const uint8_t* PDATAPadded, uint8_t PDATALength,
                 const uint8_t* ADATA, uint8_t ADATALength,
                 uint8_t* CDATA, uint8_t *tag) const override;
-#endif
             // Decrypt; true iff successful.
             // Crypto text must always be a multiple of block length.
             virtual bool gcmDecrypt(
@@ -201,7 +207,6 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 uint8_t ghashTmp[AES128GCM_BLOCK_SIZE]; // If using full blocks, no need for tmp.
                 uint8_t gFieldMultiplyTmp[AES128GCM_BLOCK_SIZE]; // If using full blocks, no need for tmp.
             };
-
             /**@struct  Bulk of GCTR() workspace. */
             struct GCTRWorkspace final
             {
@@ -236,8 +241,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 union
                 {
                     uint8_t lengthBuffer[16];
-                    // GCTRPaddedWorkspace gctrSpace; XXX
-                    GCTRWorkspace gctrSpace;
+                    GCTRPaddedWorkspace gctrSpace;
                 };
             };
 
@@ -273,8 +277,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 // generateCDATA and generateTag are called separately and so their
                 // workspaces can be a union
                 union {
-//                    GenCDATAPaddedWorkspace cdataWorkspace;
-                    GenCDATAWorkspace cdataWorkspace;
+                    GenCDATAPaddedWorkspace cdataWorkspace;
                     GenerateTagWorkspace tagWorkspace;
                 };
             };
