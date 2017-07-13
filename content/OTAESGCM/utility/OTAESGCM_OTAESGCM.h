@@ -304,7 +304,9 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
             // Only one is ever needed for any one call,
             // and calls cannot be made concurrently on any one instance.
             // Return appropriate temporary workspace.
+#if defined(OTAESGCM_ALLOW_UNPADDED)
             virtual GGBWS::GCMEncryptWorkspace &getGCMEncryptWorkspace() = 0;
+#endif
             virtual GGBWS::GCMEncryptPaddedWorkspace &getGCMEncryptPaddedWorkspace() = 0;
             virtual GGBWS::GCMDecryptWorkspace &getGCMDecryptWorkspace() = 0;
 
@@ -367,12 +369,16 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
             // and calls cannot be made concurrently on any one instance.
             union
                 {
+#if defined(OTAESGCM_ALLOW_UNPADDED)
                 GGBWS::GCMEncryptWorkspace encWS;
+#endif
                 GGBWS::GCMEncryptPaddedWorkspace encPaddedWS;
                 GGBWS::GCMDecryptWorkspace decWS;
                 };
             // Return appropriate temporary workspace.
+#if defined(OTAESGCM_ALLOW_UNPADDED)
             virtual GGBWS::GCMEncryptWorkspace &getGCMEncryptWorkspace() override { return(encWS); }
+#endif
             virtual GGBWS::GCMEncryptPaddedWorkspace &getGCMEncryptPaddedWorkspace() override { return(encPaddedWS); }
             virtual GGBWS::GCMDecryptWorkspace &getGCMDecryptWorkspace() override { return(decWS); }
 
@@ -395,7 +401,9 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
             uint8_t *const gcmWorkspace;
 
             // Return appropriate temporary workspace.
+#if defined(OTAESGCM_ALLOW_UNPADDED)
             virtual GGBWS::GCMEncryptWorkspace &getGCMEncryptWorkspace() override { return(*(GGBWS::GCMEncryptWorkspace *)(gcmWorkspace)); }
+#endif
             virtual GGBWS::GCMEncryptPaddedWorkspace &getGCMEncryptPaddedWorkspace() override { return(*(GGBWS::GCMEncryptPaddedWorkspace *)(gcmWorkspace)); }
             virtual GGBWS::GCMDecryptWorkspace &getGCMDecryptWorkspace() override { return(*(GGBWS::GCMDecryptWorkspace *)(gcmWorkspace)); }
 

@@ -24,7 +24,9 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015--2017
 
 #include "OTAESGCM_OTAESGCM.h"
 
+#if !defined(ARDUINO_ARCH_AVR)
 #include <stdio.h>
+#endif
 
 
 // Use namespaces to help avoid collisions.
@@ -477,7 +479,6 @@ bool OTAES128GCMGenericBase::gcmEncrypt(
     return(true);
 }
 #endif
-#if 1
 /**
  * @brief   performs AES-GCM encryption on padded data.
  *          If ADATA unused, set ADATA to NULL and ADATALength to 0.
@@ -541,8 +542,6 @@ bool OTAES128GCMGenericBase::gcmEncryptPadded(
 
     return(true);
 }
-
-#endif
 
 /**
  * @brief   performs AES-GCM decryption and authentication
@@ -674,13 +673,13 @@ bool fixed32BTextSize12BNonce16BTagSimpleEnc_DEFAULT_WITH_LWORKSPACE(
     typedef OTAES128GCMGenericWithWorkspace<> t;
     if(!t::isWorkspaceSufficientEncPadded(workspace, workspaceSize))
         {
-#if 1
+#if 1 && !defined(ARDUINO_ARCH_AVR)
 // V0P2BASE_DEBUG_SERIAL_PRINTLN_FLASHSTRING(fs) { OTV0P2BASE::serialPrintlnAndFlush(F(fs)); }
         fprintf(stderr, "ERROR: insufficient workspace to encrypt: %lu vs %lu\n", workspaceSize, t::workspaceRequiredEncPadded);
 #endif
         return(false); // ERROR
         }
-#if 1
+#if 1 && !defined(ARDUINO_ARCH_AVR)
     else if(workspaceSize > t::workspaceRequiredMax)
         {
         fprintf(stderr, "WARNING: clear excess workspace to encrypt: %lu vs %lu\n", workspaceSize, t::workspaceRequiredEncPadded);
@@ -722,12 +721,12 @@ bool fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_WITH_LWORKSPACE(
     typedef OTAES128GCMGenericWithWorkspace<> t;
     if(!t::isWorkspaceSufficientDec(workspace, workspaceSize))
         {
-#if 1
+#if 1 && !defined(ARDUINO_ARCH_AVR)
         fprintf(stderr, "ERROR: insufficient workspace to decrypt: %lu vs %lu\n", workspaceSize, t::workspaceRequiredDec);
 #endif
         return(false); // ERROR
         }
-#if 1
+#if 1 && !defined(ARDUINO_ARCH_AVR)
     else if(workspaceSize > t::workspaceRequiredMax)
         {
         fprintf(stderr, "WARNING: clear excess workspace to decrypt: %lu vs %lu\n", workspaceSize, t::workspaceRequiredDec);
