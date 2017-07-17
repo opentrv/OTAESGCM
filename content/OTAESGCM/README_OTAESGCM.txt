@@ -28,6 +28,7 @@ specific language governing permissions and limitations
 under the Licence.
 
 Author(s) / Copyright (s): Damon Hart-Davis 2015--2017
+                           Deniz Erbilgin 2017
 
 
 
@@ -45,5 +46,7 @@ Misfeatures to guard against:
 
   * APIs must be clear so that programmers know eg where padding must be supplied
     and for example even if inputs don't need padding, do output buffers?
+  
+  * Non-block-sized data is not supported. All input buffers must be multiples of 128 bits.
 
 
