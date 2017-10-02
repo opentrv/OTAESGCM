@@ -526,7 +526,7 @@ bool OTAES128GCMGenericBase::gcmEncryptPadded(
 
     const uint8_t CDATALength = PDATALength;
 
-    GGBWS::GCMEncryptPaddedWorkspace workspace = getGCMEncryptPaddedWorkspace();
+    GGBWS::GCMEncryptPaddedWorkspace &workspace = getGCMEncryptPaddedWorkspace();
 
     // Encrypt data.
     generateAuthKey(ap, key, workspace.authKey);
@@ -566,7 +566,7 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
 
     // Fail if the CDATA length is not a multiple of the block size.
     if(0 != (CDATALength & (AES128GCM_BLOCK_SIZE-1))) { return(false); }
-    GGBWS::GCMDecryptWorkspace workspace = getGCMDecryptWorkspace();
+    GGBWS::GCMDecryptWorkspace &workspace = getGCMDecryptWorkspace();
 
     // Decrypt CDATA.
     generateAuthKey(ap, key, workspace.authKey);
@@ -585,7 +585,7 @@ bool OTAES128GCMGenericBase::gcmDecrypt(
     return(success);
 }
 
-
+#if defined(OTAESGCM_ALLOW_NON_WORKSPACE)
 // AES-GCM 128-bit-key fixed-size text (256-bit/32-byte) encryption/authentication function.
 // This is an adaptor/bridge function to ease outside use in simple cases
 // without explicit type/library dependencies, but use with care.
@@ -644,7 +644,7 @@ bool fixed32BTextSize12BNonce16BTagSimpleDec_DEFAULT_STATELESS(void *const,
     OTAES128GCMGeneric<> i;
     return(i.gcmDecrypt(key, iv, ciphertext, (NULL == ciphertext) ? 0 : 32, (0 == authtextSize) ? NULL : authtext, authtextSize, tag, plaintextOut));
     }
-
+#endif
 
 // AES-GCM 128-bit-key fixed-size text (256-bit/32-byte) encryption/authentication function using work space passed in.
 // This is an adaptor/bridge function to ease outside use in simple cases

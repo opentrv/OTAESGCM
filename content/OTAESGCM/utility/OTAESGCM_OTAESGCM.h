@@ -30,6 +30,7 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015--2017
 #include "OTAESGCM_OTAES128Impls.h"
 
 #undef OTAESGCM_ALLOW_UNPADDED
+#define OTAESGCM_ALLOW_NON_WORKSPACE
 
 // Use namespaces to help avoid collisions.
 namespace OTAESGCM
@@ -326,7 +327,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 uint8_t* CDATA, uint8_t *tag) override;
 
 #endif
-            // Encrypt; true iff successful.
+            // Encrypt; true if successful.
             // Plain-text must be an exact multiple of block length, eg padded.
             // This version should be smaller and faster and need less stack
             // than more generic gcmEncrypt().
@@ -344,7 +345,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                  const uint8_t* ADATA, uint8_t ADATALength,
                  const uint8_t* messageTag, uint8_t *PDATA) override;
         };
-        
+#if defined(OTAESGCM_ALLOW_NON_WORKSPACE)
     // Generic implementation, parameterised with type of underlying AES implementation.
     // Carries the AES working state with it.
     //
@@ -386,7 +387,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
             // Construct an instance.
             constexpr OTAES128GCMGeneric() : OTAESImpl(workspaceAES, workspaceRequiredAES), OTAES128GCMGenericBase(this) { }
         };
-
+#endif
     // Generic implementation, parameterised with type of underlying AES implementation.
     // Carries the AES working state with it.
     //
@@ -410,7 +411,6 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
         public:
             constexpr static uint8_t workspaceRequiredAES = OTAESImpl::workspaceRequired;
 
-//            // Verify that workspace is small enough for 255-byte limit
 //            // on top of AES requirement.
 //            // Implicitly this ensures total size can fit in a uint8_t also.
 //            static_assert(GGBWS::gcmEncryptWorkspaceRequired + workspaceRequiredAES < 256U, "too big");
@@ -463,7 +463,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
                 { return((NULL != workspace) && (workspaceSize >= workspaceRequiredDec)); }
         };
 
-
+#if defined(OTAESGCM_ALLOW_NON_WORKSPACE)
     // AES-GCM 128-bit-key fixed-size text (256-bit/32-byte) encryption/authentication function.
     // This is an adaptor/bridge function to ease outside use in simple cases
     // without explicit type/library dependencies, but use with care.
@@ -511,7 +511,7 @@ static constexpr uint8_t AES128GCM_TAG_SIZE   = 16; // GCM authentication tag si
             const uint8_t *ciphertext, const uint8_t *tag,
             uint8_t *plaintextOut);
 
-
+#endif
     // AES-GCM 128-bit-key fixed-size text (256-bit/32-byte) encryption/authentication function using work space passed in.
     // This is an adaptor/bridge function to ease outside use in simple cases
     // without explicit type/library dependencies, but use with care.
