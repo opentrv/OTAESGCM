@@ -76,8 +76,8 @@ install:
     - arduino --install-boards "opentrv:avr"
     - arduino --pref "boardsmanager.additional.urls=" --save-prefs
     - ls -al
-    - ln -s $PWD/OTAESGCM/content/OTAESGCM /usr/local/share/arduino/libraries/OTAESGCM
-    - sudo cp $PWD/OTAESGCM/test/platform.local.txt /usr/local/share/arduino/hardware/arduino/avr/
+    - ln -s $PWD/content/OTAESGCM /usr/local/share/arduino/libraries/OTAESGCM
+    - sudo cp $PWD/test/platform.local.txt /usr/local/share/arduino/hardware/arduino/avr/
  
 script:
     - ./PortableUnitTestsDriver.sh
