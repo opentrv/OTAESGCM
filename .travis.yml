@@ -81,7 +81,7 @@ install:
  
 script:
     - ./PortableUnitTestsDriver.sh
-    - arduino --verify --board opentrv:avr:opentrv_v0p2 $PWD/OTAESGCM/test/test.ino
+    - arduino --verify --board opentrv:avr:opentrv_v0p2 $PWD/test/test.ino
 notifications:
   email:
     recipients:
