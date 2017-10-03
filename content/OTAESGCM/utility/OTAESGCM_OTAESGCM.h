@@ -30,7 +30,7 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015--2017
 #include "OTAESGCM_OTAES128Impls.h"
 
 #undef OTAESGCM_ALLOW_UNPADDED
-#define OTAESGCM_ALLOW_NON_WORKSPACE
+#undef OTAESGCM_ALLOW_NON_WORKSPACE
 
 // Use namespaces to help avoid collisions.
 namespace OTAESGCM
