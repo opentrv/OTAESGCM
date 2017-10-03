@@ -43,39 +43,45 @@ matrix:
           packages:
             - clang-3.7
       env: COMPILER=clang++-3.7
+      
 before_install:
- - $CXX --version
- - clang++ --version
- - sudo apt-get -qq update
- - sudo apt-get install -y libgtest-dev
- - wget https://github.com/google/googletest/archive/release-1.7.0.tar.gz
- - tar xf release-1.7.0.tar.gz
- - cd googletest-release-1.7.0
-# - sudo cmake -DBUILD_SHARED_LIBS=ON .
- - cd make
- - make
-# - sudo cp -a libgtest_main.so libgtest.so /usr/lib/
- - sudo cp -a gtest_main.a /usr/lib/libgtest_main.a
- - sudo cp -a gtest_main.a /usr/lib/libgtest.a
- - cd ..
- - sudo cp -a include/gtest /usr/include
- - cd "${TRAVIS_BUILD_DIR}"
- - chmod +x PortableUnitTestsDriver.sh
+    - $CXX --version
+    - clang++ --version
+    - sudo apt-get -qq update
+    - sudo apt-get install -y libgtest-dev
+    - wget https://github.com/google/googletest/archive/release-1.7.0.tar.gz
+    - tar xf release-1.7.0.tar.gz
+    - cd googletest-release-1.7.0
+#   - sudo cmake -DBUILD_SHARED_LIBS=ON .
+    - cd make
+    - make
+#   - sudo cp -a libgtest_main.so libgtest.so /usr/lib/
+    - sudo cp -a gtest_main.a /usr/lib/libgtest_main.a
+    - sudo cp -a gtest_main.a /usr/lib/libgtest.a
+    - cd ..
+    - sudo cp -a include/gtest /usr/include
+    - cd "${TRAVIS_BUILD_DIR}"
+    - chmod +x PortableUnitTestsDriver.sh
 # Setup Arduino IDE
- - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16 -extension RANDR"
- - sleep 3
- - export DISPLAY=:1.0
- - wget http://downloads.arduino.cc/arduino-1.8.1-linux64.tar.xz
- - tar xf arduino-1.8.1-linux64.tar.xz
- - sudo mv arduino-1.8.1 /usr/local/share/arduino
- - sudo ln -s /usr/local/share/arduino/arduino /usr/local/bin/arduino
+    - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16 -extension RANDR"
+    - sleep 3
+    - export DISPLAY=:1.0
+    - wget http://downloads.arduino.cc/arduino-1.8.1-linux64.tar.xz
+    - tar xf arduino-1.8.1-linux64.tar.xz
+    - sudo mv arduino-1.8.1 /usr/local/share/arduino
+    - sudo ln -s /usr/local/share/arduino/arduino /usr/local/bin/arduino
+ 
 install:
- - arduino --pref "boardsmanager.additional.urls=https://raw.githubusercontent.com/opentrv/OpenTRV-Config/master/Arduino/package_opentrv_index.json" --save-prefs
- - arduino --install-boards "opentrv:avr"
- - arduino --pref "boardsmanager.additional.urls=" --save-prefs
- - ls -al
- - ln -s $PWD/OTAESGCM/content/OTAESGCM /usr/local/share/arduino/libraries/OTAESGCM
-script: ./PortableUnitTestsDriver.sh
+    - arduino --pref "boardsmanager.additional.urls=https://raw.githubusercontent.com/opentrv/OpenTRV-Config/master/Arduino/package_opentrv_index.json" --save-prefs
+    - arduino --install-boards "opentrv:avr"
+    - arduino --pref "boardsmanager.additional.urls=" --save-prefs
+    - ls -al
+    - ln -s $PWD/OTAESGCM/content/OTAESGCM /usr/local/share/arduino/libraries/OTAESGCM
+    - sudo cp $PWD/OTAESGCM/test/platform.local.txt /usr/local/share/arduino/hardware/arduino/avr/
+ 
+script:
+    - ./PortableUnitTestsDriver.sh
+    - arduino --verify --board opentrv:avr:opentrv_v0p2 $PWD/OTAESGCM/test/test.ino
 notifications:
   email:
     recipients:
