@@ -1,0 +1,7 @@
+compiler.c.extra_flags=-fno-lto -fstack-usage -Wstack-usage=20
+compiler.c.elf.extra_flags=
+compiler.S.extra_flags=
+compiler.cpp.extra_flags=-fno-lto -fstack-usage -Wall -Werror -Wextra -Wstack-usage=50
+compiler.ar.extra_flags=
+compiler.objcopy.eep.extra_flags=
+compiler.elf2hex.extra_flags=
