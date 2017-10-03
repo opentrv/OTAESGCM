@@ -17,7 +17,10 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015
                            Damon Hart-Davis 2015--2016
 */
 
-/*Unit test routines for library code.
+/**
+ *  Test stack usage of OTAESGCM functions
+ *  - No function should use more than 50 bytes of stack.
+ *
  */
 
 // Include the library under test.
