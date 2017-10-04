@@ -526,7 +526,7 @@ bool OTAES128GCMGenericBase::gcmEncryptPadded(
 
     const uint8_t CDATALength = PDATALength;
 
-    GGBWS::GCMEncryptPaddedWorkspace &workspace = getGCMEncryptPaddedWorkspace();
+    GGBWS::GCMEncryptPaddedWorkspace workspace = getGCMEncryptPaddedWorkspace();
 
     // Encrypt data.
     generateAuthKey(ap, key, workspace.authKey);
