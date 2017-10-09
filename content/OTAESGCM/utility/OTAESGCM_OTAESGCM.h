@@ -29,7 +29,16 @@ Author(s) / Copyright (s): Deniz Erbilgin 2015--2017
 #include "OTAESGCM_OTAES128.h"
 #include "OTAESGCM_OTAES128Impls.h"
 
+// IF DEFINED: Allow encryption/decryption functions to take unpadded input.
+// These are disabled by default as original implementation was incorrect,
+// increased flash size and is unnecessary for the OT secure frame.
 #undef OTAESGCM_ALLOW_UNPADDED
+// IF DEFINED: Enable non-workspace versions of AES128GCM.
+// These are disabled by default as:
+// - They make large (> 200 byte on AVR) stack allocations and are not
+//   recommended.
+// - When included they prevent -Werror and -Wstack-usage being used together
+//   for static analysis of stack allocations.
 #undef OTAESGCM_ALLOW_NON_WORKSPACE
 
 // Use namespaces to help avoid collisions.
