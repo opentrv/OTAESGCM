@@ -10,6 +10,7 @@ or release/freeze points.
 
 pending:
     *** V3.0
+    DE20171002:  Fixed critical bug causing workspace to be copied rather than referenced.
     DE20170716:  Disabled padding routines due to implementation bugs and excessive SRAM bloat.
     DHD20170707: improving stack usage management
     DHD20170707: allowing > 255 byte workspace for encode/decode
