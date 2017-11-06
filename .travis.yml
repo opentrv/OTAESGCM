@@ -39,10 +39,10 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.7
+            - llvm-toolchain-precise-5.0
           packages:
-            - clang-3.7
-      env: COMPILER=clang++-3.7
+            - clang-5.0
+      env: COMPILER=clang++-5.0
       
 before_install:
     - $CXX --version
