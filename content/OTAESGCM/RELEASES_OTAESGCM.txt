@@ -9,12 +9,21 @@ or release/freeze points.
 
 
 pending:
-    *** V3.0
-    DE20171002:  Fixed critical bug causing workspace to be copied rather than referenced.
-    DE20170716:  Disabled padding routines due to implementation bugs and excessive SRAM bloat.
-    DHD20170707: improving stack usage management
-    DHD20170707: allowing > 255 byte workspace for encode/decode
+
+
+
+20171204
+    freezepoint name: V3.0
+    branch name: HEAD
+    Deployed where:
+    Changes since last freezepoint (developer/mgr initials and brief description): 
+    Previous significant freezepoint: V2.0
     DHD20161111: turned compiler strictness up to max, eg including -Wextra and pedantic and conversion.
+    DHD20170707: allowing > 255 byte workspace for encode/decode
+    DHD20170707: improving stack usage management
+    DE20170716:  Disabled padding routines due to implementation bugs and excessive SRAM bloat.
+    DE20171002:  Fixed critical bug causing workspace to be copied rather than referenced.
+    DE20171003:  Disabled non-workspace code paths.
 
 
 20161108:
