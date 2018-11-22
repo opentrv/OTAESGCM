@@ -32,3 +32,6 @@
 /.externalToolBuilders/
 /Debug-lib/
 /tmptestexe
+
+# ninja
+builddir
