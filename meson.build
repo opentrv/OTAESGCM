@@ -5,16 +5,6 @@ project('OTAESGCMTests', 'cpp',
 
 gtest_dep = dependency('gtest_main')
 
-lib_inc = include_directories(
-    'content/OTAESGCM',
-    'content/OTAESGCM/utility',
-)
-lib_src = [
-    'content/OTAESGCM/utility/OTAESGCM_OTAES128AVR.cpp',
-    'content/OTAESGCM/utility/OTAESGCM_OTAESGCM.cpp',
-]
-
-
 inc = include_directories(
     'content/OTAESGCM',
     'content/OTAESGCM/utility',
@@ -27,9 +17,8 @@ src = [
     'portableUnitTests/main.cpp'
 ]
 
-libOTAESGCM = static_library('OTAESGCM', lib_src,
-    include_directories : lib_inc,
-    # dependencies : gtest_dep,
+libOTAESGCM = static_library('OTAESGCM', src,
+    include_directories : inc,
     cpp_args : [
         '-O0',
         '-Wall', '-Werror',
