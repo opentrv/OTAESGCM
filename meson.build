@@ -1,4 +1,4 @@
-project('OTAESGCMTests', 'cpp',
+project('OTAESGCM', 'cpp',
     default_options : [
         'c_std=c11', 'cpp_std=c++11']
 )
