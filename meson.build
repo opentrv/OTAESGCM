@@ -28,22 +28,23 @@ libOTAESGCM = static_library('OTAESGCM', src,
     install : true
 )
 
-
 libOTAESGCM_dep = declare_dependency(
     include_directories : inc, 
     link_with : libOTAESGCM
 )
 
-test_app = executable('OTAESGCMTests', src,
-    include_directories : inc,
-    dependencies : gtest_dep,
-    cpp_args : [
-        '-O0',
-        '-Wall', '-Werror',
-        '-Wno-non-virtual-dtor',
-        '-fstack-check', '-fstack-protector-strong'
-    ],
-    install : false
-)
+if not meson.is_subproject()
+    test_app = executable('OTAESGCMTests', src,
+        include_directories : inc,
+        dependencies : gtest_dep,
+        cpp_args : [
+            '-O0',
+            '-Wall', '-Werror',
+            '-Wno-non-virtual-dtor',
+            '-fstack-check', '-fstack-protector-strong'
+        ],
+        install : false
+    )
 
-test('unit_tests', test_app)
+    test('unit_tests', test_app)
+endif
