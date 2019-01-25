@@ -3,6 +3,22 @@ project('OTAESGCM', 'cpp',
         'c_std=c11', 'cpp_std=c++11']
 )
 
+cpp_args = [
+        '-O0',
+        '-Wall', '-Werror',
+        '-Wno-non-virtual-dtor',
+        '-DEXT_AVAILABLE_ARDUINO_LIB_OTAESGCM'
+]
+cpp_args_clang_compat = ['-fstack-check', '-fstack-protector-strong']
+
+
+compiler = meson.get_compiler('cpp')
+if (compiler.get_id() == 'gcc') # and (compiler.version().version_compare('<8'))
+    cpp_args += cpp_args_clang_compat
+else
+    warning('Skipping -fstack-check and -fstack-protector-strong due to old compiler version.')
+endif
+
 # Setup and compile gtest.
 # Tries to find gtest via normal dependency manager (e.g. pkgconf) and falls 
 # back to downloading and compiling using a wrap file.
@@ -37,12 +53,7 @@ src = [
 
 libOTAESGCM = static_library('OTAESGCM', src,
     include_directories : inc,
-    cpp_args : [
-        '-O0',
-        '-Wall', '-Werror',
-        '-Wno-non-virtual-dtor',
-        '-fstack-check', '-fstack-protector-strong'
-    ],
+    cpp_args : cpp_args,
     install : true
 )
 
@@ -59,12 +70,7 @@ if not meson.is_subproject()
     test_app = executable('OTAESGCMTests', [src, test_src],
         include_directories : inc,
         dependencies : gtest_dep,
-        cpp_args : [
-            '-O0',
-            '-Wall', '-Werror',
-            '-Wno-non-virtual-dtor',
-            '-fstack-check', '-fstack-protector-strong'
-        ],
+        cpp_args : cpp_args,
         install : false
     )
 
