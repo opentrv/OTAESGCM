@@ -34,5 +34,7 @@
 /tmptestexe
 
 # ninja
-builddir
-subprojects
+/builddir
+/buildscan
+/subprojects
+
