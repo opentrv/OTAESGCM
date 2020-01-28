@@ -35,6 +35,6 @@
 
 # ninja
 /builddir
-/buildscan
+/buildclang
 /subprojects
 
