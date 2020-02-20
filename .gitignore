@@ -38,3 +38,5 @@
 /buildclang
 /subprojects
 
+# vscode
+.vscode
