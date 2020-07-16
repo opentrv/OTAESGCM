@@ -34,8 +34,8 @@
 /tmptestexe
 
 # ninja
+/build
 /builddir
-/buildclang
 /subprojects
 
 # vscode

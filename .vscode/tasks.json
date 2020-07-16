@@ -1,19 +1,13 @@
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "test",
-            "type": "shell",
-            "command": ".vscode/tests.sh",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared"
-            },
-            "problemMatcher": "$gcc"
-        }
-    ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "meson",
+			"target": "OTAESGCMTests",
+			"mode": "build",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "Meson: Build OTAESGCMTests"
+		}
+	]
 }

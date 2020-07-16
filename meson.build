@@ -51,18 +51,18 @@ src = [
     'content/OTAESGCM/utility/OTAESGCM_OTAESGCM.cpp',
 ]
 
-libOTAESGCM = static_library('OTAESGCM', src,
-    include_directories : inc,
-    cpp_args : cpp_args,
-    install : true
-)
+if meson.is_subproject()
+    libOTAESGCM = static_library('OTAESGCM', src,
+        include_directories : inc,
+        cpp_args : cpp_args,
+        install : true
+    )
 
-libOTAESGCM_dep = declare_dependency(
-    include_directories : inc, 
-    link_with : libOTAESGCM
-)
-
-if not meson.is_subproject()
+    libOTAESGCM_dep = declare_dependency(
+        include_directories : inc, 
+        link_with : libOTAESGCM
+    )
+else
     # Compile test executable.
     # This is broken out to avoid compile errors due to lack of gtest.
     test_src = 'portableUnitTests/main.cpp'
