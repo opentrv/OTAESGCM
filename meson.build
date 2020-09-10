@@ -5,7 +5,7 @@ project('OTAESGCM', 'cpp',
 
 cpp_args = [
         '-O0',
-        '-Wall', '-Werror',
+        '-Wall', '-Wextra', '-Werror',
         '-Wno-non-virtual-dtor',
         '-DEXT_AVAILABLE_ARDUINO_LIB_OTAESGCM'
 ]
