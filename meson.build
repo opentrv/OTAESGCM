@@ -1,22 +1,17 @@
 project('OTAESGCM', 'cpp',
     default_options : [
-        'c_std=c11', 'cpp_std=c++11']
+        'c_std=c11', 'cpp_std=c++11',
+        'buildtype=debug',
+        'warning_level=3',
+        'werror=true'
+    ]
 )
 
-cpp_args = [
-        '-O0',
-        '-Wall', '-Wextra', '-Werror',
-        '-Wno-non-virtual-dtor',
-        '-DEXT_AVAILABLE_ARDUINO_LIB_OTAESGCM'
-]
-cpp_args_clang_compat = ['-fstack-check', '-fstack-protector-strong']
+cpp_args = [ '-DEXT_AVAILABLE_ARDUINO_LIB_OTAESGCM' ]
 
-
-compiler = meson.get_compiler('cpp')
-if (compiler.get_id() == 'gcc') # and (compiler.version().version_compare('<8'))
-    cpp_args += cpp_args_clang_compat
-else
-    warning('Skipping -fstack-check and -fstack-protector-strong due to old compiler version.')
+compiler_id = meson.get_compiler('cpp').get_id()
+if (compiler_id == 'gcc') or (compiler_id == 'clang')
+    cpp_args += ['-Wno-non-virtual-dtor', '-fstack-check', '-fstack-protector-strong']
 endif
 
 # Setup and compile gtest.
